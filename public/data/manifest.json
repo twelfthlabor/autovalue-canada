@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "sourceRetrievedAt": "2026-08-29",
+  "sourceUrl": "https://huggingface.co/datasets/OmniaAuto/canadian-vehicle-market-aggregates",
+  "sourceLicense": "CC BY-NC 4.0",
+  "sourceSha256": "93f41bf12ce1e79b452b8a47ba7d29b2fed090810c892ecd644fd63d05702c8e",
+  "priceBasis": "Dealer asking prices, not transactions",
+  "scope": "Canadian commercial inventory snapshot",
+  "usedMarketCells": 5605,
+  "sourceMarketCells": 7673,
+  "usedVehiclesRepresented": 180833,
+  "newVehiclesRepresented": 349752,
+  "sourceVehiclesRepresented": 530585,
+  "provinces": [
+    "AB",
+    "BC",
+    "MB",
+    "NB",
+    "NL",
+    "NS",
+    "ON",
+    "PE",
+    "QC",
+    "SK"
+  ],
+  "makes": 38,
+  "yearRange": [
+    2002,
+    2027
+  ],
+  "quality": {
+    "duplicateKeys": 0,
+    "rejectedRows": 0,
+    "percentileOrderViolations": 0,
+    "minimumCellSize": 10
+  }
+}

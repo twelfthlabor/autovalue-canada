@@ -1,0 +1,213 @@
+{
+  "schemaVersion": 1,
+  "sourceRetrievedAt": "2026-08-29",
+  "status": "research-only",
+  "predictionTarget": "Aggregate median dealer asking price in CAD",
+  "notFor": [
+    "individual appraisal",
+    "transaction price",
+    "future residual value"
+  ],
+  "validation": "5-fold GroupKFold; make-model groups never cross train/test boundaries",
+  "cells": 5605,
+  "vehiclesRepresented": 180833,
+  "makeModelGroups": 360,
+  "features": [
+    "province",
+    "make",
+    "vehicle_age",
+    "log_mileage",
+    "days_on_market_median",
+    "log_sample_size"
+  ],
+  "baseline": {
+    "name": "Training-fold global median",
+    "mae_cad": 14639.849,
+    "median_ae_cad": 11091.0,
+    "wape_pct": 43.35,
+    "median_ape_pct": 40.425,
+    "r2": -0.073
+  },
+  "model": {
+    "name": "Histogram gradient boosting",
+    "mae_cad": 8026.186,
+    "median_ae_cad": 5133.744,
+    "wape_pct": 23.766,
+    "median_ape_pct": 19.594,
+    "r2": 0.617
+  },
+  "maeImprovementVsBaselinePct": 45.18,
+  "folds": [
+    {
+      "fold": 1,
+      "train_cells": 4484,
+      "test_cells": 1121,
+      "test_make_model_groups": 72,
+      "model": {
+        "mae_cad": 8359.699,
+        "median_ae_cad": 6372.004,
+        "wape_pct": 25.653,
+        "median_ape_pct": 20.212,
+        "r2": 0.543
+      }
+    },
+    {
+      "fold": 2,
+      "train_cells": 4484,
+      "test_cells": 1121,
+      "test_make_model_groups": 72,
+      "model": {
+        "mae_cad": 10187.569,
+        "median_ae_cad": 5961.984,
+        "wape_pct": 28.247,
+        "median_ape_pct": 22.071,
+        "r2": 0.476
+      }
+    },
+    {
+      "fold": 3,
+      "train_cells": 4484,
+      "test_cells": 1121,
+      "test_make_model_groups": 72,
+      "model": {
+        "mae_cad": 8296.069,
+        "median_ae_cad": 5433.407,
+        "wape_pct": 25.101,
+        "median_ape_pct": 21.58,
+        "r2": 0.655
+      }
+    },
+    {
+      "fold": 4,
+      "train_cells": 4484,
+      "test_cells": 1121,
+      "test_make_model_groups": 72,
+      "model": {
+        "mae_cad": 6240.211,
+        "median_ae_cad": 3767.238,
+        "wape_pct": 19.95,
+        "median_ape_pct": 16.606,
+        "r2": 0.681
+      }
+    },
+    {
+      "fold": 5,
+      "train_cells": 4484,
+      "test_cells": 1121,
+      "test_make_model_groups": 72,
+      "model": {
+        "mae_cad": 7068.925,
+        "median_ae_cad": 4351.758,
+        "wape_pct": 19.776,
+        "median_ape_pct": 17.132,
+        "r2": 0.711
+      }
+    }
+  ],
+  "byProvince": [
+    {
+      "province": "AB",
+      "cells": 790,
+      "vehicles": 21467,
+      "mae_cad": 10138.541,
+      "median_ae_cad": 7309.728,
+      "wape_pct": 25.678,
+      "median_ape_pct": 20.481,
+      "r2": 0.464
+    },
+    {
+      "province": "BC",
+      "cells": 989,
+      "vehicles": 23049,
+      "mae_cad": 9394.06,
+      "median_ae_cad": 6179.957,
+      "wape_pct": 25.327,
+      "median_ape_pct": 21.824,
+      "r2": 0.597
+    },
+    {
+      "province": "MB",
+      "cells": 178,
+      "vehicles": 3456,
+      "mae_cad": 9416.735,
+      "median_ae_cad": 7062.048,
+      "wape_pct": 24.831,
+      "median_ape_pct": 19.888,
+      "r2": 0.4
+    },
+    {
+      "province": "NB",
+      "cells": 81,
+      "vehicles": 1290,
+      "mae_cad": 7686.427,
+      "median_ae_cad": 3755.123,
+      "wape_pct": 22.021,
+      "median_ape_pct": 17.454,
+      "r2": 0.232
+    },
+    {
+      "province": "NL",
+      "cells": 31,
+      "vehicles": 507,
+      "mae_cad": 8467.291,
+      "median_ae_cad": 6138.959,
+      "wape_pct": 20.809,
+      "median_ape_pct": 15.784,
+      "r2": 0.511
+    },
+    {
+      "province": "NS",
+      "cells": 127,
+      "vehicles": 2215,
+      "mae_cad": 7528.59,
+      "median_ae_cad": 5645.077,
+      "wape_pct": 23.246,
+      "median_ape_pct": 19.077,
+      "r2": 0.287
+    },
+    {
+      "province": "ON",
+      "cells": 2172,
+      "vehicles": 90506,
+      "mae_cad": 7453.888,
+      "median_ae_cad": 4446.368,
+      "wape_pct": 23.578,
+      "median_ape_pct": 19.224,
+      "r2": 0.651
+    },
+    {
+      "province": "PE",
+      "cells": 1,
+      "vehicles": 11,
+      "mae_cad": 862.896,
+      "median_ae_cad": 862.896,
+      "wape_pct": 2.466,
+      "median_ape_pct": 2.466,
+      "r2": null
+    },
+    {
+      "province": "QC",
+      "cells": 1068,
+      "vehicles": 35023,
+      "mae_cad": 6894.405,
+      "median_ae_cad": 4377.918,
+      "wape_pct": 21.261,
+      "median_ape_pct": 17.252,
+      "r2": 0.637
+    },
+    {
+      "province": "SK",
+      "cells": 168,
+      "vehicles": 3309,
+      "mae_cad": 11395.957,
+      "median_ae_cad": 10252.729,
+      "wape_pct": 27.189,
+      "median_ape_pct": 22.407,
+      "r2": 0.107
+    }
+  ],
+  "reproducibility": {
+    "randomState": 42,
+    "snapshotYear": 2026
+  }
+}
