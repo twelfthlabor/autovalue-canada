@@ -13,10 +13,14 @@ export default function Home() {
         <div className="eyebrow"><span /> Canadian used-vehicle evidence</div>
         <div className="hero-grid">
           <div>
-            <h1>See the market behind the <em>asking price.</em></h1>
+            <h1 aria-label="See the market behind the asking price.">
+              <span>See the market</span>
+              <span>behind the</span>
+              <em>asking price.</em>
+            </h1>
           </div>
           <div className="hero-copy">
-            <p>Compare a listing with observed dealer inventory across Canada. No mystery score. No false precision. Just the range, the sample and the caveats you need to ask better questions.</p>
+            <p>Decode a VIN, recover reviewed listing evidence and compare its ask with mileage-adjusted matches. No mystery score—just the target, range, sample and caveats behind the deal signal.</p>
             <a className="text-link" href="#check">Check a listing <span aria-hidden="true">↓</span></a>
           </div>
         </div>
@@ -36,7 +40,7 @@ export default function Home() {
             <p className="kicker">PRICE CHECK</p>
             <h2>Bring the listing.<br />We’ll bring the context.</h2>
           </div>
-          <p>Choose a vehicle and optionally add the asking price and odometer. We compare it with the exact province × make × model × year market cell.</p>
+          <p>Choose manually or decode a VIN. Matched listings produce a mileage-adjusted target; every other supported vehicle gets a clearly labelled broad-market fallback.</p>
         </div>
         <ValuationWorkbench />
       </section>

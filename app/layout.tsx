@@ -7,10 +7,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: "AutoValue Canada — See the market behind the asking price",
-  description: "An evidence-first view of Canadian used-vehicle asking prices, sample strength, mileage and market position.",
+  description: "A transparent Canadian used-vehicle deal checker with VIN decode, matched comparables, mileage modeling and visible uncertainty.",
   openGraph: {
     title: "AutoValue Canada",
-    description: "See the market behind a Canadian used-vehicle asking price.",
+    description: "Check a Canadian used-vehicle asking price against matched comparables and a visible mileage model.",
     type: "website",
   },
 };
@@ -39,6 +39,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <Link href="/#check">Check a price</Link>
             <Link href="/market-lab">Market lab</Link>
             <Link href="/methodology">Methodology</Link>
+            <Link href="/calculation">How we calculate</Link>
           </nav>
           <a className="source-pill" href="https://huggingface.co/datasets/OmniaAuto/canadian-vehicle-market-aggregates" target="_blank" rel="noreferrer">
             Open data <span aria-hidden="true">↗</span>
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           </div>
           <div className="footer-links">
             <Link href="/methodology">Methods & limitations</Link>
+            <Link href="/calculation">How price works</Link>
             <a href="https://open.canada.ca/data/en/dataset/1ec92326-47ef-4110-b7ca-959fab03f96d" target="_blank" rel="noreferrer">Transport Canada recalls</a>
             <a href="https://open.canada.ca/data/en/dataset/98f1a129-f628-4ce4-b24d-6f16bf24dd64" target="_blank" rel="noreferrer">NRCan fuel data</a>
           </div>

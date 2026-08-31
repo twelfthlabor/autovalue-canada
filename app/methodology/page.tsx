@@ -1,10 +1,11 @@
 import Link from "next/link";
 
 const decisions = [
-  ["What we show", "Observed dealer asking-price percentiles for an exact province, make, model, model-year and used condition cell."],
-  ["What we do not show", "A transaction value, appraisal, recommended offer, trim-level valuation or residual-value forecast."],
+  ["What we show", "A mileage-adjusted target and error band when reviewed trim-level matches exist; otherwise, an observed broad-market distribution."],
+  ["What we do not show", "A known transaction value, appraisal, recommended offer, damage adjustment or residual-value forecast."],
   ["Why the range", "P25–P75 describes the middle half of observed inventory. P10–P90 supplies broader context without exposing individual listings."],
   ["Minimum evidence", "The source suppresses prices for cells with fewer than 10 vehicles. We validate that rule during every build."],
+  ["Listing evidence", "VIN validation confirms format only. Seller history highlights stay attributed and never alter or certify the modeled price."],
 ];
 
 export default function MethodologyPage() {
@@ -17,14 +18,24 @@ export default function MethodologyPage() {
       </header>
 
       <section className="method-grid">
-        <aside><p>RELEASE 0.1</p><strong>Observed market evidence</strong><span>Retrieved Aug 29, 2026</span><span>Prices in CAD</span><span>Non-commercial research</span></aside>
+        <aside><p>RELEASE 0.2</p><strong>Matched + broad evidence</strong><span>Market data Aug 29, 2026</span><span>Listings Aug 25–31, 2026</span><span>Prices in CAD</span><span>Non-commercial research</span></aside>
         <div>
           <h2>Claim boundary</h2>
-          <p className="lead">This release answers one defensible question: <strong>where does an asking price sit within observed Canadian dealer inventory?</strong></p>
-          <p>It does not estimate what a buyer ultimately paid. It does not adjust for condition or accident history. It does not infer future value from a single snapshot.</p>
+          <p className="lead">This release answers one defensible question: <strong>is the ask supported by recent comparable inventory after a visible mileage adjustment?</strong></p>
+          <p>A vehicle has no observable “true” transaction price before it sells. The matched output is therefore a current asking-price target with model error—not a promise of what a buyer will pay. It does not adjust for condition or accident history. Seller highlights remain attributed and never declare a vehicle damage-free.</p>
           <div className="decision-list">
-            {decisions.map(([title, copy], index) => <article key={title}><span>0{index + 1}</span><div><h3>{title}</h3><p>{copy}</p></div></article>)}
+            {decisions.map(([title, copy], index) => <article key={title}><span>{String(index + 1).padStart(2, "0")}</span><div><h3>{title}</h3><p>{copy}</p></div></article>)}
           </div>
+        </div>
+      </section>
+
+      <section className="method-section">
+        <p className="kicker">MATCHED-COMPARABLE MODEL</p>
+        <h2>Match first. Exclude the subject. Then learn the mileage effect.</h2>
+        <div className="method-columns">
+          <div><h3>Evidence tier</h3><p>The BMW example uses six 2017 340i xDrive automatic sedans observed in Canadian public inventory. Manual cars and the subject listing are excluded. Fewer than four valid observations produces no matched model.</p></div>
+          <div><h3>Estimator</h3><p>Ordinary least squares fits advertised price against odometer. The displayed centre evaluates that line at the subject’s 73,677 km. The $33,200 target and −$990 per 10,000 km coefficient are rounded only after fitting.</p></div>
+          <div><h3>Uncertainty</h3><p>The $30,700–$35,600 range is target ± one residual RMSE. Sample size, capture date and each model input are public. Six observations are graded limited evidence; condition and transaction-price error remain outside the model.</p><Link className="text-link" href="/calculation">Audit the calculation →</Link></div>
         </div>
       </section>
 

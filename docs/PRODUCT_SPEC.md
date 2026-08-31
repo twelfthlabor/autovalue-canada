@@ -20,6 +20,14 @@ A Canadian consumer comparing a dealer listing who knows the vehicle's province,
 - Results show median, P25–P75, P10–P90 and sample size.
 - An optional asking price is positioned against published percentiles.
 - Optional odometer is compared with, but does not alter, the published median.
+- Optional VIN input is validated locally; explicit decode requests are proxied to NHTSA vPIC without persistence.
+- A successful VIN decode fills make, model and year when an exact published market cell is available.
+- A reviewed public-listing match can fill province, asking price and odometer while preserving source and retrieval date.
+- When trim-level comparables exist, the subject is excluded and the output shows the fitted mileage target, residual-error range, sample size and listing-minus-target deal signal.
+- A decoded VIN that has no matching price cell never inherits a previous or default vehicle result.
+- Seller-displayed history highlights are readable, attributed and linked back to the exact public listing.
+- The primary desktop checker remains inside one viewport-height frame and adapts to smaller screens without horizontal overflow.
+- A dedicated interactive calculation route visualizes all model inputs, the fitted line, error band, target and listing-minus-target arithmetic.
 - Every result states important missing factors.
 - The interface works at 360 px width and supports keyboard operation.
 - The public build requires no secret or paid service.
@@ -48,8 +56,11 @@ For the portfolio release:
 
 ## Safety and consumer protections
 
-- Do not state “good deal,” “bad deal” or “fair value” from aggregate asking prices alone.
+- Do not state “good deal,” “bad deal” or “fair value” from aggregate asking prices alone. A matched-comparable signal must name its evidence tier and unresolved risks.
 - Do not produce a recommended offer without condition, history and channel data.
 - Never state that a vehicle has no outstanding recall based only on make/model/year data.
-- Never collect or expose a VIN unless a future feature has a documented need and retention policy.
+- Send a VIN only after an explicit decode action, keep it out of request URLs, and never persist, train on or expose it.
+- Never describe a valid VIN format or an empty history result as proof that a vehicle is damage-free.
+- Never describe seller-displayed CARFAX or inspection summaries as independently verified AutoValue findings.
 - Do not expose commercial API keys to the browser.
+- Never call an asking-price target a known transaction price. “True price” in product language means an evidence-based current target with uncertainty, not an observable ground truth before sale.

@@ -19,7 +19,20 @@ Next.js application ─── Vercel CDN
         └── Data control room
 ```
 
-The initial app is static-first. This avoids putting a paid or restricted market-data API behind an unprotected public endpoint, eliminates cold-start dependency for the core experience and keeps the source artifact exactly reproducible.
+The initial app is static-first for the core market comparison. One small POST-only server route validates VIN input, calls the official NHTSA vPIC decoder and checks a reviewed public-listing evidence registry. The VIN is kept out of the URL and is not persisted. A decoder outage cannot break the manual price-check experience, and the supplied demonstration VIN has a verified cached decode for resilient portfolio review.
+
+```text
+VIN form ──POST──► Vercel route ──► NHTSA vPIC
+                       │
+                       └──► reviewed listing registry
+                                  │
+                                  ├──► matched-comparable OLS + deal signal
+                                  └──► broad market-cell fallback
+```
+
+The pricing hierarchy is fail-closed: (1) use a reviewed exact listing and same-specification comparables when available; (2) otherwise use the decoded identity only when it maps to a published aggregate cell; (3) otherwise show the decode without a price result. The previous form selection is never treated as evidence for an unmatched VIN.
+
+The matched model requires at least four valid positive-price/positive-odometer observations, excludes the subject VIN, estimates a linear mileage coefficient and returns a rounded fitted target plus or minus residual RMSE. It also records R², observed odometer bounds and whether the target is extrapolated. These diagnostics are descriptive for the captured asking-price sample, not completed-sale validation.
 
 ## Production target for the role
 
