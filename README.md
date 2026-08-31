@@ -2,6 +2,8 @@
 
 An evidence-first Canadian used-vehicle deal checker. AutoValue Canada helps a shopper spot asking-price opportunities using matched comparables, a visible mileage model and an honest fallback to broad province × make × model × year evidence—without pretending that an advertised price is a completed transaction or appraisal.
 
+**[Open the live demo](https://autovalue-canada.vercel.app)** · [View the calculation](https://autovalue-canada.vercel.app/calculation) · [Inspect CI](https://github.com/twelfthlabor/autovalue-canada/actions)
+
 ## Why this project exists
 
 Most portfolio price predictors return a single unexplained number from an old, foreign dataset. This project focuses on the harder work a production data scientist is accountable for:
