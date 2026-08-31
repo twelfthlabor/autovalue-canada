@@ -105,6 +105,11 @@ test("BMW VIN produces an auditable mileage-adjusted deal signal", async ({ page
   await expect(page.getByText("The subject listing is excluded from the fit", { exact: false })).toBeVisible();
   await expect(page.locator(".calc-rail article").filter({ hasText: "-$990" })).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath("bmw-matched-result.png"), fullPage: true });
+
+  await page.getByLabel("Make", { exact: true }).selectOption("Toyota");
+  await expect(page.getByText("EXACT PUBLIC LISTING FOUND", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Within matched range", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("$33,200", { exact: true })).toHaveCount(0);
 });
 
 test("asking-price marker has reserved space and does not overlap its caption", async ({ page }) => {

@@ -136,6 +136,10 @@ export function ValuationWorkbench() {
 
   function update<K extends keyof FormState>(field: K, value: FormState[K]) {
     if (field !== "vin") setMarketBlockedByVin(false);
+    if (field === "province" || field === "make" || field === "model" || field === "year") {
+      setVinReport(undefined);
+      setLookupState("idle");
+    }
     setForm((current) => {
       const next = { ...current, [field]: value };
       if (field === "province") {
