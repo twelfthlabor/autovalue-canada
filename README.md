@@ -1,103 +1,78 @@
 # AutoValue Canada
 
-An evidence-first Canadian used-vehicle deal checker. AutoValue Canada combines current Canadian asking-market evidence with a transaction-trained condition and mileage adjustment, while keeping the estimate, uncertainty and unpriced factors visible on one page.
+A transparent Canadian used-vehicle deal checker. It compares a seller's asking price with current Canadian dealer inventory, then adjusts the market estimate for mileage and user-reported condition.
 
-**[Open the live demo](https://autovalue-canada.vercel.app)** · [View the calculation](https://autovalue-canada.vercel.app/calculation) · [Inspect CI](https://github.com/twelfthlabor/autovalue-canada/actions)
+[Live demo](https://autovalue-canada.vercel.app) · [Calculation](https://autovalue-canada.vercel.app/calculation) · [CI](https://github.com/twelfthlabor/autovalue-canada/actions)
 
-## Why this project exists
+## How it works
 
-Most portfolio price predictors return a single unexplained number from an old, foreign dataset. This project focuses on the harder work a production data scientist is accountable for:
+1. Select a province, make, model and year, then enter the asking price and odometer.
+2. Optionally decode a VIN and describe the vehicle's condition and history.
+3. Review the estimated value, range, difference from the asking price, evidence strength and unpriced factors.
 
-- current and legally reusable Canadian data;
-- explicit claim boundaries and uncertainty;
-- reproducible ingestion and build-time quality gates;
-- an accessible consumer decision experience;
-- transparent sample size, provenance and model limitations;
-- a small, reproducible gradient-boosted model that runs locally in the browser;
-- a deployment path that separates the public Vercel interface from future licensed data/ML workloads.
+The estimate combines:
 
-## Current release
+- a province × make × model × year median from Canadian dealer asking prices; and
+- a browser-based gradient-boosted model that applies relative mileage and condition adjustments.
 
-Release 0.3 answers one defensible question:
+VIN decoding uses the official NHTSA vPIC API. A VIN is sent only after the user clicks **Decode VIN**, is kept out of the URL and is not stored. The app has no live listing feed, so asking price, odometer and condition are entered by the user.
 
-> What condition-aware market value is supported by current Canadian evidence, and how far is the seller's ask from that estimate?
+## Data and limitations
 
-The VIN-first flow validates format and decodes manufacturer-submitted specifications through the official NHTSA vPIC API at request time. Asking price, odometer, options and inspection facts are never inferred from an embedded listing snapshot: users enter them directly until a licensed row-level inventory connector is configured. The model then uses a published province × make × model × year market cell and adjusts it with a gradient-boosted condition and mileage model.
+The included market artifact contains 5,605 used-vehicle cells representing 180,833 vehicles from [OmniaAuto's Canadian Vehicle Market Aggregates](https://huggingface.co/datasets/OmniaAuto/canadian-vehicle-market-aggregates). These are dealer asking prices, not completed sales. Cells with fewer than 10 vehicles are excluded.
 
-The condition model was trained on 91,278 completed US wholesale auction outcomes from the Larsen (2020) NBER research dataset. It predicts the sold-price residual around a leave-one-out matched-peer anchor and is tested on later sale years: 39,132 temporal-test outcomes, $1,198 MAE, 11.60% WAPE and a 4.29% MAE improvement over the peer-only baseline. The serialized trees run in TypeScript with no prediction API or secret.
+The adjustment model was trained on 91,278 historical US wholesale auction sales. On a later-year test set of 39,132 sales, it reached $1,198 MAE and 11.60% WAPE. The model runs locally in the browser; no prediction service or API key is required.
 
-For a valid VIN without an exact listing or matched comparables, the vehicle can still decode and the user can enter the seller's ask, odometer and condition. The app uses a broad Canadian market distribution only when the identity maps to a published cell; it never substitutes a stale unrelated vehicle. The output is a **condition-aware market estimate**, not an observable “true price,” certified appraisal, current Canadian completed-sale prediction or future residual value. Historical US wholesale condition effects are transferred only as relative adjustments around current Canadian evidence.
-
-The interactive **How we calculate** page documents the live data contract and each model stage. The Market Lab publishes both the consumer condition model's temporal test and a separate aggregate research benchmark. See [MODEL_CARD.md](docs/MODEL_CARD.md).
-
-The primary checker presents the estimate, range, listing gap, evidence method and factor coverage on one consolidated valuation sheet. It explicitly distinguishes modelled inputs from context-only and unpriced factors. The path from this research-grade hybrid to a licensed Canadian transaction model is documented in [VALUATION_MODEL_PLAN.md](docs/VALUATION_MODEL_PLAN.md).
-
-The interface review and the GitHub design skills/guidelines are recorded in [FRONTEND_REVIEW.md](docs/FRONTEND_REVIEW.md).
-
-## Data
-
-The demo uses [OmniaAuto's Canadian Vehicle Market Aggregates](https://huggingface.co/datasets/OmniaAuto/canadian-vehicle-market-aggregates), licensed CC BY-NC 4.0. The source describes 624,678 dealer vehicles across 12 provinces and territories. Price cells with fewer than 10 vehicles are suppressed by the publisher.
-
-The release artifact contains 5,605 used-vehicle price cells representing 180,833 vehicles. The source price file includes 530,585 new and used vehicles with published price statistics. The core price check remains usable if the VIN service is unavailable.
-
-See [DATA_SOURCES.md](docs/DATA_SOURCES.md) for provenance, licence and limitations.
+Results are market estimates, not certified appraisals, guaranteed offers or future-value forecasts. Trim, options, inspection findings, fees and the final negotiated price may not be captured. See the [model card](docs/MODEL_CARD.md) and [data sources](docs/DATA_SOURCES.md) for methodology, provenance and full limitations.
 
 ## Run locally
 
-Requirements: Node.js 20.9 or later.
+Requires Node.js 20.9 or later.
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://localhost:3000`. No credentials or environment variables are required.
 
-Quality and production checks:
+## Verify
 
 ```bash
 npm run build:data
-npm run model:benchmark
-npm run model:train-condition
 npm test
 npm run lint
 npm run build
 npm run test:e2e
 ```
 
-The data build fails on schema drift, duplicate market-cell keys, invalid numerics, samples below 10, non-positive prices or non-monotonic percentiles.
+Model training is optional and requires Python dependencies:
 
-## Repository map
-
-```text
-app/                 Next.js routes and product surfaces
-analysis/            Reproducible model training and evaluation
-components/          Interactive valuation workbench
-data/raw/            Attributed source snapshots
-docs/                Product, data and architecture decisions
-lib/                 Tested market-evidence logic
-public/data/         Validated, compact release artifacts
-scripts/             Reproducible data preparation
-.github/workflows/   CI quality gates
+```bash
+python -m pip install -r requirements.txt
+npm run model:benchmark
+npm run model:train-condition
 ```
 
-## Vercel deployment
+The data build rejects schema changes, duplicate market cells, invalid values, samples below 10 and unordered price percentiles.
 
-Import this repository in Vercel and use the default Next.js settings. `npm run build` regenerates and validates the market artifact before compiling the application. The checked-in condition-model artifact is deterministic and can be rebuilt with the separate Python command above. No environment variables are required for release 0.3.
+## Project structure
 
-The Vercel Hobby plan is appropriate only for this non-commercial portfolio demonstration, which also matches the dataset's non-commercial licence. A commercial deployment requires a commercial data licence and a paid hosting plan appropriate to its use.
+```text
+app/          Pages and VIN decode route
+components/   Valuation interface
+lib/          Market, VIN and model logic
+analysis/     Model training and evaluation
+data/raw/     Attributed source snapshots
+public/data/  Validated release artifacts
+scripts/      Data preparation
+docs/         Architecture, methodology and data notes
+```
 
-## Roadmap
+## Deployment
 
-Features advance only after their evidence gate is satisfied:
-
-1. Transport Canada recall context from the official first-party dataset/API.
-2. NRCan fuel and EV operating-cost scenarios.
-3. Licensed row-level Canadian inventory feed for general VIN-to-listing retrieval, trim/options coverage and time-based validation.
-4. Licensed Canadian retail transactions with structured accident, inspection and reconditioning fields; retrain and calibrate by segment.
-5. Historical cohorts for 12–36 month residual forecasting.
-6. Drift, missingness, interval-coverage and out-of-distribution monitoring before commercial use.
+Import the repository into Vercel with the default Next.js settings. The production build regenerates and validates the market artifact before compiling the app.
 
 ## Licence
 
-Application code is MIT licensed. Source data retains its original [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) licence and attribution. Do not use the included data artifact for commercial purposes.
+Application code is MIT licensed. The included market data retains its [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) licence and is not licensed for commercial use.
