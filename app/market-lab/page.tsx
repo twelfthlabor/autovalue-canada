@@ -1,5 +1,8 @@
 import manifest from "@/public/data/manifest.json";
 import modelMetrics from "@/public/data/model-metrics.json";
+import conditionModel from "@/public/data/condition-model.json";
+import { formatRetrievedDate } from "@/lib/market";
+import { InfoIcon, CheckCircleIcon, AnchorIcon } from "@/components/icons";
 
 const provinceNames: Record<string, string> = {
   AB: "Alberta", BC: "British Columbia", MB: "Manitoba", NB: "New Brunswick", NL: "Newfoundland & Labrador",
@@ -7,82 +10,115 @@ const provinceNames: Record<string, string> = {
 };
 
 export default function MarketLabPage() {
+  const sha = manifest.sourceSha256;
+  const maxFoldWape = Math.max(...modelMetrics.folds.map((fold) => fold.model.wape_pct));
+
   return (
-    <div className="lab-page">
-      <header className="lab-hero">
-        <div><p className="eyebrow"><span /> Data control room</p><h1>Market data you can <em>interrogate.</em></h1></div>
-        <p>Coverage, provenance and automated quality gates from the exact artifact powering the public price check.</p>
+    <div className="inner-page">
+      <header className="page-hero">
+        <div>
+          <p className="eyebrow">Data control room</p>
+          <h1>Market data you can <em>interrogate.</em></h1>
+        </div>
+        <p className="page-hero-side">Coverage, provenance and automated quality gates from the exact artifact powering the public price check.</p>
       </header>
 
-      <section className="lab-metrics">
-        <article><span>USED VEHICLES REPRESENTED</span><strong>{manifest.usedVehiclesRepresented.toLocaleString("en-CA")}</strong><p>Across published price cells</p></article>
-        <article><span>USED MARKET CELLS</span><strong>{manifest.usedMarketCells.toLocaleString("en-CA")}</strong><p>Province × make × model × year</p></article>
-        <article><span>MAKES</span><strong>{manifest.makes}</strong><p>With usable used inventory</p></article>
-        <article><span>YEAR COVERAGE</span><strong>{manifest.yearRange[0]}–{manifest.yearRange[1]}</strong><p>Not every combination is present</p></article>
+      <section className="lab-stats" aria-label="Coverage totals">
+        <article>
+          <span>Used vehicles represented <InfoIcon /></span>
+          <strong title="Across published price cells">{manifest.usedVehiclesRepresented.toLocaleString("en-CA")}</strong>
+        </article>
+        <article>
+          <span>Used market cells <InfoIcon /></span>
+          <strong title="Province × make × model × year">{manifest.usedMarketCells.toLocaleString("en-CA")}</strong>
+        </article>
+        <article>
+          <span>Makes</span>
+          <strong title="With usable used inventory">{manifest.makes}</strong>
+        </article>
+        <article>
+          <span>Year coverage</span>
+          <strong title="Not every combination is present">{manifest.yearRange[0]}–{manifest.yearRange[1]}</strong>
+        </article>
       </section>
 
       <section className="lab-grid">
         <article className="qa-card">
-          <div className="card-title"><div><p className="kicker">PIPELINE HEALTH</p><h2>All release gates passed</h2></div><span className="status-live"><i /> VERIFIED</span></div>
-          <div className="checks">
-            <div><span>Schema contract</span><strong>PASS</strong></div>
-            <div><span>Duplicate composite keys</span><strong>{manifest.quality.duplicateKeys}</strong></div>
-            <div><span>Percentile-order violations</span><strong>{manifest.quality.percentileOrderViolations}</strong></div>
-            <div><span>Rejected market cells</span><strong>{manifest.quality.rejectedRows}</strong></div>
-            <div><span>Minimum cell sample</span><strong>n ≥ {manifest.quality.minimumCellSize}</strong></div>
+          <div className="qa-head">
+            <div><p className="kicker">Pipeline health</p><h2>All release gates passed</h2></div>
+            <span className="pill pill-verified"><i aria-hidden="true" /> VERIFIED</span>
           </div>
+          <ul className="qa-checks">
+            <li><span>Schema contract</span><strong className="pass"><CheckCircleIcon /> PASS</strong></li>
+            <li><span>Duplicate composite keys</span><strong>{manifest.quality.duplicateKeys}</strong></li>
+            <li><span>Percentile-order violations</span><strong>{manifest.quality.percentileOrderViolations}</strong></li>
+            <li><span>Rejected market cells</span><strong>{manifest.quality.rejectedRows}</strong></li>
+            <li><span>Minimum cell sample n</span><strong>≥ {manifest.quality.minimumCellSize}</strong></li>
+          </ul>
         </article>
 
-        <article className="provenance-card">
-          <p className="kicker">ARTIFACT PROVENANCE</p>
+        <article className="qa-card provenance-card">
+          <p className="kicker">Artifact provenance</p>
           <h2>Reproducible by construction</h2>
-          <dl>
-            <div><dt>Retrieved</dt><dd>Aug 29, 2026</dd></div>
+          <dl className="prov-list">
+            <div><dt>Retrieved</dt><dd>{formatRetrievedDate(manifest.sourceRetrievedAt)}</dd></div>
             <div><dt>Licence</dt><dd>{manifest.sourceLicense}</dd></div>
             <div><dt>Price basis</dt><dd>{manifest.priceBasis}</dd></div>
-            <div><dt>SHA-256</dt><dd className="hash">{manifest.sourceSha256}</dd></div>
+            <div><dt>SHA-256 (abbrev.)</dt><dd className="hash">{sha.slice(0, 8)}…{sha.slice(-8)}</dd></div>
           </dl>
         </article>
       </section>
 
-      <section className="model-section">
-        <div className="model-title">
-          <div><p className="kicker">RESEARCH BENCHMARK</p><h2>A model that earns its place by beating a declared baseline.</h2></div>
-          <span className="research-badge">NOT USED FOR CONSUMER RESULTS</span>
-        </div>
-        <div className="model-scoreboard">
-          <article><span>GROUPED-CV MAE</span><strong>${Math.round(modelMetrics.model.mae_cad).toLocaleString("en-CA")}</strong><p>Vehicle-count weighted · CAD</p></article>
-          <article><span>VS. GLOBAL-MEDIAN BASELINE</span><strong>−{modelMetrics.maeImprovementVsBaselinePct.toFixed(1)}%</strong><p>Lower mean absolute error</p></article>
-          <article><span>WEIGHTED R²</span><strong>{modelMetrics.model.r2.toFixed(3)}</strong><p>Out-of-fold predictions only</p></article>
-          <article><span>HELD-OUT GROUPS</span><strong>{modelMetrics.makeModelGroups}</strong><p>Make × model combinations</p></article>
-        </div>
-        <div className="validation-story">
-          <div>
-            <p className="kicker">LEAKAGE CONTROL</p>
-            <h3>Five folds. Zero make-model overlap.</h3>
-            <p>Complete make-model groups are held out from training. The benchmark asks whether vehicle age, mileage, province, make, market time and sample strength generalize to unseen model lines.</p>
+      <section className="lab-grid">
+        <article className="model-card consumer">
+          <div className="qa-head">
+            <div><p className="kicker">Consumer adjustment model</p><h2>Completed outcomes train the condition effect.</h2></div>
+            <span className="pill pill-blue">USED IN CONSUMER RESULTS</span>
           </div>
-          <div className="folds" aria-label="Model error by validation fold">
+          <div className="scoreboard">
+            <article><strong>{conditionModel.rows.eligibleSoldOutcomes.toLocaleString("en-CA")}</strong><span>Eligible sold outcomes</span></article>
+            <article><strong>${Math.round(conditionModel.validation.model.maeCad).toLocaleString("en-CA")}</strong><span>Temporal-test MAE</span></article>
+            <article><strong>{conditionModel.validation.model.wapePct.toFixed(2)}%</strong><span>Temporal-test WAPE</span></article>
+            <article><strong>−{conditionModel.validation.maeImprovementPct.toFixed(2)}%</strong><span>vs peer baseline</span></article>
+          </div>
+          <div className="model-foot">
+            <i className="foot-icon" aria-hidden="true"><AnchorIcon /></i>
+            <p><strong>Canadian anchor.</strong> Learned auction residual. <a href="/methodology#model-benchmark">Read the model card summary →</a></p>
+          </div>
+        </article>
+
+        <article className="model-card research">
+          <div className="qa-head">
+            <div><p className="kicker">Research benchmark</p><h2>A model that earns its place by beating a declared baseline.</h2></div>
+            <span className="pill pill-red">NOT USED FOR CONSUMER RESULTS</span>
+          </div>
+          <div className="scoreboard">
+            <article><strong>${Math.round(modelMetrics.model.mae_cad).toLocaleString("en-CA")}</strong><span>Grouped-CV MAE</span></article>
+            <article><strong>−{modelMetrics.maeImprovementVsBaselinePct.toFixed(1)}%</strong><span>vs global-median baseline</span></article>
+            <article><strong>{modelMetrics.model.r2.toFixed(3)}</strong><span>Weighted R²</span></article>
+            <article><strong>{modelMetrics.makeModelGroups}</strong><span>Held-out make × model groups</span></article>
+          </div>
+          <p className="fold-title"><span>Five-fold WAPE (grouped)</span> · Five folds. Zero make-model overlap.</p>
+          <div className="fold-bars" aria-label="Model error by validation fold">
             {modelMetrics.folds.map((fold) => (
               <div key={fold.fold}>
-                <span>FOLD 0{fold.fold}</span>
-                <i><b style={{ width: `${Math.min(100, fold.model.wape_pct * 3)}%` }} /></i>
-                <strong>{fold.model.wape_pct.toFixed(1)}% WAPE</strong>
+                <b>{fold.model.wape_pct.toFixed(1)}%</b>
+                <i><b style={{ width: `${(fold.model.wape_pct / maxFoldWape) * 100}%` }} /></i>
+                <span>Fold {fold.fold}</span>
               </div>
             ))}
           </div>
+        </article>
+      </section>
+
+      <section className="lab-note">
+        <div className="lab-note-info">
+          <InfoIcon size={16} />
+          <p><strong>Coverage is not uniform.</strong> Cells below {manifest.quality.minimumCellSize} vehicles are suppressed.</p>
         </div>
-        <p className="model-boundary"><strong>Claim boundary:</strong> predicts aggregate median dealer asking prices from one snapshot. It is not an individual appraisal, transaction-price estimate or future-value forecast. <a href="/methodology#model-benchmark">Read the model card summary.</a></p>
-      </section>
-
-      <section className="coverage-section">
-        <div><p className="kicker">GEOGRAPHIC SCOPE</p><h2>Published coverage across Canada</h2></div>
-        <div className="province-list">{manifest.provinces.map((province, index) => <div key={province}><span>{String(index + 1).padStart(2, "0")}</span><strong>{province}</strong><p>{provinceNames[province]}</p></div>)}</div>
-      </section>
-
-      <section className="lab-disclosure">
-        <strong>Interpretation note</strong>
-        <p>Coverage is not uniform. Smaller provinces and territories have more suppressed price cells because the dataset does not publish statistics for samples below 10 vehicles. Counts and price-cell totals therefore answer different questions.</p>
+        <div className="province-pills">
+          {manifest.provinces.map((province) => <span key={province} title={provinceNames[province]}>{province}</span>)}
+        </div>
       </section>
     </div>
   );

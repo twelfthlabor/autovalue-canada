@@ -10,7 +10,7 @@
 | Retrieved | 2026-08-29 |
 | Licence | CC BY-NC 4.0 |
 | Price meaning | Dealer advertised price in CAD, not completed transaction price |
-| Grain | Province × make × model × model year × condition |
+| Grain | Province × make × model × model year × new/used listing status |
 | Privacy | Aggregates only; no VINs, sellers, addresses or listing URLs |
 | Suppression | Price statistics are not published below 10 vehicles per cell |
 
@@ -36,23 +36,33 @@ The release build enforces:
 
 The VIN lookup is not a damage-record search. Format validation runs in the browser and confirms only length, permitted characters and the North American check digit. When the user explicitly selects **Decode VIN**, the VIN is sent in a POST body to the AutoValue server route and then to the official [NHTSA vPIC API](https://vpic.nhtsa.dot.gov/api/) for manufacturer-submitted vehicle specifications. It is not persisted, used for model training or joined to the released aggregate market artifact.
 
-The demonstration evidence registry contains two manually reviewed public listings:
-
-- VIN `WAUFAAF43PN018218`: 2023 Audi A4, Clutch listing `106685`, 76,243 km and $32,990 asking price (previously $35,690), verified 2026-08-30.
-- The listing labels the Canadian trim as Technik 45; vPIC decodes the manufacturer trim vocabulary as S Line quattro Prestige. Both labels are displayed with their sources rather than silently forced into one value.
-- “No accidents,” “single owner,” recall, registration and theft statements are displayed only as seller/CARFAX-summary claims with a direct link and verification date.
-- VIN `WBA8B7C37HA190314`: 2017 BMW 340i xDrive Sedan, Clutch stock `108558`, 73,677 km and $34,690 on the freshest CarGurus snapshot captured 2026-08-31. An older Carpages snapshot displayed $35,190 and an earlier Clutch search snapshot displayed $36,090, so the UI explicitly labels the price drift.
-- The BMW benchmark uses six Canadian 2017 340i xDrive automatic sedan observations from public CarGurus inventory snapshots captured 2026-08-25 and 2026-08-31. The subject VIN is excluded. Three manual-transmission listings are excluded.
-- A one-feature ordinary-least-squares model fits advertised price against odometer. At 73,677 km it yields a rounded target ask of $33,200, a mileage coefficient of −$990 per 10,000 km and residual RMSE of $2,400. The displayed $30,700–$35,600 range is target ± one residual RMSE; it is not a calibrated transaction-price interval.
-
-This registry is a transparent portfolio demonstration, not a general inventory crawler. Arbitrary valid VINs can be decoded automatically when vPIC has coverage, but a VIN itself does not encode a seller, listing URL, asking price or odometer. General exact-listing retrieval requires a licensed inventory feed. If a decoded vehicle cannot be mapped to a released price cell, the interface suppresses the previous result instead of substituting an unrelated market.
+Arbitrary valid VINs can be decoded automatically when vPIC has coverage, but a VIN itself does not encode a seller, listing URL, asking price or odometer. The current release intentionally has no embedded listing registry: exact listing retrieval requires a licensed inventory feed. If a decoded vehicle cannot be mapped to a released price cell, the interface suppresses the previous result instead of substituting an unrelated market.
 
 Two external sources are offered for follow-up:
 
 - [IBC VIN Verify](https://www.ibc.ca/industry-resources/insurance-data-tools/vin-verify) is a free check for vehicles reported as non-repairable in Alberta, Ontario and the Atlantic provinces. Its result is not a complete accident history.
 - [CARFAX Canada accident and damage history](https://www.carfax.ca/vehicle-history/vehicle-history-report/accident-damage-history) can contain reported accidents, claims, police records and available damage estimates. An absent record does not prove that damage never occurred.
 
-Seller-displayed history highlights never alter, discount or relabel the source market statistics. They remain visibly attributed and link back to the exact public listing. The interface recommends an independent pre-purchase inspection because no record source is complete.
+Seller-displayed history highlights remain visibly attributed and link back to the exact public listing. They can prefill the user-visible condition form but are not treated as independently verified facts. The interface recommends an independent pre-purchase inspection because no record source is complete.
+
+## Completed auction outcomes: condition model
+
+| Item | Detail |
+|---|---|
+| Publisher | Bradley Larsen via the National Bureau of Economic Research |
+| Dataset | Dealer-to-Dealer Used-Car Bargaining and Auction Data |
+| Source | https://www.nber.org/research/data/dealer-dealer-used-car-bargaining-and-auction-data-larsen-2020 |
+| Download | https://data.nber.org/data/used-car-bargaining/Larsen_used_car_bargaining_data_and_code.zip |
+| SHA-256 | `7827d220499700868fec28e09288e67b7c35ae8235e9b13e486d123ae05008fa` |
+| Price meaning | Completed US wholesale auction sale price |
+| Period | 2006–2010 |
+| Model use | Relative condition and odometer adjustment only |
+
+The source contains 512,396 auction observations, of which 260,299 are recorded as sold. The release trainer retains 91,278 sold outcomes that have a sufficiently dense close-peer group: same sale year, auction, vehicle year, make, model and VIN-derived trim code; at least eight peers; and at least two auction grades. The model target divides each completed price by a leave-one-out peer price so the subject vehicle cannot set its own anchor.
+
+Training uses 52,146 outcomes from 2006–2008 and the temporal test uses 39,132 outcomes from 2009–2010. With the same Average-grade centering used at inference, the model reaches $1,198.19 MAE and 11.601% WAPE on the later years, improving MAE 4.29% over the peer-only baseline. These metrics establish historical wholesale residual accuracy; they do not validate a current Canadian retail transaction claim.
+
+The consumer's accident, mechanical, cosmetic, service and wear selections are consolidated into a transparent auction-grade equivalent because those fields are not separately present in the training table. Their independent causal or dollar effects have not been learned. The condition model is therefore transferred only as a relative adjustment around a current Canadian anchor.
 
 ## Evaluated but not used for model training
 
@@ -95,9 +105,11 @@ NRCan publishes model-year fuel-consumption ratings and dedicated battery-electr
 
 | Risk | Impact | Control |
 |---|---|---|
-| Asking price differs from sale price | Cannot claim transaction value | Label every price and block transaction-value language |
+| Canadian anchor is asking price while adjustment data is wholesale sale price | Cannot claim a current Canadian transaction value | Label the hybrid output as a market estimate and expose both stages |
 | Single snapshot | Cannot infer a trend or future residual | Keep forecast feature gated |
-| No trim or condition | Wide within-cell variation | Show P25–P75 and P10–P90; never apply a hidden adjustment |
+| No trim or inspection grade in aggregate cells | Wide within-cell variation | Prefer reviewed matches; show source range and the separate learned adjustment |
+| Historical US auction transfer | Market/channel drift can bias the adjustment | Centre on the current Canadian anchor, publish temporal metrics and require Canadian retraining before commercial use |
+| Composite condition proxy | Six user inputs may imply more granularity than the training data contains | Display the auction-grade equivalent and state that individual dollar effects are not separately learned |
 | Few matched comparables | A fitted target can look more certain than it is | Require four valid observations, exclude the subject, show sample size and residual RMSE, and grade the six-observation example as limited evidence |
 | Odometer outside matched support | Linear extrapolation may be unstable | Expose the observed odometer bounds and flag extrapolation in the benchmark object |
 | Uneven regional coverage | Smaller regions have more suppressed cells | Show sample size and no-result state |

@@ -173,3 +173,11 @@ export function formatCad(value: number) {
 export function formatNumber(value: number) {
   return new Intl.NumberFormat("en-CA").format(value);
 }
+
+const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+export function formatRetrievedDate(isoDate: string) {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  if (!year || !month || !day) return isoDate;
+  return `${MONTHS_SHORT[month - 1]} ${day}, ${year}`;
+}

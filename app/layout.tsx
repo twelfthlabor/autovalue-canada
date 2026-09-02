@@ -1,16 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import "@fontsource-variable/inter";
 import "@fontsource-variable/archivo";
 import "@fontsource-variable/newsreader";
 import "./globals.css";
+import manifest from "@/public/data/manifest.json";
+import { formatRetrievedDate } from "@/lib/market";
+import { SiteNav } from "@/components/site-nav";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: "AutoValue Canada — See the market behind the asking price",
-  description: "A transparent Canadian used-vehicle deal checker with VIN decode, matched comparables, mileage modeling and visible uncertainty.",
+  description: "A transparent Canadian used-vehicle deal checker with VIN decode, current market anchors, condition-aware ML and visible uncertainty.",
   openGraph: {
     title: "AutoValue Canada",
-    description: "Check a Canadian used-vehicle asking price against matched comparables and a visible mileage model.",
+    description: "Check a Canadian used-vehicle asking price with current market evidence and transaction-trained condition-aware ML.",
     type: "website",
   },
 };
@@ -19,9 +23,9 @@ function Wordmark() {
   return (
     <Link className="wordmark" href="/" aria-label="AutoValue Canada home">
       <span className="wordmark-mark" aria-hidden="true">
-        <span />
-        <span />
-        <span />
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round">
+          <path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9" />
+        </svg>
       </span>
       <span>AutoValue</span>
       <small>CANADA</small>
@@ -35,29 +39,15 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <header className="site-header">
           <Wordmark />
-          <nav aria-label="Primary navigation">
-            <Link href="/#check">Check a price</Link>
-            <Link href="/market-lab">Market lab</Link>
-            <Link href="/methodology">Methodology</Link>
-            <Link href="/calculation">How we calculate</Link>
-          </nav>
-          <a className="source-pill" href="https://huggingface.co/datasets/OmniaAuto/canadian-vehicle-market-aggregates" target="_blank" rel="noreferrer">
+          <SiteNav />
+          <a className="nav-external" href="https://huggingface.co/datasets/OmniaAuto/canadian-vehicle-market-aggregates" target="_blank" rel="noreferrer">
             Open data <span aria-hidden="true">↗</span>
           </a>
         </header>
         <main>{children}</main>
         <footer className="site-footer">
-          <div>
-            <Wordmark />
-            <p>Evidence for a better conversation—not an appraisal.</p>
-          </div>
-          <div className="footer-links">
-            <Link href="/methodology">Methods & limitations</Link>
-            <Link href="/calculation">How price works</Link>
-            <a href="https://open.canada.ca/data/en/dataset/1ec92326-47ef-4110-b7ca-959fab03f96d" target="_blank" rel="noreferrer">Transport Canada recalls</a>
-            <a href="https://open.canada.ca/data/en/dataset/98f1a129-f628-4ce4-b24d-6f16bf24dd64" target="_blank" rel="noreferrer">NRCan fuel data</a>
-          </div>
-          <p className="footer-note">Non-commercial research demo · Prices in CAD · Source retrieved Aug 29, 2026</p>
+          <p><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.4-3 8.4-7 10-4-1.6-7-5.6-7-10V6l7-3z" /><path d="M9.2 12.2l2 2 3.6-4" /></svg> Evidence for a better conversation—not an appraisal.</p>
+          <p className="footer-meta">Inputs reflect today&rsquo;s market as of {formatRetrievedDate(manifest.sourceRetrievedAt)} · Prices in CAD</p>
         </footer>
       </body>
     </html>
