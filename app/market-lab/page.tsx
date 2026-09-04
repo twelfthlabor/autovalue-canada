@@ -1,6 +1,7 @@
 import manifest from "@/public/data/manifest.json";
 import modelMetrics from "@/public/data/model-metrics.json";
 import conditionModel from "@/public/data/condition-model.json";
+import sqlSummary from "@/public/data/sql_summary.json";
 import { formatRetrievedDate } from "@/lib/market";
 import { InfoIcon, CheckCircleIcon, AnchorIcon } from "@/components/icons";
 
@@ -39,6 +40,10 @@ export default function MarketLabPage() {
         <article>
           <span>Year coverage</span>
           <strong title="Not every combination is present">{manifest.yearRange[0]}–{manifest.yearRange[1]}</strong>
+        </article>
+        <article>
+          <span>National weighted median (warehouse) <InfoIcon /></span>
+          <strong title="Sample-weighted median across used cells in Postgres">${Math.round(sqlSummary.kpi.national_weighted_median_cad).toLocaleString("en-CA")}</strong>
         </article>
       </section>
 

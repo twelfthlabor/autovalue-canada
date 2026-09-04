@@ -38,6 +38,7 @@ jobs:
       - run: npm run build:data
       - run: python analysis/etl_to_postgres.py
       - run: python analysis/run_sql.py
+      - run: python aws/check_parity.py
       - run: npm run model:benchmark
       - run: npm test
       - run: npm run lint
