@@ -36,6 +36,25 @@ npm run dev
 
 Open `http://localhost:3000`. No credentials or environment variables are required.
 
+## Postgres warehouse (PostgreSQL 16, RDS-compatible)
+
+The same CSVs also load into Postgres for SQL analytics. Local Docker matches
+AWS RDS (PostgreSQL 16), so queries run unchanged in both places.
+
+```bash
+cp .env.example .env  # edit DATABASE_URL for RDS when needed
+docker compose up -d db
+python -m pip install -r requirements.txt
+python analysis/etl_to_postgres.py
+python analysis/run_sql.py  # writes public/data/sql_summary.json
+```
+
+S3 raw zone (optional, same boto3 path): upload the two CSVs, then set
+`S3_PRICE_STATS_URI` / `S3_INVENTORY_URI` instead of using `data/raw/`.
+See `analysis/market_insights.sql` for the six warehouse queries
+(province-year medians, dispersion, depreciation proxy, DOM buckets,
+national KPI, thin-cell flags).
+
 ## Verify
 
 ```bash
@@ -62,9 +81,10 @@ The data build rejects schema changes, duplicate market cells, invalid values, s
 app/          Pages and VIN decode route
 components/   Valuation interface
 lib/          Market, VIN and model logic
-analysis/     Model training and evaluation
+analysis/     Model training, Postgres ETL (etl_to_postgres.py),
+              warehouse SQL (market_insights.sql) and runner (run_sql.py)
 data/raw/     Attributed source snapshots
-public/data/  Validated release artifacts
+public/data/  Validated release artifacts (incl. sql_summary.json)
 scripts/      Data preparation
 docs/         Architecture, methodology and data notes
 ```

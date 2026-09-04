@@ -1,0 +1,317 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-04T01:42:26.676378+00:00",
+  "source": "raw.price_stats via analysis/market_insights.sql",
+  "kpi": {
+    "used_valid_cells": 5605,
+    "used_vehicles": 180833,
+    "national_weighted_median_cad": 33771.11,
+    "national_p50_of_medians_cad": 28444.0,
+    "min_year": 2002,
+    "max_year": 2027
+  },
+  "queries": [
+    {
+      "name": "q1_median_asking_price_by_province_x_model_year_use",
+      "rows": 137,
+      "columns": [
+        "province",
+        "model_year",
+        "cells",
+        "vehicles",
+        "mean_of_medians_cad",
+        "weighted_median_cad",
+        "p50_of_medians_cad"
+      ],
+      "sample": [
+        {
+          "province": "AB",
+          "model_year": 2027,
+          "cells": 1,
+          "vehicles": 19,
+          "mean_of_medians_cad": 46563.0,
+          "weighted_median_cad": 46563.0,
+          "p50_of_medians_cad": 46563.0
+        },
+        {
+          "province": "AB",
+          "model_year": 2026,
+          "cells": 82,
+          "vehicles": 2686,
+          "mean_of_medians_cad": 61586.33,
+          "weighted_median_cad": 60189.29,
+          "p50_of_medians_cad": 59418.5
+        },
+        {
+          "province": "AB",
+          "model_year": 2025,
+          "cells": 99,
+          "vehicles": 3544,
+          "mean_of_medians_cad": 49044.93,
+          "weighted_median_cad": 47278.62,
+          "p50_of_medians_cad": 44468.0
+        },
+        {
+          "province": "AB",
+          "model_year": 2024,
+          "cells": 109,
+          "vehicles": 3625,
+          "mean_of_medians_cad": 46498.54,
+          "weighted_median_cad": 45644.58,
+          "p50_of_medians_cad": 42888.0
+        },
+        {
+          "province": "AB",
+          "model_year": 2023,
+          "cells": 85,
+          "vehicles": 2503,
+          "mean_of_medians_cad": 43083.25,
+          "weighted_median_cad": 43263.93,
+          "p50_of_medians_cad": 39997.0
+        }
+      ]
+    },
+    {
+      "name": "q2_price_dispersion_p75_p25_spread_vs_sample_depth_",
+      "rows": 31,
+      "columns": [
+        "make",
+        "cells",
+        "vehicles",
+        "mean_spread_cad",
+        "mean_median_cad",
+        "spread_pct_of_median"
+      ],
+      "sample": [
+        {
+          "make": "Porsche",
+          "cells": 67,
+          "vehicles": 1783,
+          "mean_spread_cad": 23826.49,
+          "mean_median_cad": 94600.34,
+          "spread_pct_of_median": 25.19
+        },
+        {
+          "make": "Mercedes-Benz",
+          "cells": 225,
+          "vehicles": 6016,
+          "mean_spread_cad": 11564.56,
+          "mean_median_cad": 47438.14,
+          "spread_pct_of_median": 24.38
+        },
+        {
+          "make": "Ram",
+          "cells": 195,
+          "vehicles": 8686,
+          "mean_spread_cad": 10727.35,
+          "mean_median_cad": 45592.99,
+          "spread_pct_of_median": 23.53
+        },
+        {
+          "make": "Land Rover",
+          "cells": 74,
+          "vehicles": 1440,
+          "mean_spread_cad": 10638.0,
+          "mean_median_cad": 58168.46,
+          "spread_pct_of_median": 18.29
+        },
+        {
+          "make": "Dodge",
+          "cells": 135,
+          "vehicles": 4486,
+          "mean_spread_cad": 8903.94,
+          "mean_median_cad": 27125.87,
+          "spread_pct_of_median": 32.82
+        }
+      ]
+    },
+    {
+      "name": "q3_depreciation_proxy_young_2024_2026_vs_older_2016",
+      "rows": 20,
+      "columns": [
+        "make",
+        "model",
+        "young_cells",
+        "older_cells",
+        "young_mean_cad",
+        "older_mean_cad",
+        "depreciation_pct"
+      ],
+      "sample": [
+        {
+          "make": "BMW",
+          "model": "3 Series",
+          "young_cells": 6,
+          "older_cells": 5,
+          "young_mean_cad": 65997.67,
+          "older_mean_cad": 17164.6,
+          "depreciation_pct": 73.99
+        },
+        {
+          "make": "Land Rover",
+          "model": "Range Rover Sport",
+          "young_cells": 5,
+          "older_cells": 10,
+          "young_mean_cad": 109525.0,
+          "older_mean_cad": 31102.9,
+          "depreciation_pct": 71.6
+        },
+        {
+          "make": "Porsche",
+          "model": "Cayenne",
+          "young_cells": 8,
+          "older_cells": 5,
+          "young_mean_cad": 121916.88,
+          "older_mean_cad": 34753.6,
+          "depreciation_pct": 71.49
+        },
+        {
+          "make": "GMC",
+          "model": "Yukon",
+          "young_cells": 7,
+          "older_cells": 4,
+          "young_mean_cad": 103722.57,
+          "older_mean_cad": 29618.5,
+          "depreciation_pct": 71.44
+        },
+        {
+          "make": "Audi",
+          "model": "Q7",
+          "young_cells": 5,
+          "older_cells": 6,
+          "young_mean_cad": 81851.0,
+          "older_mean_cad": 23477.0,
+          "depreciation_pct": 71.32
+        }
+      ]
+    },
+    {
+      "name": "q4_days_on_market_bucket_vs_haggle_room_proxy_media",
+      "rows": 4,
+      "columns": [
+        "dom_bucket",
+        "cells",
+        "vehicles",
+        "mean_dom",
+        "mean_haggle_room_pct",
+        "mean_median_cad"
+      ],
+      "sample": [
+        {
+          "dom_bucket": "<30d",
+          "cells": 2551,
+          "vehicles": 81659,
+          "mean_dom": 22.1,
+          "mean_haggle_room_pct": 11.7,
+          "mean_median_cad": 26522.72
+        },
+        {
+          "dom_bucket": "30-45d",
+          "cells": 2195,
+          "vehicles": 69355,
+          "mean_dom": 36.3,
+          "mean_haggle_room_pct": 10.42,
+          "mean_median_cad": 33375.59
+        },
+        {
+          "dom_bucket": "46-60d",
+          "cells": 789,
+          "vehicles": 27699,
+          "mean_dom": 53.6,
+          "mean_haggle_room_pct": 7.31,
+          "mean_median_cad": 51963.34
+        },
+        {
+          "dom_bucket": "60d+",
+          "cells": 70,
+          "vehicles": 2120,
+          "mean_dom": 61.6,
+          "mean_haggle_room_pct": 7.2,
+          "mean_median_cad": 56819.5
+        }
+      ]
+    },
+    {
+      "name": "q5_national_weighted_median_single_row_kpi_for_dash",
+      "rows": 1,
+      "columns": [
+        "used_valid_cells",
+        "used_vehicles",
+        "national_weighted_median_cad",
+        "national_p50_of_medians_cad",
+        "min_year",
+        "max_year"
+      ],
+      "sample": [
+        {
+          "used_valid_cells": 5605,
+          "used_vehicles": 180833,
+          "national_weighted_median_cad": 33771.11,
+          "national_p50_of_medians_cad": 28444.0,
+          "min_year": 2002,
+          "max_year": 2027
+        }
+      ]
+    },
+    {
+      "name": "q6_thin_evidence_cells_40_vehicles_transparency_fla",
+      "rows": 50,
+      "columns": [
+        "province",
+        "make",
+        "model",
+        "model_year",
+        "vehicles",
+        "median_cad",
+        "spread_cad"
+      ],
+      "sample": [
+        {
+          "province": "BC",
+          "make": "Porsche",
+          "model": "911",
+          "model_year": 2025,
+          "vehicles": 10,
+          "median_cad": 209622.0,
+          "spread_cad": 25833.0
+        },
+        {
+          "province": "ON",
+          "make": "Land Rover",
+          "model": "Range Rover",
+          "model_year": 2026,
+          "vehicles": 10,
+          "median_cad": 179370.0,
+          "spread_cad": 23394.0
+        },
+        {
+          "province": "AB",
+          "make": "Chevrolet",
+          "model": "Corvette",
+          "model_year": 2024,
+          "vehicles": 10,
+          "median_cad": 169900.0,
+          "spread_cad": 75326.0
+        },
+        {
+          "province": "ON",
+          "make": "GMC",
+          "model": "HUMMER EV",
+          "model_year": 2026,
+          "vehicles": 10,
+          "median_cad": 136040.0,
+          "spread_cad": 5749.0
+        },
+        {
+          "province": "BC",
+          "make": "Porsche",
+          "model": "Panamera",
+          "model_year": 2023,
+          "vehicles": 10,
+          "median_cad": 134700.0,
+          "spread_cad": 30001.0
+        }
+      ]
+    }
+  ]
+}
