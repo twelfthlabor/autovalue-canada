@@ -55,6 +55,9 @@ function PredictionBand({ valuation, askingPrice, row }: { valuation: ConditionV
   const min = Math.max(0, Math.min(valuation.low, p25) - padding);
   const max = Math.max(valuation.high, p75) + padding;
   const position = (value: number) => Math.max(2.5, Math.min(97.5, ((value - min) / (max - min)) * 100));
+  const medianPos = position(valuation.estimate);
+  const askPos = askingPrice !== undefined ? position(askingPrice) : null;
+  const labelsClose = askPos !== null && Math.abs(askPos - medianPos) < 8;
   const percentiles = [
     { label: "P10", value: valuation.low },
     { label: "P25", value: p25 },
@@ -67,7 +70,7 @@ function PredictionBand({ valuation, askingPrice, row }: { valuation: ConditionV
       <div className="band-caption">
         {percentiles.map((p) => <span key={p.label} className={p.emphasis ? "emphasis" : undefined}><small>{p.label}</small><b>{formatCad(p.value)}</b></span>)}
       </div>
-      <div className="price-band">
+      <div className={`price-band${labelsClose ? " band-close" : ""}`}>
         <span className="band-outer" />
         <span className="band-typical" style={{ left: `${position(valuation.low)}%`, right: `${100 - position(valuation.high)}%` }} />
         <span className="band-median" style={{ left: `${position(valuation.estimate)}%` }}><i><b>ML estimate</b>{formatCad(valuation.estimate)}</i></span>
