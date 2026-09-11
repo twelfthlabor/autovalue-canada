@@ -44,6 +44,14 @@ test("inspection conditions run through the trained model and change the predict
   await expect(page.getByText(/Auction-grade equivalent -0.75 \/ 4/)).toBeVisible();
 });
 
+test("out-of-support odometer surfaces the capped-mileage caveat on both the signal and the odometer factor", async ({ page }) => {
+  await page.goto("/#check");
+  await page.getByLabel("Odometer in kilometres").fill("400000");
+  await expect(page.locator(".signal-line small")).toHaveText("Outside trained mileage support");
+  await expect(page.locator(".stat-foot b[title]")).toHaveAttribute("title", /mileage comparison was capped/);
+  await expect(page.locator(".factor-grid article:nth-child(3) strong[title]")).toHaveAttribute("title", /mileage comparison was capped/);
+});
+
 test("VIN lookup stays focused and the result remains a single valuation sheet", async ({ page }) => {
   await page.goto("/#check");
   await page.getByLabel("Vehicle identification number").fill("2T3DWRFV3LW077677");
