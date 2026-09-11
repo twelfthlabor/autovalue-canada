@@ -85,7 +85,7 @@ function PredictionBand({ valuation, askingPrice, row }: { valuation: ConditionV
 }
 
 function dealSignalForPrediction(askingPrice: number, valuation: ConditionValuation): DealSignal {
-  if (valuation.isOdometerExtrapolation) return { label: "Outside trained mileage support", detail: "The mileage comparison was capped at the model boundary, so this estimate needs additional comparable evidence.", tone: "high" };
+  if (valuation.isOdometerExtrapolation) return { label: "Outside trained mileage support", detail: "The mileage comparison was capped at the edge of the model's trained support, so this estimate needs additional comparable evidence.", tone: "high" };
   if (askingPrice < valuation.low) return { label: "Below predicted range", detail: "The ask is below the condition-aware range; verify history, condition, fees and title status before treating it as favourable.", tone: "watch" };
   if (askingPrice > valuation.high) return { label: "Above predicted range", detail: "The ask is above the condition-aware range produced from the current market anchor and transaction-trained adjustment.", tone: "high" };
   return { label: "Within predicted range", detail: "The ask is consistent with the condition-aware prediction interval, subject to the unpriced factors shown below.", tone: "typical" };
@@ -100,7 +100,7 @@ function FactorCoverage({ row, odometer, vinReport, valuation, profile }: { row:
   const factors: Array<{ label: string; value: string; note: string; state: FactorState }> = [
     { label: "Identity & age", value: `${row.y} ${row.mk} ${row.md}`, note: "Exact make, model family and model year", state: "modelled" },
     { label: "Local market", value: `${row.p} · ${formatNumber(row.n)} vehicles`, note: "Current province-level dealer inventory", state: "modelled" },
-    { label: "Odometer", value: odometer ? `${formatNumber(odometer)} km` : "Market median used", note: valuation.isOdometerExtrapolation ? "Outside trained support; the mileage comparison was capped" : "Transaction-trained relative to the Canadian cell median", state: "modelled" },
+    { label: "Odometer", value: odometer ? `${formatNumber(odometer)} km` : "Market median used", note: valuation.isOdometerExtrapolation ? (odometer ? "Outside the model's trained support; the mileage comparison was capped" : "The market median is outside the model's trained odometer support; no mileage comparison was applied") : "Transaction-trained relative to the Canadian cell median", state: "modelled" },
     { label: "Trim & drivetrain", value: trimLabel, note: "Decoded specifications are context until a live listing feed supplies row-level pricing", state: vinReport ? "context" : "missing" },
     { label: "Condition & history", value: `Auction-grade equivalent ${valuation.conditionScore.toFixed(2)} / 4`, note: `${profile.conditionGrade.replace("-", " ")} · ${profile.accidentHistory.replace("-", " ")} accident history · six user-entered signals`, state: "modelled" },
     { label: "Options & transaction", value: "Not available in public data", note: "Packages, fees, seller type and completed-sale price remain unpriced", state: "missing" },
