@@ -347,6 +347,15 @@ button:focus-visible, a:focus-visible, summary:focus-visible, select:focus-visib
 .price-band.band-close .band-asking { margin-left: 6px; }
 .price-band.band-close.band-exact .band-median { margin-left: -10px; }
 .price-band.band-close.band-exact .band-asking { margin-left: 10px; }
+/* Ask below the median (band-ask-left) mirrors the spread: the median label
+   shifts right and the ask label shifts left so they diverge, and the dot
+   nudges push the discs apart instead of into each other. */
+.price-band.band-close.band-ask-left .band-median i { transform: translateX(0); }
+.price-band.band-close.band-ask-left .band-asking i { transform: translateX(-100%); }
+.price-band.band-close.band-ask-left .band-median { margin-left: 6px; }
+.price-band.band-close.band-ask-left .band-asking { margin-left: -6px; }
+.price-band.band-close.band-exact.band-ask-left .band-median { margin-left: 10px; }
+.price-band.band-close.band-exact.band-ask-left .band-asking { margin-left: -10px; }
 /* Edge guard: near the 2.5%/97.5% clamp, keep labels inside the panel by
    flipping the outward shift. Vertical stagger (7px vs 29px) preserves
    legibility when both labels share a side. */
@@ -362,6 +371,16 @@ button:focus-visible, a:focus-visible, summary:focus-visible, select:focus-visib
 .price-band.band-close.band-exact.band-edge-l .band-asking { margin-left: 20px; }
 .price-band.band-close.band-exact.band-edge-r .band-median { margin-left: -20px; }
 .price-band.band-close.band-exact.band-edge-r .band-asking { margin-left: 0; }
+/* Mirror the edge margins when the ask is below the median: the dot nearest
+   the panel edge keeps its zero offset, the inner dot carries the nudge. */
+.price-band.band-close.band-ask-left.band-edge-l .band-median { margin-left: 12px; }
+.price-band.band-close.band-ask-left.band-edge-l .band-asking { margin-left: 0; }
+.price-band.band-close.band-ask-left.band-edge-r .band-median { margin-left: 0; }
+.price-band.band-close.band-ask-left.band-edge-r .band-asking { margin-left: -12px; }
+.price-band.band-close.band-exact.band-ask-left.band-edge-l .band-median { margin-left: 20px; }
+.price-band.band-close.band-exact.band-ask-left.band-edge-l .band-asking { margin-left: 0; }
+.price-band.band-close.band-exact.band-ask-left.band-edge-r .band-median { margin-left: 0; }
+.price-band.band-close.band-exact.band-ask-left.band-edge-r .band-asking { margin-left: -20px; }
 
 /* price anatomy */
 

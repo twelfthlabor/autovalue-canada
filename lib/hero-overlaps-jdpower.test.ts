@@ -55,6 +55,27 @@ describe("hero overlap fixes (fix/hero-overlaps-jdpower-theme)", () => {
     expect(css).toMatch(/\.price-band\.band-close[^{]*\.band-median\s*\{[^}]*margin-left:\s*-/);
   });
 
+  it("mirrors the close spread when the ask sits below the median", () => {
+    // Direction comes from the projected positions, not the raw dollars.
+    expect(workbench).toMatch(/askPos\s*<\s*medianPos/);
+    expect(workbench).toContain("band-ask-left");
+    // Ask-left: median label shifts right, ask label shifts left (away from each other).
+    expect(css).toMatch(/\.price-band\.band-close\.band-ask-left\s+\.band-median\s+i\s*\{[^}]*translateX\(0/);
+    expect(css).toMatch(/\.price-band\.band-close\.band-ask-left\s+\.band-asking\s+i\s*\{[^}]*translateX\(-100%/);
+    // Dot nudges invert so the discs separate instead of converge.
+    expect(css).toMatch(/\.price-band\.band-close\.band-ask-left\s+\.band-median\s*\{[^}]*margin-left:\s*6px/);
+    expect(css).toMatch(/\.price-band\.band-close\.band-ask-left\s+\.band-asking\s*\{[^}]*margin-left:\s*-6px/);
+    expect(css).toMatch(/\.price-band\.band-close\.band-exact\.band-ask-left\s+\.band-median\s*\{[^}]*margin-left:\s*10px/);
+    expect(css).toMatch(/\.price-band\.band-close\.band-exact\.band-ask-left\s+\.band-asking\s*\{[^}]*margin-left:\s*-10px/);
+    // Edge guard mirrors too: the dot nearest the panel edge keeps zero offset.
+    expect(css).toMatch(/\.price-band\.band-close\.band-ask-left\.band-edge-l\s+\.band-median\s*\{[^}]*margin-left:\s*12px/);
+    expect(css).toMatch(/\.price-band\.band-close\.band-ask-left\.band-edge-l\s+\.band-asking\s*\{[^}]*margin-left:\s*0/);
+    expect(css).toMatch(/\.price-band\.band-close\.band-ask-left\.band-edge-r\s+\.band-median\s*\{[^}]*margin-left:\s*0/);
+    expect(css).toMatch(/\.price-band\.band-close\.band-ask-left\.band-edge-r\s+\.band-asking\s*\{[^}]*margin-left:\s*-12px/);
+    expect(css).toMatch(/\.price-band\.band-close\.band-exact\.band-ask-left\.band-edge-l\s+\.band-median\s*\{[^}]*margin-left:\s*20px/);
+    expect(css).toMatch(/\.price-band\.band-close\.band-exact\.band-ask-left\.band-edge-r\s+\.band-asking\s*\{[^}]*margin-left:\s*-20px/);
+  });
+
   it("uses a 5-col lab-stats grid (no 4+1 orphan)", () => {
     expect(css).toMatch(/\.lab-stats\s*\{[^}]*repeat\(5,\s*1fr\)/);
     expect(css).not.toMatch(/\.lab-stats\s*\{[^}]*repeat\(4,\s*1fr\)/);

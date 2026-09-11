@@ -108,11 +108,23 @@ test("band-close spreads median/ask labels when values are close", async ({ page
   expect((await labelOverlap()).labels).toBe(0);
   expect((await labelOverlap()).dots).toBe(0);
 
-  // A nearby ask stays in the collision path and stays legible.
+  // A nearby above-estimate ask stays in the collision path and stays legible.
   await page.getByLabel("Asking price in Canadian dollars").fill(String(target + 700));
   await expect(page.locator(".price-band.band-close")).toHaveCount(1);
+  await expect(page.locator(".price-band.band-ask-left")).toHaveCount(0);
   expect((await labelOverlap()).labels).toBe(0);
   expect((await labelOverlap()).dots).toBe(0);
+
+  // Below-estimate asks (ask < median) must mirror the spread, not point the
+  // labels and dot nudges at each other. Regression from bd5e383.
+  for (const offset of [-2000, -500]) {
+    await page.getByLabel("Asking price in Canadian dollars").fill(String(target + offset));
+    await expect(page.locator(".price-band.band-close")).toHaveCount(1);
+    const below = await labelOverlap();
+    expect(below.labels).toBe(0);
+    expect(below.dots).toBe(0);
+    await expect(page.locator(".price-band.band-close.band-ask-left")).toHaveCount(1);
+  }
 
   // Exact coincidence (ask == estimate, 0pp) keeps the stronger exact path with zero overlap.
   await page.getByLabel("Asking price in Canadian dollars").fill(String(target));
