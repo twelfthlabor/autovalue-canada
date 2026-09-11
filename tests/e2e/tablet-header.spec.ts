@@ -1,4 +1,4 @@
-import { devices, expect, test, type Page } from "@playwright/test";
+import { devices, expect, test } from "@playwright/test";
 
 function intersectArea(
   a: { x: number; y: number; width: number; height: number },
