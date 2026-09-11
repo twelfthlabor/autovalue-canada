@@ -1,17 +1,54 @@
 import { ValuationWorkbench } from "@/components/valuation-workbench";
+import { HeroVisual } from "@/components/hero-visual";
+import manifest from "@/public/data/manifest.json";
+
+const heroTickerItems = [
+  `${manifest.usedMarketCells.toLocaleString("en-CA")} market cells`,
+  `${manifest.usedVehiclesRepresented.toLocaleString("en-CA")} vehicles represented`,
+  "Temporal-test MAE $1,198",
+  `${manifest.provinces.length} provinces covered`,
+  "Dealer asking-price basis",
+  "Prices in CAD",
+];
 
 export default function Home() {
   return (
     <>
       <section className="hero">
         <div className="hero-grid">
-          <h1>
-            See the market behind the <em>asking price.</em>
-          </h1>
-          <p>
-            We model Canadian dealer asking prices using real listings, auction outcomes, and adjustment
-            science. Use the workbench to see the evidence and its limits.
-          </p>
+          <div className="hero-copy">
+            <h1>
+              See the market behind the <em>asking price.</em>
+            </h1>
+            <p>
+              We model Canadian dealer asking prices using real listings, auction outcomes, and adjustment
+              science. Use the workbench to see the evidence and its limits.
+            </p>
+            <a className="hero-cta" href="#check">
+              Check this price <span aria-hidden="true">→</span>
+            </a>
+          </div>
+          <HeroVisual />
+        </div>
+        <div className="hero-ticker">
+          <div className="hero-ticker-track">
+            <div className="hero-ticker-group">
+              {heroTickerItems.map((item) => (
+                <span className="hero-ticker-item" key={item}>
+                  <span className="hero-ticker-dot" aria-hidden="true" />
+                  {item}
+                </span>
+              ))}
+            </div>
+            <div className="hero-ticker-group" aria-hidden="true">
+              {heroTickerItems.map((item) => (
+                <span className="hero-ticker-item" key={item}>
+                  <span className="hero-ticker-dot" aria-hidden="true" />
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
