@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { predictConditionAdjustedValue, type ConditionProfile } from "./condition-model";
-import { approximatePercentile, confidenceForSample, dealSignalForMatched, deriveComparableBenchmark, marketPosition, scaleBandPercentiles, type ComparableObservation, type MarketRow } from "./market";
+import { approximatePercentile, confidenceForSample, dealSignalForMatched, deriveComparableBenchmark, displayBandValues, marketPosition, type ComparableObservation, type MarketRow } from "./market";
 
 const row: MarketRow = {
   p: "ON", mk: "Toyota", md: "RAV4", y: 2021, c: "Used", n: 204,
@@ -74,16 +74,21 @@ describe("prediction band scaling", () => {
     });
 
     expect(valuation.multiplier).toBe(0.7784);
+    expect(valuation.multiplierExact).toBeCloseTo(0.778350080061302, 9);
+    expect(Math.round(valuation.multiplierExact * 10_000) / 10_000).toBe(valuation.multiplier);
     expect(valuation.estimate).toBe(2500);
 
     // Premise: the legacy estimate/baseValue ratio is not the model multiplier.
     // On this low-price case it would move the scaled P25 by more than $1.
     const legacyMultiplier = valuation.estimate / valuation.baseValue;
     expect(legacyMultiplier).toBeCloseTo(0.7936508, 6);
-    expect(Math.abs(2700 * legacyMultiplier - 2700 * valuation.multiplier)).toBeGreaterThan(1);
+    expect(Math.abs(2700 * legacyMultiplier - 2700 * valuation.multiplierExact)).toBeGreaterThan(1);
 
-    const band = scaleBandPercentiles(2700, 3600, valuation.multiplier);
-    expect(band.p25).toBe(2101.68);
-    expect(band.p75).toBe(2802.24);
+    const band = displayBandValues({ p25: 2700, p75: 3600 }, valuation);
+    expect(band.p25).toBe(2100);
+    expect(band.p75).toBe(2800);
+    expect(band.p50).toBe(valuation.estimate);
+    expect(band.p10).toBe(valuation.low);
+    expect(band.p90).toBe(valuation.high);
   });
 });

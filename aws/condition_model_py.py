@@ -132,6 +132,7 @@ class ConditionModel:
             "baseValue": base_value,
             "adjustmentCad": estimate - base_value,
             "multiplier": js_round(multiplier * 10_000) / 10_000,
+            "multiplierExact": multiplier,
             "conditionScore": score,
             "logOdometerDelta": js_round(log_delta * 10_000) / 10_000,
             "isOdometerExtrapolation": odometer_outside_support or raw_delta != log_delta,

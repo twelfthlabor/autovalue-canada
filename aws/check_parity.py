@@ -19,7 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "aws"))
 
-from condition_model_py import ConditionModel  # noqa: E402
+from condition_model_py import ConditionModel, js_round  # noqa: E402
 from lambda_predict import handler  # noqa: E402
 
 NEUTRAL = {
@@ -70,6 +70,11 @@ def main() -> None:
             f"got {result['multiplier']}, oracle {expected}",
         )
         check(f"oracle-score[{grade}]", result["conditionScore"] == score, f"got {result['conditionScore']}")
+        check(
+            f"exact-multiplier[{grade}]",
+            js_round(result["multiplierExact"] * 10_000) / 10_000 == result["multiplier"],
+            f"exact {result['multiplierExact']} -> {js_round(result['multiplierExact'] * 10_000) / 10_000}, stored {result['multiplier']}",
+        )
 
     # 2. TS test vectors (lib/condition-model.test.ts).
     average = model.predict(30000, 25000, 35000, 80000, 80000, {"conditionGrade": "average", **NEUTRAL})

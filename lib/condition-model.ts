@@ -99,6 +99,7 @@ export type ConditionValuation = {
   baseValue: number;
   adjustmentCad: number;
   multiplier: number;
+  multiplierExact: number;
   conditionScore: number;
   logOdometerDelta: number;
   isOdometerExtrapolation: boolean;
@@ -147,6 +148,7 @@ export function predictConditionAdjustedValue(input: {
     baseValue: input.baseValue,
     adjustmentCad: estimate - input.baseValue,
     multiplier: Math.round(multiplier * 10_000) / 10_000,
+    multiplierExact: multiplier,
     conditionScore: score,
     logOdometerDelta: Math.round(logOdometerDelta * 10_000) / 10_000,
     isOdometerExtrapolation: odometerOutsideSupport || rawOdometerDelta !== logOdometerDelta,

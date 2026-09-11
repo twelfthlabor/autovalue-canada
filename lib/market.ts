@@ -82,18 +82,26 @@ export function marketPosition(askingPrice: number, row: MarketRow) {
   return "inside the typical band";
 }
 
-export function scaleBandPercentiles(p25: number, p75: number, multiplier: number): { p25: number; p75: number } {
-  return { p25: p25 * multiplier, p75: p75 * multiplier };
-}
-
 export type DisplayBand = { p10: number; p25: number; p50: number; p75: number; p90: number };
 
+/**
+ * Derives every displayed band value from one consistently scaled and rounded
+ * set: the exact model multiplier for P25/P75 and the model's own rounded
+ * estimate/range for P10/P50/P90. Source cells are monotone and
+ * `nearestHundred` is monotone, so the returned band preserves P10 ≤ P25 ≤
+ * P50 ≤ P75 ≤ P90 (the low/high range can only widen the cell percentiles).
+ */
 export function displayBandValues(
   row: Pick<MarketRow, "p25" | "p75">,
-  valuation: Pick<ConditionValuation, "low" | "high" | "estimate" | "multiplier">,
+  valuation: Pick<ConditionValuation, "low" | "high" | "estimate" | "multiplierExact">,
 ): DisplayBand {
-  const { p25, p75 } = scaleBandPercentiles(row.p25, row.p75, valuation.multiplier);
-  return { p10: valuation.low, p25, p50: valuation.estimate, p75, p90: valuation.high };
+  return {
+    p10: valuation.low,
+    p25: nearestHundred(row.p25 * valuation.multiplierExact),
+    p50: valuation.estimate,
+    p75: nearestHundred(row.p75 * valuation.multiplierExact),
+    p90: valuation.high,
+  };
 }
 
 function nearestHundred(value: number) {
