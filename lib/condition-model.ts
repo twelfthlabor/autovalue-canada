@@ -113,10 +113,14 @@ export function predictConditionAdjustedValue(input: {
   profile: ConditionProfile;
 }): ConditionValuation {
   const score = conditionScore(input.profile);
-  const safeBaselineKm = clamp(input.baselineOdometerKm, modelArtifact.featureBounds.odometerKm);
-  const safeTargetKm = clamp(input.targetOdometerKm, modelArtifact.featureBounds.odometerKm);
-  const rawOdometerDelta = Math.log1p(safeTargetKm) - Math.log1p(safeBaselineKm);
-  const logOdometerDelta = clamp(rawOdometerDelta, modelArtifact.featureBounds.logOdometerDelta);
+  const odometerBounds = modelArtifact.featureBounds.odometerKm;
+  const safeBaselineKm = clamp(input.baselineOdometerKm, odometerBounds);
+  const safeTargetKm = clamp(input.targetOdometerKm, odometerBounds);
+  const modelOdometerDelta = Math.log1p(safeTargetKm) - Math.log1p(safeBaselineKm);
+  const logOdometerDelta = clamp(modelOdometerDelta, modelArtifact.featureBounds.logOdometerDelta);
+  const rawOdometerDelta = Math.log1p(input.targetOdometerKm) - Math.log1p(input.baselineOdometerKm);
+  const odometerOutsideSupport = input.baselineOdometerKm < odometerBounds[0] || input.baselineOdometerKm > odometerBounds[1]
+    || input.targetOdometerKm < odometerBounds[0] || input.targetOdometerKm > odometerBounds[1];
   let prediction = rawPrediction(score, logOdometerDelta);
 
   // Preserve the training-time monotonic guard: a user-reported grade above
@@ -145,7 +149,7 @@ export function predictConditionAdjustedValue(input: {
     multiplier: Math.round(multiplier * 10_000) / 10_000,
     conditionScore: score,
     logOdometerDelta: Math.round(logOdometerDelta * 10_000) / 10_000,
-    isOdometerExtrapolation: rawOdometerDelta !== logOdometerDelta,
+    isOdometerExtrapolation: odometerOutsideSupport || rawOdometerDelta !== logOdometerDelta,
   };
 }
 

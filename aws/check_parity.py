@@ -92,6 +92,28 @@ def main() -> None:
     check("ts/monotonic-guard", clean["estimate"] >= average["estimate"],
           f"clean {clean['estimate']} vs avg {average['estimate']}")
 
+    # 2b. Odometer extrapolation vectors (mirrored from lib/condition-model.test.ts).
+    # Support is 100-350,000 km inclusive; the log-delta quantile cap is 0.880628.
+    odometer_vectors = [
+        (300000, 400000, True, 0.1542),
+        (200000, 500000, True, 0.5596),
+        (50, 100, True, 0),
+        (6, 6, True, 0),
+        (80000, 80000, False, 0),
+        (100, 100, False, 0),
+        (350000, 350000, False, 0),
+        (300000, 350000, False, 0.1542),
+        (300000, 350001, True, 0.1542),
+        (100, 350000, True, 0.8806),
+        (90, 90, True, 0),
+    ]
+    for baseline, target, expected_flag, expected_delta in odometer_vectors:
+        vector = model.predict(30000, 25000, 35000, baseline, target, {"conditionGrade": "average", **NEUTRAL})
+        check(f"ts/odometer-flag[{baseline}->{target}]", vector["isOdometerExtrapolation"] is expected_flag,
+              f"got {vector['isOdometerExtrapolation']}, want {expected_flag}")
+        check(f"ts/odometer-delta[{baseline}->{target}]", vector["logOdometerDelta"] == expected_delta,
+              f"got {vector['logOdometerDelta']}, want {expected_delta}")
+
     # 3. Handler contract via API Gateway proxy event.
     ok_event = {"queryStringParameters": {
         "baseValue": "30000", "baseLow": "25000", "baseHigh": "35000",
