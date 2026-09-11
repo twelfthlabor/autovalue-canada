@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { conditionModelMetadata, predictConditionAdjustedValue, type ConditionProfile, type ConditionValuation } from "@/lib/condition-model";
 import { confidenceForSample, formatCad, formatNumber, scaleBandPercentiles, type DealSignal, type MarketRow } from "@/lib/market";
 import { normalizeVin, validateNorthAmericanVin, vinStatusCopy } from "@/lib/vin";
+import { resolveVinMarketSelection } from "@/lib/vin-market-match";
 import type { VinLookupResponse } from "@/lib/vin-report";
 
 type FormState = ConditionProfile & {
@@ -185,13 +186,14 @@ export function ValuationWorkbench() {
       if (!response.ok) throw new Error(payload.error || "VIN lookup failed.");
       const report = payload as VinLookupResponse;
       setVinReport(report);
-      const province = form.province;
-      const make = uniqueSorted(rows.filter((row) => row.p === province).map((row) => row.mk)).find((candidate) => candidate.toLowerCase() === report.vehicle.make.toLowerCase());
-      const decodedMarketModel = report.vehicle.model;
-      const model = make ? uniqueSorted(rows.filter((row) => row.p === province && row.mk === make).map((row) => row.md)).find((candidate) => candidate.toLowerCase().replace(/[^a-z0-9]/g, "") === decodedMarketModel.toLowerCase().replace(/[^a-z0-9]/g, "")) : undefined;
-      const hasMarketCell = Boolean(make && model && rows.some((row) => row.p === province && row.mk === make && row.md === model && row.y === report.vehicle.year));
-      setMarketBlockedByVin(!hasMarketCell);
-      setForm((current) => ({ ...current, province, make: make ?? current.make, model: model ?? current.model, year: make && model ? String(report.vehicle.year) : current.year }));
+      const { selection, cellMatched } = resolveVinMarketSelection({
+        rows,
+        province: form.province,
+        current: { province: form.province, make: form.make, model: form.model, year: form.year },
+        decoded: { make: report.vehicle.make, model: report.vehicle.model, year: report.vehicle.year },
+      });
+      setMarketBlockedByVin(!cellMatched);
+      setForm((current) => ({ ...current, ...selection }));
       setLookupState("success"); setResultPulse((value) => value + 1);
       window.setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
     } catch (error) { setLookupState("error"); setLookupError(error instanceof Error ? error.message : "VIN lookup failed."); }
