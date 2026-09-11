@@ -1,11 +1,14 @@
 import { ValuationWorkbench } from "@/components/valuation-workbench";
 import { HeroVisual } from "@/components/hero-visual";
 import manifest from "@/public/data/manifest.json";
+import conditionModel from "@/public/data/condition-model.json";
+
+const heroMae = Math.round(conditionModel.validation.model.maeCad).toLocaleString("en-CA");
 
 const heroTickerItems = [
   `${manifest.usedMarketCells.toLocaleString("en-CA")} market cells`,
   `${manifest.usedVehiclesRepresented.toLocaleString("en-CA")} vehicles represented`,
-  "Temporal-test MAE $1,198",
+  `US wholesale temporal-test MAE $${heroMae}`,
   `${manifest.provinces.length} provinces covered`,
   "Dealer asking-price basis",
   "Prices in CAD",

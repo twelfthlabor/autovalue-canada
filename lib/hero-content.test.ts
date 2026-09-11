@@ -24,7 +24,7 @@ describe("animated landing hero contract", () => {
     expect(page).toContain("manifest.usedMarketCells");
     expect(page).toContain("manifest.usedVehiclesRepresented");
     expect(page).toMatch(/hero-ticker/);
-    expect(page).toMatch(/Temporal-test MAE \$1,198/);
+    expect(page).toMatch(/US wholesale temporal-test MAE \$/);
   });
 
   it("defines hero-* keyframes", () => {
