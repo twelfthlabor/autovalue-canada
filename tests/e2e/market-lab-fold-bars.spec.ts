@@ -21,6 +21,22 @@ test("fold-bars avoids the mobile 2+2+1 orphan and stays 5-col on wide screens",
       last: el.lastElementChild!.getBoundingClientRect().width,
     }));
     expect(Math.abs(widths.last - widths.grid)).toBeLessThanOrEqual(1);
+
+    // Equal percentages must render at an equal pixel scale: the spanning last
+    // bar's inner track has to stay one column wide, not two. Wait out the
+    // 700ms band-grow animation before measuring.
+    await page.waitForTimeout(900);
+    const measured = await bars.evaluate((el) => {
+      const cells = [...el.children];
+      const tracks = cells.map((cell) => cell.querySelector("i")!.getBoundingClientRect().width);
+      const fills = cells.map((cell) => cell.querySelector("i > b")!.getBoundingClientRect().width);
+      return { tracks, fills };
+    });
+    console.log("FOLD_BAR_MEASUREMENTS", JSON.stringify(measured));
+    await testInfo.attach("fold-bar-measurements.json", { body: JSON.stringify(measured), contentType: "application/json" });
+
+    expect(Math.max(...measured.tracks) - Math.min(...measured.tracks)).toBeLessThanOrEqual(1);
+    expect(Math.abs(measured.fills[3] - measured.fills[4])).toBeLessThanOrEqual(2);
   } else {
     expect(columns).toBe(5);
     // All five bars share one row (no orphan).
