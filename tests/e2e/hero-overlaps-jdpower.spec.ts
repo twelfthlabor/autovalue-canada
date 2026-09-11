@@ -86,24 +86,39 @@ test("band-close spreads median/ask labels when values are close", async ({ page
     const boxes = await page.evaluate(() => {
       const med = document.querySelector(".band-median i")?.getBoundingClientRect();
       const ask = document.querySelector(".band-asking i")?.getBoundingClientRect();
+      const medDot = document.querySelector(".band-median")?.getBoundingClientRect();
+      const askDot = document.querySelector(".band-asking")?.getBoundingClientRect();
       return {
         med: med ? { x: med.x, y: med.y, width: med.width, height: med.height } : null,
         ask: ask ? { x: ask.x, y: ask.y, width: ask.width, height: ask.height } : null,
+        medDot: medDot ? { x: medDot.x, y: medDot.y, width: medDot.width, height: medDot.height } : null,
+        askDot: askDot ? { x: askDot.x, y: askDot.y, width: askDot.width, height: askDot.height } : null,
       };
     });
     expect(boxes.med).not.toBeNull();
     expect(boxes.ask).not.toBeNull();
-    return intersectArea(boxes.med!, boxes.ask!);
+    return {
+      labels: intersectArea(boxes.med!, boxes.ask!),
+      dots: boxes.medDot && boxes.askDot ? intersectArea(boxes.medDot, boxes.askDot) : 0,
+    };
   }
 
-  // Default ask (31,995) sits within 8pp of the estimate: collision path on, labels clear.
+  // Default ask (31,995) sits within 14pp of the estimate: collision path on, labels + dots clear.
   await expect(page.locator(".price-band.band-close")).toHaveCount(1);
-  expect(await labelOverlap()).toBe(0);
+  expect((await labelOverlap()).labels).toBe(0);
+  expect((await labelOverlap()).dots).toBe(0);
 
   // A nearby ask stays in the collision path and stays legible.
   await page.getByLabel("Asking price in Canadian dollars").fill(String(target + 700));
   await expect(page.locator(".price-band.band-close")).toHaveCount(1);
-  expect(await labelOverlap()).toBe(0);
+  expect((await labelOverlap()).labels).toBe(0);
+  expect((await labelOverlap()).dots).toBe(0);
+
+  // Exact coincidence (ask == estimate, 0pp) keeps the stronger exact path with zero overlap.
+  await page.getByLabel("Asking price in Canadian dollars").fill(String(target));
+  await expect(page.locator(".price-band.band-close.band-exact")).toHaveCount(1);
+  expect((await labelOverlap()).labels).toBe(0);
+  expect((await labelOverlap()).dots).toBe(0);
 
   // A distant ask leaves the collision path (flag is conditional, not always-on).
   await page.getByLabel("Asking price in Canadian dollars").fill(String(target + 10000));

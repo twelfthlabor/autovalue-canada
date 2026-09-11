@@ -57,7 +57,10 @@ function PredictionBand({ valuation, askingPrice, row }: { valuation: ConditionV
   const position = (value: number) => Math.max(2.5, Math.min(97.5, ((value - min) / (max - min)) * 100));
   const medianPos = position(valuation.estimate);
   const askPos = askingPrice !== undefined ? position(askingPrice) : null;
-  const labelsClose = askPos !== null && Math.abs(askPos - medianPos) < 8;
+  const gapPp = askPos !== null ? Math.abs(askPos - medianPos) : null;
+  const labelsClose = gapPp !== null && gapPp < 14;
+  const labelsExact = gapPp !== null && gapPp < 2;
+  const bandEdge = labelsClose && askPos !== null ? (Math.min(medianPos, askPos) < 10 ? " band-edge-l" : Math.max(medianPos, askPos) > 90 ? " band-edge-r" : "") : "";
   const percentiles = [
     { label: "P10", value: valuation.low },
     { label: "P25", value: p25 },
@@ -70,7 +73,7 @@ function PredictionBand({ valuation, askingPrice, row }: { valuation: ConditionV
       <div className="band-caption">
         {percentiles.map((p) => <span key={p.label} className={p.emphasis ? "emphasis" : undefined}><small>{p.label}</small><b>{formatCad(p.value)}</b></span>)}
       </div>
-      <div className={`price-band${labelsClose ? " band-close" : ""}`}>
+      <div className={`price-band${labelsClose ? " band-close" : ""}${labelsExact ? " band-exact" : ""}${bandEdge}`}>
         <span className="band-outer" />
         <span className="band-typical" style={{ left: `${position(valuation.low)}%`, right: `${100 - position(valuation.high)}%` }} />
         <span className="band-median" style={{ left: `${position(valuation.estimate)}%` }}><i><b>ML estimate</b>{formatCad(valuation.estimate)}</i></span>
