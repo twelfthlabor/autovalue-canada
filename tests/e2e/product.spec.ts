@@ -52,6 +52,19 @@ test("out-of-support odometer surfaces the capped-mileage caveat on both the sig
   await expect(page.locator(".factor-grid article:nth-child(3) strong[title]")).toHaveAttribute("title", /mileage comparison was capped/);
 });
 
+test("level-only out-of-support odometer copy says no mileage comparison was applied", async ({ page }) => {
+  await page.goto("/#check");
+  await page.getByLabel("Province").selectOption("AB");
+  await page.getByLabel("Make").selectOption("Buick");
+  await page.getByLabel("Model", { exact: true }).selectOption("Encore GX");
+  await page.getByLabel("Model year").selectOption("2026");
+  await page.getByLabel("Odometer in kilometres").fill("");
+
+  const odometerFactor = page.locator(".factor-grid article").nth(2);
+  await expect(odometerFactor.locator("strong")).toHaveText("Market median used");
+  await expect(odometerFactor.locator("strong")).toHaveAttribute("title", /no mileage comparison was applied/);
+});
+
 test("VIN lookup stays focused and the result remains a single valuation sheet", async ({ page }) => {
   await page.goto("/#check");
   await page.getByLabel("Vehicle identification number").fill("2T3DWRFV3LW077677");
