@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { conditionModelMetadata, predictConditionAdjustedValue, type ConditionProfile, type ConditionValuation } from "@/lib/condition-model";
-import { confidenceForSample, formatCad, formatNumber, type DealSignal, type MarketRow } from "@/lib/market";
+import { confidenceForSample, formatCad, formatNumber, scaleBandPercentiles, type DealSignal, type MarketRow } from "@/lib/market";
 import { normalizeVin, validateNorthAmericanVin, vinStatusCopy } from "@/lib/vin";
 import type { VinLookupResponse } from "@/lib/vin-report";
 
@@ -48,9 +48,7 @@ const FACTOR_ICONS: Record<string, ReactElement> = {
 };
 
 function PredictionBand({ valuation, askingPrice, row }: { valuation: ConditionValuation; askingPrice?: number; row: MarketRow }) {
-  const multiplier = valuation.baseValue ? valuation.estimate / valuation.baseValue : 1;
-  const p25 = row.p25 * multiplier;
-  const p75 = row.p75 * multiplier;
+  const { p25, p75 } = scaleBandPercentiles(row.p25, row.p75, valuation.multiplier);
   const padding = Math.max((valuation.high - valuation.low) * 0.1, 800);
   const min = Math.max(0, Math.min(valuation.low, p25) - padding);
   const max = Math.max(valuation.high, p75) + padding;

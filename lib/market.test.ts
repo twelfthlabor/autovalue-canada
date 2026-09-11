@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { approximatePercentile, confidenceForSample, dealSignalForMatched, deriveComparableBenchmark, marketPosition, type ComparableObservation, type MarketRow } from "./market";
+import { predictConditionAdjustedValue, type ConditionProfile } from "./condition-model";
+import { approximatePercentile, confidenceForSample, dealSignalForMatched, deriveComparableBenchmark, marketPosition, scaleBandPercentiles, type ComparableObservation, type MarketRow } from "./market";
 
 const row: MarketRow = {
   p: "ON", mk: "Toyota", md: "RAV4", y: 2021, c: "Used", n: 204,
@@ -49,5 +50,40 @@ describe("market evidence helpers", () => {
       { vin: "4", askingPrice: 27000, odometerKm: 110000, location: "ON", transmission: "Automatic", observedAt: "2026-08-31" },
     ];
     expect(deriveComparableBenchmark(sparse, 90000)).toBeUndefined();
+  });
+});
+
+describe("prediction band scaling", () => {
+  const profile: ConditionProfile = {
+    conditionGrade: "average",
+    accidentHistory: "none",
+    mechanicalCondition: "sound",
+    cosmeticCondition: "light",
+    serviceHistory: "partial",
+    wearItems: "good",
+  };
+
+  it("scales the typical band from the exact model multiplier on the low-price case", () => {
+    const valuation = predictConditionAdjustedValue({
+      baseValue: 3150,
+      baseLow: 2500,
+      baseHigh: 3800,
+      baselineOdometerKm: 80000,
+      targetOdometerKm: 150000,
+      profile,
+    });
+
+    expect(valuation.multiplier).toBe(0.7784);
+    expect(valuation.estimate).toBe(2500);
+
+    // Premise: the legacy estimate/baseValue ratio is not the model multiplier.
+    // On this low-price case it would move the scaled P25 by more than $1.
+    const legacyMultiplier = valuation.estimate / valuation.baseValue;
+    expect(legacyMultiplier).toBeCloseTo(0.7936508, 6);
+    expect(Math.abs(2700 * legacyMultiplier - 2700 * valuation.multiplier)).toBeGreaterThan(1);
+
+    const band = scaleBandPercentiles(2700, 3600, valuation.multiplier);
+    expect(band.p25).toBe(2101.68);
+    expect(band.p75).toBe(2802.24);
   });
 });

@@ -80,6 +80,10 @@ export function marketPosition(askingPrice: number, row: MarketRow) {
   return "inside the typical band";
 }
 
+export function scaleBandPercentiles(p25: number, p75: number, multiplier: number): { p25: number; p75: number } {
+  return { p25: p25 * multiplier, p75: p75 * multiplier };
+}
+
 function nearestHundred(value: number) {
   return Math.round(value / 100) * 100;
 }
