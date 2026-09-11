@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { conditionModelMetadata, predictConditionAdjustedValue, type ConditionProfile, type ConditionValuation } from "@/lib/condition-model";
-import { confidenceForSample, formatCad, formatNumber, scaleBandPercentiles, type DealSignal, type MarketRow } from "@/lib/market";
+import { confidenceForSample, displayBandValues, formatCad, formatNumber, type DealSignal, type MarketRow } from "@/lib/market";
 import { normalizeVin, validateNorthAmericanVin, vinStatusCopy } from "@/lib/vin";
 import { resolveVinMarketSelection } from "@/lib/vin-market-match";
 import type { VinLookupResponse } from "@/lib/vin-report";
@@ -49,12 +49,12 @@ const FACTOR_ICONS: Record<string, ReactElement> = {
 };
 
 function PredictionBand({ valuation, askingPrice, row }: { valuation: ConditionValuation; askingPrice?: number; row: MarketRow }) {
-  const { p25, p75 } = scaleBandPercentiles(row.p25, row.p75, valuation.multiplier);
-  const padding = Math.max((valuation.high - valuation.low) * 0.1, 800);
-  const min = Math.max(0, Math.min(valuation.low, p25) - padding);
-  const max = Math.max(valuation.high, p75) + padding;
+  const band = displayBandValues(row, valuation);
+  const padding = Math.max((band.p90 - band.p10) * 0.1, 800);
+  const min = Math.max(0, Math.min(band.p10, band.p25) - padding);
+  const max = Math.max(band.p90, band.p75) + padding;
   const position = (value: number) => Math.max(2.5, Math.min(97.5, ((value - min) / (max - min)) * 100));
-  const medianPos = position(valuation.estimate);
+  const medianPos = position(band.p50);
   const askPos = askingPrice !== undefined ? position(askingPrice) : null;
   const gapPp = askPos !== null ? Math.abs(askPos - medianPos) : null;
   const labelsClose = gapPp !== null && gapPp < 14;
@@ -63,11 +63,11 @@ function PredictionBand({ valuation, askingPrice, row }: { valuation: ConditionV
   const askSide = askLeftOfMedian ? " band-ask-left" : "";
   const bandEdge = labelsClose && askPos !== null ? (Math.min(medianPos, askPos) < 10 ? " band-edge-l" : Math.max(medianPos, askPos) > 90 ? " band-edge-r" : "") : "";
   const percentiles = [
-    { label: "P10", value: valuation.low },
-    { label: "P25", value: p25 },
-    { label: "MEDIAN (P50)", value: valuation.estimate, emphasis: true },
-    { label: "P75", value: p75 },
-    { label: "P90", value: valuation.high },
+    { label: "P10", value: band.p10 },
+    { label: "P25", value: band.p25 },
+    { label: "MEDIAN (P50)", value: band.p50, emphasis: true },
+    { label: "P75", value: band.p75 },
+    { label: "P90", value: band.p90 },
   ];
   return (
     <div className="band-wrap prediction-band">
@@ -76,8 +76,8 @@ function PredictionBand({ valuation, askingPrice, row }: { valuation: ConditionV
       </div>
       <div className={`price-band${labelsClose ? " band-close" : ""}${labelsExact ? " band-exact" : ""}${askSide}${bandEdge}`}>
         <span className="band-outer" />
-        <span className="band-typical" style={{ left: `${position(valuation.low)}%`, right: `${100 - position(valuation.high)}%` }} />
-        <span className="band-median" style={{ left: `${position(valuation.estimate)}%` }}><i><b>ML estimate</b>{formatCad(valuation.estimate)}</i></span>
+        <span className="band-typical" style={{ left: `${position(band.p10)}%`, right: `${100 - position(band.p90)}%` }} />
+        <span className="band-median" style={{ left: `${position(band.p50)}%` }}><i><b>ML estimate</b>{formatCad(band.p50)}</i></span>
         {askingPrice ? <span className="band-asking" style={{ left: `${position(askingPrice)}%` }}><i><b>Listing ask</b>{formatCad(askingPrice)}</i></span> : null}
       </div>
     </div>

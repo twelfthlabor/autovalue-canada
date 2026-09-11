@@ -1,3 +1,5 @@
+import type { ConditionValuation } from "./condition-model";
+
 export type MarketRow = {
   p: string;
   mk: string;
@@ -82,6 +84,16 @@ export function marketPosition(askingPrice: number, row: MarketRow) {
 
 export function scaleBandPercentiles(p25: number, p75: number, multiplier: number): { p25: number; p75: number } {
   return { p25: p25 * multiplier, p75: p75 * multiplier };
+}
+
+export type DisplayBand = { p10: number; p25: number; p50: number; p75: number; p90: number };
+
+export function displayBandValues(
+  row: Pick<MarketRow, "p25" | "p75">,
+  valuation: Pick<ConditionValuation, "low" | "high" | "estimate" | "multiplier">,
+): DisplayBand {
+  const { p25, p75 } = scaleBandPercentiles(row.p25, row.p75, valuation.multiplier);
+  return { p10: valuation.low, p25, p50: valuation.estimate, p75, p90: valuation.high };
 }
 
 function nearestHundred(value: number) {
