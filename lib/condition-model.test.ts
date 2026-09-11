@@ -90,6 +90,11 @@ describe("odometer extrapolation flag", () => {
     { baseline: 300_000, target: 350_001, flag: true, logOdometerDelta: 0.1542 },
     { baseline: 100, target: 350_000, flag: true, logOdometerDelta: 0.8806 },
     { baseline: 90, target: 90, flag: true, logOdometerDelta: 0 },
+    { baseline: -5, target: -6, flag: true, logOdometerDelta: 0 },
+    { baseline: -100, target: 50_000, flag: true, logOdometerDelta: 0.8806 },
+    { baseline: 100_000, target: 80_000, flag: false, logOdometerDelta: -0.2231 },
+    { baseline: 300_000, target: 100_000, flag: false, logOdometerDelta: -1.0986 },
+    { baseline: 350_000, target: 100, flag: true, logOdometerDelta: -1.1618 },
   ];
 
   for (const { baseline, target, flag, logOdometerDelta } of vectors) {
