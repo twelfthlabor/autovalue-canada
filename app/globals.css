@@ -770,9 +770,16 @@ button:focus-visible, a:focus-visible, summary:focus-visible, select:focus-visib
 .inspect-button:hover { background: var(--accent-soft); }
 .inspect-button:active { transform: scale(.97); }
 
-.method-section { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 22px 26px; box-shadow: var(--shadow-sm); margin-bottom: 12px; }
+.method-section { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 22px 26px; box-shadow: var(--shadow-sm); margin-bottom: 12px; scroll-margin-top: 90px; }
 .method-section .kicker { margin-bottom: 6px; }
 .method-section h2 { font-family: var(--display); font-size: clamp(20px, 1.9vw, 25px); font-weight: 550; letter-spacing: -.02em; margin: 0 0 14px; line-height: 1.15; }
+/* Keep in-page methodology anchors clear of the two-row sticky header (see tablet/mobile header rules above).
+   96px header convention + 14px rise-in entrance displacement (.inner-page > *
+   animates from translateY(14px), which the on-load fragment scroll resolves
+   against) + slack. Desktop base (90px) is the same sum on the 76px convention. */
+@media (max-width: 980px) {
+  .method-section { scroll-margin-top: 116px; }
+ }
 .method-columns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
 .method-columns h3 { margin: 0 0 6px; font-size: 13.5px; font-weight: 680; }
 .method-columns p { margin: 0; font-size: 13px; line-height: 1.6; color: var(--muted); }
