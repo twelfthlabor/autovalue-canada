@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { conditionModelMetadata, predictConditionAdjustedValue, type ConditionProfile, type ConditionValuation } from "@/lib/condition-model";
 import { confidenceForSample, displayBandValues, formatCad, formatNumber, type DealSignal, type MarketRow } from "@/lib/market";
 import { normalizeVin, validateNorthAmericanVin, vinStatusCopy } from "@/lib/vin";
-import { resolveVinMarketSelection } from "@/lib/vin-market-match";
+import { resolveVinMarketSelection, vinMarketEditAction } from "@/lib/vin-market-match";
 import type { VinLookupResponse } from "@/lib/vin-report";
 
 type FormState = ConditionProfile & {
@@ -153,11 +153,9 @@ export function ValuationWorkbench() {
   const result = marketBlockedByVin ? undefined : selectedResult;
 
   function update<K extends keyof FormState>(field: K, value: FormState[K]) {
-    if (field !== "vin") setMarketBlockedByVin(false);
-    if (field === "province" || field === "make" || field === "model" || field === "year") {
-      setVinReport(undefined);
-      setLookupState("idle");
-    }
+    const vinAction = vinMarketEditAction(field);
+    if (vinAction.clearsBlock) setMarketBlockedByVin(false);
+    if (vinAction.clearsReport) { setVinReport(undefined); setLookupState("idle"); }
     setForm((current) => {
       const next = { ...current, [field]: value };
       if (field === "province") {
@@ -256,7 +254,7 @@ export function ValuationWorkbench() {
         </details>
         <div className="history-input">
           <p className="kicker">VIN</p>
-          <label className="vin-field"><span>17-character VIN</span><div className="vin-control"><input value={form.vin} onChange={(event) => { update("vin", normalizeVin(event.target.value)); setLookupState("idle"); setVinReport(undefined); setMarketBlockedByVin(false); }} maxLength={17} spellCheck={false} autoCapitalize="characters" placeholder="Enter VIN (optional)" aria-label="Vehicle identification number" /><button type="button" onClick={decodeVin} disabled={loading || lookupState === "loading"}>{lookupState === "loading" ? "DECODING…" : "Decode VIN"}</button></div><small className={`vin-status ${vinStatus}`}>{vinStatusCopy[vinStatus]}</small></label>
+          <label className="vin-field"><span>17-character VIN</span><div className="vin-control"><input value={form.vin} onChange={(event) => update("vin", normalizeVin(event.target.value))} maxLength={17} spellCheck={false} autoCapitalize="characters" placeholder="Enter VIN (optional)" aria-label="Vehicle identification number" /><button type="button" onClick={decodeVin} disabled={loading || lookupState === "loading"}>{lookupState === "loading" ? "DECODING…" : "Decode VIN"}</button></div><small className={`vin-status ${vinStatus}`}>{vinStatusCopy[vinStatus]}</small></label>
           {lookupState === "error" ? <p className="lookup-error" role="alert">{lookupError}</p> : null}
           {vinReport ? <div className="decoded-mini"><span>DECODED BY {vinReport.vehicle.source}</span><strong>{vinReport.vehicle.year} {vinReport.vehicle.make} {vinReport.vehicle.model}</strong><p>{vinReport.vehicle.trim} · {vinReport.vehicle.driveType} · {vinReport.vehicle.displacementL ?? "—"} L</p><small>{vinReport.notice}{marketBlockedByVin ? " No matching price cell exists in this public release, so the previous manual selection is not used as a substitute." : ""}</small></div> : null}
           <p className="privacy-note"><LockIcon /> VIN is sent to the official NHTSA &amp; vPIC decoder only when you click Decode. AutoValue does not store it.</p>

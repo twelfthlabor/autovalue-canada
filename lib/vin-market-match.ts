@@ -86,3 +86,17 @@ export function resolveVinMarketSelection(input: {
     cellMatched,
   };
 }
+
+export type VinMarketEditAction = { clearsBlock: boolean; clearsReport: boolean };
+
+/**
+ * Commit A extraction: the workbench's previous inline block/report clearing
+ * moved verbatim behind the final API, so the component change stays
+ * behavior-neutral.
+ */
+export function vinMarketEditAction(field: string): VinMarketEditAction {
+  return {
+    clearsBlock: true,
+    clearsReport: field === "province" || field === "make" || field === "model" || field === "year" || field === "vin",
+  };
+}

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import marketData from "../public/data/market.json";
 import type { MarketRow } from "./market";
-import { resolveVinMarketSelection, type VinMarketSelection } from "./vin-market-match";
+import { resolveVinMarketSelection, vinMarketEditAction, type VinMarketSelection } from "./vin-market-match";
 
 function row(overrides: Partial<MarketRow> & Pick<MarketRow, "p" | "mk" | "md" | "y" | "n">): MarketRow {
   return {
@@ -168,5 +168,46 @@ describe("resolveVinMarketSelection", () => {
 
     expect(result.selection).toEqual({ province: "ON", make: "Toyota", model: "RAV4", year: "2020" });
     expect(result.cellMatched).toBe(true);
+  });
+});
+
+describe("vinMarketEditAction", () => {
+  it("preserves the decode for edits that are not vehicle identity or VIN", () => {
+    const unrelatedFields = ["askingPrice", "odometer", "conditionGrade", "accidentHistory", "mechanicalCondition", "cosmeticCondition", "serviceHistory", "wearItems"];
+    for (const field of unrelatedFields) {
+      expect(vinMarketEditAction(field)).toEqual({ clearsBlock: false, clearsReport: false });
+    }
+  });
+
+  it("abandons the decode for vehicle identity and VIN edits", () => {
+    for (const field of ["province", "make", "model", "year", "vin"]) {
+      expect(vinMarketEditAction(field)).toEqual({ clearsBlock: true, clearsReport: true });
+    }
+  });
+
+  it("keeps the decoded VIN blocked across a price edit until the year changes", () => {
+    const rows = marketData as unknown as MarketRow[];
+    const { selection, cellMatched } = resolveVinMarketSelection({
+      rows,
+      province: "AB",
+      current: { province: "AB", make: "Buick", model: "Encore GX", year: "2026" },
+      decoded: { make: "Audi", model: "Q3", year: 2020 },
+    });
+
+    expect(cellMatched).toBe(false);
+    expect(selection).toEqual({ province: "AB", make: "Audi", model: "Q3", year: "2025" });
+
+    const state = { blocked: !cellMatched, reportActive: true };
+    const apply = (field: string) => {
+      const action = vinMarketEditAction(field);
+      if (action.clearsBlock) state.blocked = false;
+      if (action.clearsReport) state.reportActive = false;
+    };
+
+    apply("askingPrice");
+    expect(state).toEqual({ blocked: true, reportActive: true });
+
+    apply("year");
+    expect(state).toEqual({ blocked: false, reportActive: false });
   });
 });
