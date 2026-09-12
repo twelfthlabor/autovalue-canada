@@ -39,41 +39,37 @@ describe("hero overlap fixes (fix/hero-overlaps-jdpower-theme)", () => {
     expect(workbench).toContain("labelsClose");
     expect(workbench).toMatch(/<\s*14/);
     expect(workbench).toMatch(/price-band\$\{labelsClose/);
-    // Exact coincidence (<2pp) gets stronger dot-nudge handling.
+    // Exact coincidence (<2pp) gets the stronger z-order path.
     expect(workbench).toContain("labelsExact");
     expect(workbench).toContain("band-exact");
-    expect(workbench).toContain("band-edge");
-    expect(css).toContain(".price-band.band-close .band-median i");
-    expect(css).toContain(".price-band.band-close .band-asking i");
-    // -100%/0% side-by-side (not -92%/-8% inset that left ~8px overlap at 0pp).
-    expect(css).toMatch(/\.price-band\.band-close\s+\.band-median\s+i\s*\{[^}]*translateX\(-100%/);
-    expect(css).toMatch(/\.price-band\.band-close\s+\.band-asking\s+i\s*\{[^}]*translateX\(0/);
-    // Ticks live on the dots (dot center) so they stay pointed after shift.
-    expect(css).toContain(".price-band.band-close .band-median::after");
-    expect(css).toContain(".price-band.band-close .band-asking::after");
-    // Dot nudge separates 17px/21px discs at coincidence.
-    expect(css).toMatch(/\.price-band\.band-close[^{]*\.band-median\s*\{[^}]*margin-left:\s*-/);
+    expect(workbench).toContain("data-band-pos");
+    // The displacement classes are gone from the component.
+    expect(workbench).not.toContain("band-ask-left");
+    expect(workbench).not.toContain("band-edge");
+    expect(workbench).not.toContain("translateX(-100%)");
   });
 
-  it("mirrors the close spread when the ask sits below the median", () => {
-    // Direction comes from the projected positions, not the raw dollars.
-    expect(workbench).toMatch(/askPos\s*<\s*medianPos/);
-    expect(workbench).toContain("band-ask-left");
-    // Ask-left: median label shifts right, ask label shifts left (away from each other).
-    expect(css).toMatch(/\.price-band\.band-close\.band-ask-left\s+\.band-median\s+i\s*\{[^}]*translateX\(0/);
-    expect(css).toMatch(/\.price-band\.band-close\.band-ask-left\s+\.band-asking\s+i\s*\{[^}]*translateX\(-100%/);
-    // Dot nudges invert so the discs separate instead of converge.
-    expect(css).toMatch(/\.price-band\.band-close\.band-ask-left\s+\.band-median\s*\{[^}]*margin-left:\s*6px/);
-    expect(css).toMatch(/\.price-band\.band-close\.band-ask-left\s+\.band-asking\s*\{[^}]*margin-left:\s*-6px/);
-    expect(css).toMatch(/\.price-band\.band-close\.band-exact\.band-ask-left\s+\.band-median\s*\{[^}]*margin-left:\s*10px/);
-    expect(css).toMatch(/\.price-band\.band-close\.band-exact\.band-ask-left\s+\.band-asking\s*\{[^}]*margin-left:\s*-10px/);
-    // Edge guard mirrors too: the dot nearest the panel edge keeps zero offset.
-    expect(css).toMatch(/\.price-band\.band-close\.band-ask-left\.band-edge-l\s+\.band-median\s*\{[^}]*margin-left:\s*12px/);
-    expect(css).toMatch(/\.price-band\.band-close\.band-ask-left\.band-edge-l\s+\.band-asking\s*\{[^}]*margin-left:\s*0/);
-    expect(css).toMatch(/\.price-band\.band-close\.band-ask-left\.band-edge-r\s+\.band-median\s*\{[^}]*margin-left:\s*0/);
-    expect(css).toMatch(/\.price-band\.band-close\.band-ask-left\.band-edge-r\s+\.band-asking\s*\{[^}]*margin-left:\s*-12px/);
-    expect(css).toMatch(/\.price-band\.band-close\.band-exact\.band-ask-left\.band-edge-l\s+\.band-median\s*\{[^}]*margin-left:\s*20px/);
-    expect(css).toMatch(/\.price-band\.band-close\.band-exact\.band-ask-left\.band-edge-r\s+\.band-asking\s*\{[^}]*margin-left:\s*-20px/);
+  it("centers dots, labels and captions on the value scale (no displacement offsets)", () => {
+    // Dots recenter with -50% only; no margin nudges, no ticks.
+    expect(css).toMatch(/\.band-median\s*\{[^}]*transform:\s*translateX\(-50%\)/);
+    expect(css).toMatch(/\.band-asking\s*\{[^}]*transform:\s*translateX\(-50%\)/);
+    expect(css).not.toMatch(/\.band-(?:median|asking)[^{}]*\{[^}]*margin-left/);
+    expect(css).not.toContain(".price-band.band-close .band-median::after");
+    expect(css).not.toContain(".price-band.band-close .band-asking::after");
+    expect(css).not.toContain(".band-ask-left");
+    expect(css).not.toContain(".band-edge");
+    // Labels opt into the measured shift contract instead of side-by-side flips.
+    expect(css).toMatch(/\.band-median i\s*\{[^}]*translateX\(calc\(-50% \+ var\(--band-shift, 0px\)\)\)/);
+    expect(css).toMatch(/\.band-asking i\s*\{[^}]*translateX\(calc\(-50% \+ var\(--band-shift, 0px\)\)\)/);
+    // Captions are absolutely positioned on the same percent scale.
+    expect(css).toMatch(/\.band-caption\s*\{[^}]*position:\s*relative/);
+    expect(css).toMatch(/\.band-caption span\s*\{[^}]*position:\s*absolute/);
+    expect(css).toMatch(/\.band-caption span\s*\{[^}]*translateX\(calc\(-50% \+ var\(--band-shift, 0px\)\)\)/);
+    expect(css).toMatch(/\.band-caption span\s*\{[^}]*top:\s*calc\(var\(--band-row, 0\) \* var\(--band-row-h, \d+px\)\)/);
+    // Close mode only adjusts the vertical stagger now.
+    expect(css).toMatch(/\.price-band\.band-close\s+\.band-asking\s+i\s*\{[^}]*top:\s*calc\(100% \+ \d+px\)/);
+    // Exact coincidence paints the 17px ink median above the 21px accent ask disc.
+    expect(css).toMatch(/\.band-exact\s+\.band-median\s*\{[^}]*z-index:\s*2/);
   });
 
   it("uses a 5-col lab-stats grid (no 4+1 orphan)", () => {

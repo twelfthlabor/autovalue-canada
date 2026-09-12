@@ -306,11 +306,8 @@ button:focus-visible, a:focus-visible, summary:focus-visible, select:focus-visib
 /* distribution band */
 
 .valuation-band { margin-top: 12px; padding: 14px 16px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-3); }
-.band-caption { display: flex; justify-content: space-between; gap: 8px; }
-.band-caption span { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.band-caption span:nth-child(3) { align-items: center; }
-.band-caption span:first-child { align-items: flex-start; }
-.band-caption span:last-child { align-items: flex-end; }
+.band-caption { position: relative; }
+.band-caption span { position: absolute; top: calc(var(--band-row, 0) * var(--band-row-h, 34px)); display: flex; flex-direction: column; gap: 1px; white-space: nowrap; transform: translateX(calc(-50% + var(--band-shift, 0px))); }
 .band-caption small { font-size: 9.5px; font-weight: 650; letter-spacing: .07em; color: var(--faint); text-transform: uppercase; }
 .band-caption b { font-size: 12px; font-weight: 620; color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .band-caption span.emphasis b { font-size: 13px; font-weight: 740; color: var(--ink); }
@@ -321,66 +318,24 @@ button:focus-visible, a:focus-visible, summary:focus-visible, select:focus-visib
 .band-median, .band-asking { transition: left 460ms var(--spring); }
 .band-typical { transition: left 460ms var(--spring), right 460ms var(--spring); }
 .band-typical { top: 8px; height: 11px; border-radius: 99px; background: #8FBFC6; transform-origin: left; animation: band-grow 700ms var(--out) both; }
-.band-median { top: 5px; width: 17px; height: 17px; border-radius: 50%; background: var(--ink); border: 3px solid var(--surface-3); transform: translateX(-8.5px); box-shadow: 0 1px 4px rgba(16, 35, 48, .3); }
-.band-asking { top: 3px; width: 21px; height: 21px; border-radius: 50%; background: var(--accent); border: 3px solid var(--surface-3); transform: translateX(-10.5px); box-shadow: 0 2px 6px rgba(211, 70, 18, .4); }
+.band-median { top: 5px; width: 17px; height: 17px; border-radius: 50%; background: var(--ink); border: 3px solid var(--surface-3); transform: translateX(-50%); box-shadow: 0 1px 4px rgba(16, 35, 48, .3); }
+.band-asking { top: 3px; width: 21px; height: 21px; border-radius: 50%; background: var(--accent); border: 3px solid var(--surface-3); transform: translateX(-50%); box-shadow: 0 2px 6px rgba(211, 70, 18, .4); }
 .band-median i, .band-asking i { position: absolute; left: 50%; display: flex; flex-direction: column; align-items: center; gap: 0; font-style: normal; white-space: nowrap; }
-.band-median i { top: calc(100% + 7px); transform: translateX(-50%); }
-.band-asking i { top: calc(100% + 29px); transform: translateX(-50%); }
+.band-median i { top: calc(100% + 7px); transform: translateX(calc(-50% + var(--band-shift, 0px))); }
+.band-asking i { top: calc(100% + 29px); transform: translateX(calc(-50% + var(--band-shift, 0px))); }
 .band-median i b, .band-asking i b { font-size: 10.5px; font-weight: 570; color: var(--muted); line-height: 1.25; }
 .band-median i, .band-asking i { font-family: var(--display); font-size: 14px; font-weight: 600; letter-spacing: -.01em; color: var(--ink); font-variant-numeric: tabular-nums; line-height: 1.2; }
 .band-asking i { color: var(--accent-deep); }
 .band-asking i b { color: var(--accent-deep); opacity: .85; }
 
-/* Collision spread: when median + ask dots sit within 14pp, place labels
-   side-by-side (median left, asking right). -100%/0% avoids the 8% inset
-   overlap that left ~8px x-overlap at 0pp. Ticks live on the dots
-   (left:50% = dot center) so they stay pointed after the label shift. */
-.price-band.band-close .band-median i { transform: translateX(-100%); }
-.price-band.band-close .band-asking i { transform: translateX(0); }
-.price-band.band-close .band-median::after,
-.price-band.band-close .band-asking::after { content: ""; position: absolute; left: 50%; top: 100%; width: 1px; height: 8px; background: var(--line-2); }
-/* Exact coincidence (<2pp): nudge dots apart so the 17px/21px discs no
-   longer sit concentric; the dot gap separates the side-by-side labels.
-   Close (<14pp) gets a smaller nudge so mobile default (5.8pp, Dx 16.8px
-   vs 19px needed) also clears without exaggerating wider gaps. */
-.price-band.band-close .band-median { margin-left: -6px; }
-.price-band.band-close .band-asking { margin-left: 6px; }
-.price-band.band-close.band-exact .band-median { margin-left: -10px; }
-.price-band.band-close.band-exact .band-asking { margin-left: 10px; }
-/* Ask below the median (band-ask-left) mirrors the spread: the median label
-   shifts right and the ask label shifts left so they diverge, and the dot
-   nudges push the discs apart instead of into each other. */
-.price-band.band-close.band-ask-left .band-median i { transform: translateX(0); }
-.price-band.band-close.band-ask-left .band-asking i { transform: translateX(-100%); }
-.price-band.band-close.band-ask-left .band-median { margin-left: 6px; }
-.price-band.band-close.band-ask-left .band-asking { margin-left: -6px; }
-.price-band.band-close.band-exact.band-ask-left .band-median { margin-left: 10px; }
-.price-band.band-close.band-exact.band-ask-left .band-asking { margin-left: -10px; }
-/* Edge guard: near the 2.5%/97.5% clamp, keep labels inside the panel by
-   flipping the outward shift. Vertical stagger (7px vs 29px) preserves
-   legibility when both labels share a side. */
-.price-band.band-close.band-edge-l .band-median i,
-.price-band.band-close.band-edge-l .band-asking i { transform: translateX(0); }
-.price-band.band-close.band-edge-r .band-median i,
-.price-band.band-close.band-edge-r .band-asking i { transform: translateX(-100%); }
-.price-band.band-close.band-edge-l .band-median { margin-left: 0; }
-.price-band.band-close.band-edge-l .band-asking { margin-left: 12px; }
-.price-band.band-close.band-edge-r .band-median { margin-left: -12px; }
-.price-band.band-close.band-edge-r .band-asking { margin-left: 0; }
-.price-band.band-close.band-exact.band-edge-l .band-median { margin-left: 0; }
-.price-band.band-close.band-exact.band-edge-l .band-asking { margin-left: 20px; }
-.price-band.band-close.band-exact.band-edge-r .band-median { margin-left: -20px; }
-.price-band.band-close.band-exact.band-edge-r .band-asking { margin-left: 0; }
-/* Mirror the edge margins when the ask is below the median: the dot nearest
-   the panel edge keeps its zero offset, the inner dot carries the nudge. */
-.price-band.band-close.band-ask-left.band-edge-l .band-median { margin-left: 12px; }
-.price-band.band-close.band-ask-left.band-edge-l .band-asking { margin-left: 0; }
-.price-band.band-close.band-ask-left.band-edge-r .band-median { margin-left: 0; }
-.price-band.band-close.band-ask-left.band-edge-r .band-asking { margin-left: -12px; }
-.price-band.band-close.band-exact.band-ask-left.band-edge-l .band-median { margin-left: 20px; }
-.price-band.band-close.band-exact.band-ask-left.band-edge-l .band-asking { margin-left: 0; }
-.price-band.band-close.band-exact.band-ask-left.band-edge-r .band-median { margin-left: 0; }
-.price-band.band-close.band-exact.band-ask-left.band-edge-r .band-asking { margin-left: -20px; }
+/* Collision spread: when median + ask dots sit within 14pp the labels stay
+   centered on their dots; only the vertical stagger separates them. The
+   measured `--band-shift` (set from the value scale) is the sole horizontal
+   displacement, so a label can never drift off its marker. */
+.price-band.band-close .band-asking i { top: calc(100% + 33px); }
+/* Exact coincidence (<2pp): DOM order paints the 21px accent ask disc on top;
+   lifting the 17px ink median disc keeps a ~2px accent annulus visible. */
+.band-exact .band-median { z-index: 2; }
 
 /* price anatomy */
 
@@ -517,8 +472,8 @@ button:focus-visible, a:focus-visible, summary:focus-visible, select:focus-visib
   .price-band { height: 76px; margin-top: 8px; }
   .band-outer { top: 8px; height: 6px; }
   .band-typical { top: 6.5px; height: 9px; }
-  .band-median { top: 2px; width: 15px; height: 15px; transform: translateX(-7.5px); }
-  .band-asking { top: 0; width: 19px; height: 19px; transform: translateX(-9.5px); }
+  .band-median { top: 2px; width: 15px; height: 15px; }
+  .band-asking { top: 0; width: 19px; height: 19px; }
   .band-median i { top: calc(100% + 5px); }
   .band-asking i { top: calc(100% + 24px); }
   .band-median i, .band-asking i { font-size: 12px; }
@@ -586,6 +541,10 @@ button:focus-visible, a:focus-visible, summary:focus-visible, select:focus-visib
   .price-band { height: 60px; margin-top: 4px; }
   .band-median i { top: calc(100% + 3px); }
   .band-asking i { top: calc(100% + 19px); }
+  /* Close labels stay centered; the compact stagger starts tighter so the
+     band keeps its 60px height (product.spec fit assertions). */
+  .price-band.band-close .band-median i { top: calc(100% + 0px); }
+  .price-band.band-close .band-asking i { top: calc(100% + 22px); }
   .band-median i, .band-asking i { font-size: 11px; }
   .band-median i b, .band-asking i b { font-size: 9px; }
   .price-anatomy { margin-top: 4px; padding: 3px 11px 4px; }
@@ -618,6 +577,9 @@ button:focus-visible, a:focus-visible, summary:focus-visible, select:focus-visib
 
 @media (max-width: 980px) {
   .site-header { height: auto; min-height: 56px; padding: 8px clamp(20px, 4vw, 48px) 6px; grid-template-columns: auto auto; grid-template-rows: auto auto; row-gap: 2px; justify-content: space-between; }
+  /* 681-980px keeps the base 14px/10.5px label metrics, whose value line
+     needs a deeper stagger than the desktop tier to stay clear. */
+  .price-band.band-close .band-asking i { top: calc(100% + 34px); }
   .wordmark { grid-row: 1; grid-column: 1; }
   .nav-external { grid-row: 1; grid-column: 2; }
   .site-header nav { grid-row: 2; grid-column: 1 / -1; justify-self: stretch; }
@@ -657,10 +619,6 @@ button:focus-visible, a:focus-visible, summary:focus-visible, select:focus-visib
   .result-stats { flex-direction: row; align-items: center; width: 100%; justify-content: space-between; }
   .result-stats > p { text-align: right; }
   .valuation-summary { grid-template-columns: 1fr; }
-  .band-caption { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 12px; }
-  .band-caption span:nth-child(3) { align-items: center; }
-  .band-caption span:last-child { align-items: flex-start; }
-  .band-caption b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
   .price-band { height: 86px; }
   .band-median i, .band-asking i { align-items: center; }
   .band-median i b, .band-asking i b { text-align: center; }

@@ -72,7 +72,7 @@ test("mobile header keeps nav + external inside without page overflow", async ({
   expect(external!.y + external!.height).toBeLessThanOrEqual(header!.y + header!.height + 1);
 });
 
-test("band-close spreads median/ask labels when values are close", async ({ page }) => {
+test("band markers stay on the value scale when values are close", async ({ page }) => {
   await page.goto("/#check");
   const estimate = page.getByTestId("ml-estimate");
   await expect(estimate).toBeVisible();
@@ -80,61 +80,124 @@ test("band-close spreads median/ask labels when values are close", async ({ page
   const target = dollars(await estimate.textContent());
   expect(target).toBeGreaterThan(0);
 
-  async function labelOverlap() {
-    // Let the 460ms spring settle before measuring label boxes.
-    await page.waitForTimeout(700);
-    const boxes = await page.evaluate(() => {
-      const med = document.querySelector(".band-median i")?.getBoundingClientRect();
-      const ask = document.querySelector(".band-asking i")?.getBoundingClientRect();
-      const medDot = document.querySelector(".band-median")?.getBoundingClientRect();
-      const askDot = document.querySelector(".band-asking")?.getBoundingClientRect();
+  // Disable the 460ms `left` spring + grow animations so measurements read the
+  // settled geometry without a fixed sleep.
+  await page.addStyleTag({
+    content: "*, *::before, *::after { transition-duration: 0s !important; transition-delay: 0s !important; animation-duration: 0s !important; animation-delay: 0s !important; }",
+  });
+  await page.evaluate(async () => { await document.fonts.ready; });
+
+  const measure = () =>
+    page.evaluate(() => {
+      const rect = (el: Element) => {
+        const box = el.getBoundingClientRect();
+        return { x: box.x, y: box.y, width: box.width, height: box.height, centerX: box.x + box.width / 2 };
+      };
+      const declared = (el: HTMLElement) => {
+        const data = el.getAttribute("data-band-pos");
+        if (data !== null && data.trim() !== "") return Number(data);
+        const left = el.style.left;
+        return left && left.endsWith("%") ? parseFloat(left) : null;
+      };
+      const textNode = (root: Element | null) => {
+        if (!root) return null;
+        for (const node of Array.from(root.childNodes)) {
+          if (node.nodeType === Node.TEXT_NODE && (node.textContent ?? "").trim() !== "") return node;
+        }
+        return null;
+      };
+      const rangeRect = (node: Node | null) => {
+        if (!node) return null;
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        const box = range.getBoundingClientRect();
+        return { x: box.x, y: box.y, width: box.width, height: box.height };
+      };
+      const band = document.querySelector(".price-band");
+      const card = document.querySelector(".valuation-band");
+      if (!band || !card) return null;
+      const medianDot = band.querySelector<HTMLElement>(".band-median");
+      const askDot = band.querySelector<HTMLElement>(".band-asking");
+      const medianLabel = medianDot?.querySelector("i") ?? null;
+      const askLabel = askDot?.querySelector("i") ?? null;
       return {
-        med: med ? { x: med.x, y: med.y, width: med.width, height: med.height } : null,
-        ask: ask ? { x: ask.x, y: ask.y, width: ask.width, height: ask.height } : null,
-        medDot: medDot ? { x: medDot.x, y: medDot.y, width: medDot.width, height: medDot.height } : null,
-        askDot: askDot ? { x: askDot.x, y: askDot.y, width: askDot.width, height: askDot.height } : null,
+        band: rect(band),
+        card: rect(card),
+        medianDot: medianDot ? rect(medianDot) : null,
+        askDot: askDot ? rect(askDot) : null,
+        medianLabel: medianLabel ? rect(medianLabel) : null,
+        askLabel: askLabel ? rect(askLabel) : null,
+        medianPos: medianDot ? declared(medianDot) : null,
+        askPos: askDot ? declared(askDot) : null,
+        medianText: rangeRect(textNode(medianLabel)),
+        askTagText: rangeRect(textNode(askLabel?.querySelector("b") ?? null)),
       };
     });
-    expect(boxes.med).not.toBeNull();
-    expect(boxes.ask).not.toBeNull();
-    return {
-      labels: intersectArea(boxes.med!, boxes.ask!),
-      dots: boxes.medDot && boxes.askDot ? intersectArea(boxes.medDot, boxes.askDot) : 0,
-    };
+
+  async function assertOnScale(stateLabel: string) {
+    // Let the 460ms spring settle, then measure the rendered geometry.
+    await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+    const snapshot = await measure();
+    expect(snapshot, `${stateLabel}: band geometry`).not.toBeNull();
+    if (!snapshot) return;
+
+    for (const marker of [
+      { name: "median", dot: snapshot.medianDot, label: snapshot.medianLabel, pos: snapshot.medianPos },
+      { name: "ask", dot: snapshot.askDot, label: snapshot.askLabel, pos: snapshot.askPos },
+    ]) {
+      expect(marker.dot, `${stateLabel}: ${marker.name} dot present`).not.toBeNull();
+      expect(marker.label, `${stateLabel}: ${marker.name} label present`).not.toBeNull();
+      expect(marker.pos, `${stateLabel}: ${marker.name} declared position present`).not.toBeNull();
+      if (!marker.dot || !marker.label || marker.pos === null) continue;
+
+      const desired = snapshot.band.x + (snapshot.band.width * marker.pos) / 100;
+      expect(Math.abs(marker.dot.centerX - desired), `${stateLabel}: ${marker.name} dot center is off its declared value position`).toBeLessThanOrEqual(1);
+
+      const lower = snapshot.card.x + 1 + marker.label.width / 2;
+      const upper = snapshot.card.x + snapshot.card.width - 1 - marker.label.width / 2;
+      const expected = Math.min(Math.max(desired, lower), upper);
+      expect(Math.abs(marker.label.centerX - expected), `${stateLabel}: ${marker.name} label center is off the clamped value scale`).toBeLessThanOrEqual(1);
+
+      expect(marker.label.x, `${stateLabel}: ${marker.name} label clipped on the left`).toBeGreaterThanOrEqual(snapshot.card.x - 0.5);
+      expect(marker.label.x + marker.label.width, `${stateLabel}: ${marker.name} label clipped on the right`).toBeLessThanOrEqual(snapshot.card.x + snapshot.card.width + 0.5);
+    }
+
+    expect(snapshot.medianText, `${stateLabel}: median value text`).not.toBeNull();
+    expect(snapshot.askTagText, `${stateLabel}: ask label text`).not.toBeNull();
+    if (snapshot.medianText && snapshot.askTagText) {
+      const overlapX = Math.max(0, Math.min(snapshot.medianText.x + snapshot.medianText.width, snapshot.askTagText.x + snapshot.askTagText.width) - Math.max(snapshot.medianText.x, snapshot.askTagText.x));
+      const overlapY = Math.max(0, Math.min(snapshot.medianText.y + snapshot.medianText.height, snapshot.askTagText.y + snapshot.askTagText.height) - Math.max(snapshot.medianText.y, snapshot.askTagText.y));
+      expect(overlapX * overlapY, `${stateLabel}: median value and ask label text overlap`).toBeLessThan(0.5);
+    }
   }
 
-  // Default ask (31,995) sits within 14pp of the estimate: collision path on, labels + dots clear.
+  // Default ask (31,995) sits within 14pp of the estimate: collision path on, still on scale.
   await expect(page.locator(".price-band.band-close")).toHaveCount(1);
-  expect((await labelOverlap()).labels).toBe(0);
-  expect((await labelOverlap()).dots).toBe(0);
+  await assertOnScale("default close");
 
   // A nearby above-estimate ask stays in the collision path and stays legible.
   await page.getByLabel("Asking price in Canadian dollars").fill(String(target + 700));
   await expect(page.locator(".price-band.band-close")).toHaveCount(1);
   await expect(page.locator(".price-band.band-ask-left")).toHaveCount(0);
-  expect((await labelOverlap()).labels).toBe(0);
-  expect((await labelOverlap()).dots).toBe(0);
+  await assertOnScale("close above");
 
-  // Below-estimate asks (ask < median) must mirror the spread, not point the
-  // labels and dot nudges at each other. Regression from bd5e383.
+  // Below-estimate asks (ask < median) must stay centered on their own dots,
+  // not mirror into a side-by-side spread. Regression from bd5e383.
   for (const offset of [-2000, -500]) {
     await page.getByLabel("Asking price in Canadian dollars").fill(String(target + offset));
     await expect(page.locator(".price-band.band-close")).toHaveCount(1);
-    const below = await labelOverlap();
-    expect(below.labels).toBe(0);
-    expect(below.dots).toBe(0);
-    await expect(page.locator(".price-band.band-close.band-ask-left")).toHaveCount(1);
+    await assertOnScale(`close below ${offset}`);
   }
 
-  // Exact coincidence (ask == estimate, 0pp) keeps the stronger exact path with zero overlap.
+  // Exact coincidence (ask == estimate, 0pp) keeps the exact path with zero text overlap.
   await page.getByLabel("Asking price in Canadian dollars").fill(String(target));
   await expect(page.locator(".price-band.band-close.band-exact")).toHaveCount(1);
-  expect((await labelOverlap()).labels).toBe(0);
-  expect((await labelOverlap()).dots).toBe(0);
+  await assertOnScale("exact coincidence");
 
   // A distant ask leaves the collision path (flag is conditional, not always-on).
   await page.getByLabel("Asking price in Canadian dollars").fill(String(target + 10000));
   await expect(page.locator(".price-band.band-close")).toHaveCount(0);
+  await assertOnScale("distant above");
 });
 
 test("lab-stats keeps 5 columns on wide screens", async ({ page }, testInfo) => {

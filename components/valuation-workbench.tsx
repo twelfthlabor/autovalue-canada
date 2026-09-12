@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { conditionModelMetadata, predictConditionAdjustedValue, type ConditionProfile, type ConditionValuation } from "@/lib/condition-model";
+import { bandPosition, bandScale, layoutBandItems } from "@/lib/band-layout";
 import { confidenceForSample, dealSignalForPrediction, displayBandValues, formatCad, formatNumber, type MarketRow } from "@/lib/market";
 import { normalizeVin, validateNorthAmericanVin, vinStatusCopy } from "@/lib/vin";
 import { resolveVinMarketSelection, vinMarketEditAction } from "@/lib/vin-market-match";
@@ -50,18 +51,15 @@ const FACTOR_ICONS: Record<string, ReactElement> = {
 
 function PredictionBand({ valuation, askingPrice, row }: { valuation: ConditionValuation; askingPrice?: number; row: MarketRow }) {
   const band = displayBandValues(row, valuation);
-  const padding = Math.max((band.p90 - band.p10) * 0.1, 800);
-  const min = Math.max(0, Math.min(band.p10, band.p25) - padding);
-  const max = Math.max(band.p90, band.p75) + padding;
-  const position = (value: number) => Math.max(2.5, Math.min(97.5, ((value - min) / (max - min)) * 100));
+  const scale = bandScale(band);
+  const position = (value: number) => bandPosition(value, scale.min, scale.max);
   const medianPos = position(band.p50);
   const askPos = askingPrice !== undefined ? position(askingPrice) : null;
   const gapPp = askPos !== null ? Math.abs(askPos - medianPos) : null;
   const labelsClose = gapPp !== null && gapPp < 14;
   const labelsExact = gapPp !== null && gapPp < 2;
-  const askLeftOfMedian = askPos !== null && askPos < medianPos;
-  const askSide = askLeftOfMedian ? " band-ask-left" : "";
-  const bandEdge = labelsClose && askPos !== null ? (Math.min(medianPos, askPos) < 10 ? " band-edge-l" : Math.max(medianPos, askPos) > 90 ? " band-edge-r" : "") : "";
+  const bandRef = useRef<HTMLDivElement>(null);
+  const captionRef = useRef<HTMLDivElement>(null);
   const percentiles = [
     { label: "P10", value: band.p10 },
     { label: "P25", value: band.p25 },
@@ -69,16 +67,72 @@ function PredictionBand({ valuation, askingPrice, row }: { valuation: ConditionV
     { label: "P75", value: band.p75 },
     { label: "P90", value: band.p90 },
   ];
+
+  // One coordinate system: `position()` percent is the only source of truth.
+  // Measure the rendered boxes, then hand back only the minimal containment
+  // shift (`--band-shift`) and caption rows (`--band-row`). Nothing else moves
+  // a marker off its value.
+  useLayoutEffect(() => {
+    const bandEl = bandRef.current;
+    const captionEl = captionRef.current;
+    if (!bandEl || !captionEl) return;
+    const finiteBand = [band.p10, band.p25, band.p50, band.p75, band.p90].every((value) => Number.isFinite(value));
+    if (!finiteBand || (askingPrice !== undefined && !Number.isFinite(askingPrice))) return;
+
+    const apply = () => {
+      if (!bandEl.isConnected || !captionEl.isConnected) return;
+      const bandRect = bandEl.getBoundingClientRect();
+      if (bandRect.width <= 0) return;
+      const cardRect = (bandEl.closest(".valuation-band") ?? bandEl).getBoundingClientRect();
+      const minCenter = cardRect.left + 1 - bandRect.left;
+      const maxCenter = cardRect.right - 1 - bandRect.left;
+
+      const labels: Array<{ element: HTMLElement; position: number }> = [];
+      bandEl.querySelectorAll<HTMLElement>(".band-median, .band-asking").forEach((dot) => {
+        const element = dot.querySelector<HTMLElement>("i");
+        const declared = Number(dot.dataset.bandPos);
+        if (element && Number.isFinite(declared)) labels.push({ element, position: declared });
+      });
+      const labelItems = labels.map(({ element, position: itemPosition }) => {
+        const rect = element.getBoundingClientRect();
+        return { position: itemPosition, width: rect.width, height: rect.height };
+      });
+      const labelLayout = layoutBandItems(labelItems, bandRect.width, minCenter, maxCenter, 6);
+      labels.forEach(({ element }, index) => {
+        element.style.setProperty("--band-shift", `${labelLayout.shifts[index]}px`);
+      });
+
+      const captions = Array.from(captionEl.querySelectorAll<HTMLElement>("span[data-band-pos]"));
+      const captionItems = captions.map((caption) => {
+        const rect = caption.getBoundingClientRect();
+        return { position: Number(caption.dataset.bandPos), width: rect.width, height: rect.height };
+      });
+      const captionLayout = layoutBandItems(captionItems, bandRect.width, minCenter, maxCenter, 6);
+      captions.forEach((caption, index) => {
+        caption.style.setProperty("--band-shift", `${captionLayout.shifts[index]}px`);
+        caption.style.setProperty("--band-row", String(captionLayout.rows[index]));
+      });
+      captionEl.style.setProperty("--band-row-h", `${captionLayout.rowHeight}px`);
+      captionEl.style.height = `${captionLayout.rowCount * captionLayout.rowHeight}px`;
+    };
+
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(bandEl);
+    void document.fonts.ready.then(apply);
+    return () => observer.disconnect();
+  }, [band.p10, band.p25, band.p50, band.p75, band.p90, askingPrice]);
+
   return (
     <div className="band-wrap prediction-band">
-      <div className="band-caption">
-        {percentiles.map((p) => <span key={p.label} className={p.emphasis ? "emphasis" : undefined}><small>{p.label}</small><b>{formatCad(p.value)}</b></span>)}
+      <div className="band-caption" ref={captionRef}>
+        {percentiles.map((p) => <span key={p.label} className={p.emphasis ? "emphasis" : undefined} data-band-pos={position(p.value)} style={{ left: `${position(p.value)}%` }}><small>{p.label}</small><b>{formatCad(p.value)}</b></span>)}
       </div>
-      <div className={`price-band${labelsClose ? " band-close" : ""}${labelsExact ? " band-exact" : ""}${askSide}${bandEdge}`}>
+      <div ref={bandRef} className={`price-band${labelsClose ? " band-close" : ""}${labelsExact ? " band-exact" : ""}`}>
         <span className="band-outer" />
         <span className="band-typical" style={{ left: `${position(band.p10)}%`, right: `${100 - position(band.p90)}%` }} />
-        <span className="band-median" style={{ left: `${position(band.p50)}%` }}><i><b>ML estimate</b>{formatCad(band.p50)}</i></span>
-        {askingPrice ? <span className="band-asking" style={{ left: `${position(askingPrice)}%` }}><i><b>Listing ask</b>{formatCad(askingPrice)}</i></span> : null}
+        <span className="band-median" data-band-pos={medianPos} style={{ left: `${position(band.p50)}%` }}><i><b>ML estimate</b>{formatCad(band.p50)}</i></span>
+        {askingPrice ? <span className="band-asking" data-band-pos={askPos ?? undefined} style={{ left: `${position(askingPrice)}%` }}><i><b>Listing ask</b>{formatCad(askingPrice)}</i></span> : null}
       </div>
     </div>
   );
