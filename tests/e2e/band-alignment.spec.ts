@@ -31,6 +31,7 @@ import { expect, test, type Page, type TestInfo } from "@playwright/test";
 
 const DESKTOP_PROJECT = "chromium-desktop";
 const DESKTOP_VIEWPORT = { width: 1440, height: 900 };
+const SHORT_VIEWPORT = { width: 1280, height: 720 };
 const MOBILE_VIEWPORT = { width: 412, height: 915 };
 const NARROW_VIEWPORT = { width: 320, height: 568 };
 
@@ -445,4 +446,10 @@ for (const state of STATES) {
       await runBandState(page, testInfo, state, NARROW_VIEWPORT);
     });
   }
+
+  test(`band containment @${SHORT_VIEWPORT.width}x${SHORT_VIEWPORT.height}: ${state.slug} — ${state.label}`, async ({ page }, testInfo: TestInfo) => {
+    test.skip(testInfo.project.name !== DESKTOP_PROJECT, "1280x720 short-height containment runs once from the desktop project");
+    await page.setViewportSize(SHORT_VIEWPORT);
+    await runBandState(page, testInfo, state, SHORT_VIEWPORT);
+  });
 }
