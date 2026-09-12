@@ -1,7 +1,10 @@
 import { expect, test } from "@playwright/test";
+import modelMetrics from "../../public/data/model-metrics.json";
 
 test("fold-bars avoids the mobile 2+2+1 orphan and stays 5-col on wide screens", async ({ page }, testInfo) => {
   await page.goto("/market-lab");
+  // Measure the final geometry without depending on animation timing.
+  await page.addStyleTag({ content: ".fold-bars i b { animation: none !important; }" });
   const bars = page.locator(".fold-bars");
   await expect(bars).toBeVisible();
   await expect(bars.locator("div")).toHaveCount(5);
@@ -22,10 +25,7 @@ test("fold-bars avoids the mobile 2+2+1 orphan and stays 5-col on wide screens",
     }));
     expect(Math.abs(widths.last - widths.grid)).toBeLessThanOrEqual(1);
 
-    // Equal percentages must render at an equal pixel scale: the spanning last
-    // bar's inner track has to stay one column wide, not two. Wait out the
-    // 700ms band-grow animation before measuring.
-    await page.waitForTimeout(900);
+    // The spanning last bar's inner track must stay one column wide.
     const measured = await bars.evaluate((el) => {
       const cells = [...el.children];
       const tracks = cells.map((cell) => cell.querySelector("i")!.getBoundingClientRect().width);
@@ -36,7 +36,15 @@ test("fold-bars avoids the mobile 2+2+1 orphan and stays 5-col on wide screens",
     await testInfo.attach("fold-bar-measurements.json", { body: JSON.stringify(measured), contentType: "application/json" });
 
     expect(Math.max(...measured.tracks) - Math.min(...measured.tracks)).toBeLessThanOrEqual(1);
-    expect(Math.abs(measured.fills[3] - measured.fills[4])).toBeLessThanOrEqual(2);
+    // Folds can have different error rates after CI retrains the benchmark.
+    // Verify each fill against its data, rather than assuming folds 4 and 5 match.
+    const maxWape = Math.max(...modelMetrics.folds.map((fold) => fold.model.wape_pct));
+    for (const [index, fold] of modelMetrics.folds.entries()) {
+      const expectedWidth = measured.tracks[index] * fold.model.wape_pct / maxWape;
+      expect(Math.abs(measured.fills[index] - expectedWidth)).toBeLessThanOrEqual(1);
+      await expect(bars.locator("div").nth(index).locator(":scope > b"))
+        .toHaveText(`${fold.model.wape_pct.toFixed(1)}%`);
+    }
   } else {
     expect(columns).toBe(5);
     // All five bars share one row (no orphan).

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import modelMetrics from "../../public/data/model-metrics.json";
 
 test("default price check is complete and evidence-labelled", async ({ page }, testInfo) => {
   await page.goto("/");
@@ -117,7 +118,9 @@ test("methodology and control-room evidence are public", async ({ page }, testIn
   await expect(page.getByRole("heading", { name: "All release gates passed" })).toBeVisible();
   await expect(page.getByText("VERIFIED")).toBeVisible();
   await expect(page.getByText("5,605")).toBeVisible();
-  await expect(page.getByText("−45.2%")).toBeVisible();
+  // CI retrains this research benchmark before building the page.
+  await expect(page.locator(".model-card.research .scoreboard article").nth(1).locator("strong"))
+    .toHaveText(`−${modelMetrics.maeImprovementVsBaselinePct.toFixed(1)}%`);
   await expect(page.getByText(/Zero make-model overlap/)).toBeVisible();
 
   await page.goto("/calculation");
