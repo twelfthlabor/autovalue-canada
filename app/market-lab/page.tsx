@@ -10,9 +10,33 @@ const provinceNames: Record<string, string> = {
   NS: "Nova Scotia", NT: "Northwest Territories", ON: "Ontario", PE: "Prince Edward Island", QC: "Quebec", SK: "Saskatchewan", YT: "Yukon",
 };
 
+type SegmentRow = {
+  segment: string;
+  n: number;
+  maeCad?: number;
+  medianAeCad?: number;
+  wapePct?: number;
+  coverage80Pct?: number;
+  intervalWidthPct?: number;
+};
+
+type SegmentAxis = { definition: string; baseline: SegmentRow[]; model: SegmentRow[] };
+
+const segmentAxes: Array<[string, string]> = [
+  ["auctionGrade", "Auction grade"],
+  ["saleYear", "Sale year"],
+  ["priceBand", "Price band"],
+  ["logOdometerDeltaSextile", "Odometer delta vs peers"],
+  ["peerCountTercile", "Peer count"],
+];
+
 export default function MarketLabPage() {
   const sha = manifest.sourceSha256;
   const maxFoldWape = Math.max(...modelMetrics.folds.map((fold) => fold.model.wape_pct));
+  const segments = conditionModel.validation.segments as unknown as Record<string, SegmentAxis>;
+  const segmentPairs = segmentAxes.flatMap(([axisKey]) => segments[axisKey].baseline.map((baseline, index) => ({ baseline, model: segments[axisKey].model[index] })));
+  const modelWins = segmentPairs.filter(({ baseline, model }) => (model.wapePct ?? Infinity) < (baseline.wapePct ?? -Infinity)).length;
+  const intervalWidthPct = segments.auctionGrade.model[0]?.intervalWidthPct;
 
   return (
     <div className="inner-page">
@@ -113,6 +137,62 @@ export default function MarketLabPage() {
               </div>
             ))}
           </div>
+        </article>
+      </section>
+
+      <section className="segment-card">
+        <article className="qa-card">
+          <div className="qa-head">
+            <div>
+              <p className="kicker">Segment validation</p>
+              <h2>Where the error concentrates.</h2>
+            </div>
+            <span className="pill pill-blue">TEMPORAL TEST · 39,132 OUTCOMES</span>
+          </div>
+          <div className="segment-table-wrap">
+            <table className="segment-table" aria-label="Temporal-test error by validation segment, peer baseline vs condition model">
+              <thead>
+                <tr>
+                  <th scope="col">Segment</th>
+                  <th scope="col">n</th>
+                  <th scope="col" className="seg-mae">Baseline MAE</th>
+                  <th scope="col" className="seg-mae">Model MAE</th>
+                  <th scope="col">Baseline WAPE</th>
+                  <th scope="col">Model WAPE</th>
+                  <th scope="col">Model 80% coverage</th>
+                </tr>
+              </thead>
+              {segmentAxes.map(([axisKey, axisTitle]) => (
+                <tbody key={axisKey}>
+                  <tr className="group">
+                    <th scope="colgroup" colSpan={7} title={segments[axisKey].definition}>{axisTitle}</th>
+                  </tr>
+                  {segments[axisKey].baseline.map((row, index) => {
+                    const model = segments[axisKey].model[index];
+                    return (
+                      <tr key={row.segment}>
+                        <th scope="row">{row.segment}</th>
+                        <td>{row.n.toLocaleString("en-CA")}</td>
+                        <td className="seg-mae">${row.maeCad?.toLocaleString("en-CA")}</td>
+                        <td className="seg-mae">${model.maeCad?.toLocaleString("en-CA")}</td>
+                        <td>{row.wapePct?.toFixed(2)}%</td>
+                        <td>{model.wapePct?.toFixed(2)}%</td>
+                        <td className={model.coverage80Pct !== undefined && model.coverage80Pct < 80 ? "cov-under" : undefined}>
+                          {model.coverage80Pct?.toFixed(2)}%
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              ))}
+            </table>
+          </div>
+          <p className="seg-note">
+            80% coverage is the share of each segment&apos;s actual sale prices inside the global temporal-test
+            interval [P10, P90] of log(actual / model prediction); its width is {intervalWidthPct?.toFixed(2)}% of the
+            central estimate, so it does not re-fit per segment. The model improves WAPE in {modelWins} of{" "}
+            {segmentPairs.length} segments; the remaining rows are where the peer baseline already prices well.
+          </p>
         </article>
       </section>
 
