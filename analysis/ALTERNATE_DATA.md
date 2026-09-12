@@ -32,15 +32,15 @@ Residual dispersion is 0.2533 (graded) versus 0.2881 (ungraded). The ungraded sl
 
 The Readme codebook describes them only as: "32 dummies from the auction house's database specifying different types of damage or background information on the vehicle." The individual flags are not enumerated anywhere in the archive; `step1_regression.do` uses `vin_exdum*` as generic controls and adds no names. `odoflagnew_dum` is documented: 1 = odometer considered accurate, 0 = questionable.
 
-Measured on the 91,278-row graded trainer population:
+Measured on the full 91,278-row graded trainer population (all sale years, 2006–2010); the controlled coefficient comes from `target ~ log_odometer_delta + condition_score + flag` on the same rows:
 
-| flag | prevalence | raw target gap | controlled coefficient (delta + score) |
+| flag | prevalence | raw target gap | controlled coefficient (se, z) |
 |---|---:|---:|---:|
-| `vin_exdum22` | 4.32% | −0.2471 | −0.2003 (se 0.0054, z −36.9) |
-| `vin_exdum5` | 0.69% | −0.0024 | −0.0478 (se 0.0121, z −3.9) |
-| `vin_exdum27` | 4.24% | −0.1539 | — |
+| `vin_exdum22` | 4.32% | −0.2471 | −0.1891 (0.0038, −50.1) |
+| `vin_exdum5` | 0.51% | −0.0119 | −0.0456 (0.0105, −4.3) |
+| `vin_exdum27` | 4.24% | −0.1539 | −0.0888 (0.0038, −23.4) |
 
-The `vin_exdum22` numbers reproduce the figures in the brief (4.3%, −0.247) exactly; on the 2006–2008 fit window alone the prevalence is 3.69% and the raw gap −0.2628. The flags carry real, large residual signal. They also move the learned grade mapping: training the champion on rows with no flags at all raises the GBR Rough multiplier by +3.4% and Extra Rough/Salvage by +9.7% relative to training on all rows, while the odometer multipliers move less than 0.5% (Average at delta ±0.5: −0.47% / +0.30%). In other words, today the grade multipliers absorb undisclosed-damage discounts that the consumer form cannot express.
+The `vin_exdum22` full-population numbers reproduce the figures in the brief (4.3%, −0.247) exactly. On the 2006–2008 fit window alone the same flag reads 3.69% / −0.2628 (controlled −0.2003, se 0.0054) and `vin_exdum5` reads 0.69% / −0.0024 (controlled −0.0478, se 0.0121) — smaller samples, same direction. The flags carry real, large residual signal. They also move the learned grade mapping: training the champion on the 2006–2008 rows with no flags at all raises the GBR Rough multiplier by +3.4% and Extra Rough/Salvage by +9.7% relative to training on all rows, while the odometer multipliers move less than 0.5% (Average at delta ±0.5: −0.47% / +0.30%). In other words, today the grade multipliers absorb undisclosed-damage discounts that the consumer form cannot express.
 
 **Verdict:** park it. Adding the flags would help accuracy on the historical panel, but the 32 flags cannot be mapped to the consumer accident/title input without the auction house's or author's flag dictionary, which is not in the cached archive. Even with names, a seller's disclosure dummy is not the buyer's self-reported accident history. Revisit only if a documented mapping appears.
 
@@ -57,7 +57,13 @@ Champion hyper-parameters, fit on 2006–2007, evaluated on 2008:
 
 **Recommendation:** drop `odoflagnew_dum == 0` rows from future fits (a consistent −$2.44 MAE, −0.18%), and leave the 2008 evaluation set unchanged so comparisons stay on frozen ground. The effect is small enough that it is housekeeping for the next refit, not a challenger to pre-register.
 
-**What was run:** a scratch probe using the venv Python that reloads both `pre_step1_ins*.csv` files with `usecols` extended to `odoflagnew_dum` and `vin_exdum1-32`, rebuilds the trainer's filters and peer stats, then runs the OLS/interaction and champion-GBR A/B described above. Reproduce with `/Users/daniel/Desktop/repo/.venvs/autovalue-ml/bin/python`; the peer group is `sale_year, auction, year, make, model, vin_modeltrim`, and all models use `random_state=42`.
+**Reproduce every number in this section:**
+
+```bash
+/Users/daniel/Desktop/repo/.venvs/autovalue-ml/bin/python analysis/probe_alternate_data.py
+```
+
+`analysis/probe_alternate_data.py` reloads both `pre_step1_ins*.csv` files with `usecols` extended to `odoflagnew_dum` and `vin_exdum1-32`, rebuilds the trainer's filters and peer stats, then runs the OLS/interaction, damage-flag and champion-GBR A/B probes above. It writes nothing; the peer group is `sale_year, auction, year, make, model, vin_modeltrim` and all stochastic fits use `random_state=42`.
 
 ---
 

@@ -111,6 +111,8 @@ def main() -> None:
         (300000, 350000, False, 0.1542),
         (300000, 350001, True, 0.1542),
         (100, 350000, True, 0.8569),
+        # Raw 0.869676 was inside the old cap, outside the train-only one.
+        (100, 240, True, 0.8569),
         (90, 90, True, 0),
         (-5, -6, True, 0),
         (-100, 50000, True, 0.8569),

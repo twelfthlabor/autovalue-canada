@@ -90,6 +90,9 @@ describe("odometer extrapolation flag", () => {
     { baseline: 300_000, target: 350_000, flag: false, logOdometerDelta: 0.1542 },
     { baseline: 300_000, target: 350_001, flag: true, logOdometerDelta: 0.1542 },
     { baseline: 100, target: 350_000, flag: true, logOdometerDelta: 0.8569 },
+    // Raw log-delta 0.869676 sits inside the old 0.880628 cap but above the
+    // train-only 0.856905 cap: it must now clamp and flag as extrapolation.
+    { baseline: 100, target: 240, flag: true, logOdometerDelta: 0.8569 },
     { baseline: 90, target: 90, flag: true, logOdometerDelta: 0 },
     { baseline: -5, target: -6, flag: true, logOdometerDelta: 0 },
     { baseline: -100, target: 50_000, flag: true, logOdometerDelta: 0.8569 },
