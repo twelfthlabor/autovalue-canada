@@ -183,7 +183,7 @@ def estimate_artifact_bytes(model) -> int:
     reference = len(json.dumps(champion, separators=(",", ":")))
     champion_trees = len(json.dumps(champion["model"]["trees"], separators=(",", ":")))
     candidate_trees = len(
-        json.dumps([tcm.export_tree(estimator) for estimator in model.estimators_], separators=(",", ":"))
+        json.dumps([tcm.export_tree(estimator[0]) for estimator in model.estimators_], separators=(",", ":"))
     )
     return reference - champion_trees + candidate_trees
 

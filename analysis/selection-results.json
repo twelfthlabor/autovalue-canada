@@ -1,0 +1,5847 @@
+{
+ "protocol": {
+  "sklearnVersion": "1.7.0",
+  "split": {
+   "fitSaleYears": "2006-2007",
+   "fitRows": 18201,
+   "validateSaleYear": 2008,
+   "validateRows": 33945,
+   "testSaleYears": "2009-2010",
+   "testRows": 39132
+  },
+  "selectionRule": "lowest validation maeCad; ties: fewer n_estimators, lower max_depth, lower min_samples_leaf, id",
+  "adoptionGate": {
+   "testMaeMaxCad": 1162.24,
+   "segmentMinN": 2000,
+   "segmentMaxDegradePct": 2.0,
+   "artifactMaxBytes": 153600
+  },
+  "grid": {
+   "max_depth": [
+    2,
+    3,
+    4
+   ],
+   "learning_rate": [
+    0.02,
+    0.04,
+    0.08
+   ],
+   "min_samples_leaf": [
+    40,
+    80,
+    160
+   ],
+   "loss": [
+    {
+     "loss": "huber",
+     "alpha": 0.9
+    },
+    {
+     "loss": "huber",
+     "alpha": 0.95
+    },
+    {
+     "loss": "squared_error"
+    }
+   ],
+   "subsample": [
+    0.8,
+    1.0
+   ],
+   "n_estimators": [
+    140,
+    280
+   ],
+   "plainCandidates": 324,
+   "weightVariants": [
+    {
+     "id": "w-recency",
+     "weight": "recency"
+    },
+    {
+     "id": "w-peer-count",
+     "weight": "peer"
+    },
+    {
+     "id": "w-price-level",
+     "weight": "price"
+    }
+   ],
+   "weightedBase": {
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "alpha": 0.9,
+    "subsample": 0.8,
+    "n_estimators": 140
+   }
+  },
+  "monotonicCst": {
+   "GradientBoostingRegressor": false,
+   "detail": "sklearn 1.7.0 GradientBoostingRegressor.__init__ has no monotonic_cst parameter; passing it raises TypeError. Family (b) was not executed. HistGradientBoostingRegressor supports monotonic constraints but serializes a different tree format than the TypeScript evaluator consumes."
+  }
+ },
+ "championReference": {
+  "artifactBytes": 38076,
+  "test": {
+   "maeCad": 1198.19,
+   "medianAeCad": 884.56,
+   "wapePct": 11.601
+  },
+  "selectedInArtifact": {}
+ },
+ "validation": {
+  "candidateCount": 327,
+  "flat": [
+   {
+    "id": "g001",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1288.98,
+     "medianAeCad": 979.09,
+     "wapePct": 12.426
+    }
+   },
+   {
+    "id": "g002",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1319.57,
+     "medianAeCad": 1006.55,
+     "wapePct": 12.721
+    }
+   },
+   {
+    "id": "g003",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1290.72,
+     "medianAeCad": 979.77,
+     "wapePct": 12.442
+    }
+   },
+   {
+    "id": "g004",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1317.97,
+     "medianAeCad": 1005.61,
+     "wapePct": 12.705
+    }
+   },
+   {
+    "id": "g005",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1296.08,
+     "medianAeCad": 982.45,
+     "wapePct": 12.494
+    }
+   },
+   {
+    "id": "g006",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1331.17,
+     "medianAeCad": 1012.31,
+     "wapePct": 12.832
+    }
+   },
+   {
+    "id": "g007",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1295.93,
+     "medianAeCad": 983.51,
+     "wapePct": 12.493
+    }
+   },
+   {
+    "id": "g008",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1329.2,
+     "medianAeCad": 1012.65,
+     "wapePct": 12.813
+    }
+   },
+   {
+    "id": "g009",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1305.12,
+     "medianAeCad": 987.7,
+     "wapePct": 12.581
+    }
+   },
+   {
+    "id": "g010",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1352.7,
+     "medianAeCad": 1023.26,
+     "wapePct": 13.04
+    }
+   },
+   {
+    "id": "g011",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1308.93,
+     "medianAeCad": 991.61,
+     "wapePct": 12.618
+    }
+   },
+   {
+    "id": "g012",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1349.1,
+     "medianAeCad": 1022.42,
+     "wapePct": 13.005
+    }
+   },
+   {
+    "id": "g013",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1288.98,
+     "medianAeCad": 979.52,
+     "wapePct": 12.426
+    }
+   },
+   {
+    "id": "g014",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1319.36,
+     "medianAeCad": 1005.3,
+     "wapePct": 12.719
+    }
+   },
+   {
+    "id": "g015",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1290.73,
+     "medianAeCad": 979.77,
+     "wapePct": 12.443
+    }
+   },
+   {
+    "id": "g016",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1318.01,
+     "medianAeCad": 1005.52,
+     "wapePct": 12.706
+    }
+   },
+   {
+    "id": "g017",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1296.17,
+     "medianAeCad": 982.47,
+     "wapePct": 12.495
+    }
+   },
+   {
+    "id": "g018",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1331.68,
+     "medianAeCad": 1013.54,
+     "wapePct": 12.837
+    }
+   },
+   {
+    "id": "g019",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1295.93,
+     "medianAeCad": 983.51,
+     "wapePct": 12.493
+    }
+   },
+   {
+    "id": "g020",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1328.55,
+     "medianAeCad": 1012.89,
+     "wapePct": 12.807
+    }
+   },
+   {
+    "id": "g021",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1305.85,
+     "medianAeCad": 988.11,
+     "wapePct": 12.588
+    }
+   },
+   {
+    "id": "g022",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1350.98,
+     "medianAeCad": 1023.18,
+     "wapePct": 13.023
+    }
+   },
+   {
+    "id": "g023",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1310.06,
+     "medianAeCad": 989.95,
+     "wapePct": 12.629
+    }
+   },
+   {
+    "id": "g024",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1349.47,
+     "medianAeCad": 1023.32,
+     "wapePct": 13.009
+    }
+   },
+   {
+    "id": "g025",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1290.04,
+     "medianAeCad": 981.3,
+     "wapePct": 12.436
+    }
+   },
+   {
+    "id": "g026",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1321.14,
+     "medianAeCad": 1006.52,
+     "wapePct": 12.736
+    }
+   },
+   {
+    "id": "g027",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1290.09,
+     "medianAeCad": 979.65,
+     "wapePct": 12.436
+    }
+   },
+   {
+    "id": "g028",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1320.04,
+     "medianAeCad": 1006.28,
+     "wapePct": 12.725
+    }
+   },
+   {
+    "id": "g029",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1295.39,
+     "medianAeCad": 983.88,
+     "wapePct": 12.488
+    }
+   },
+   {
+    "id": "g030",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1330.89,
+     "medianAeCad": 1014.34,
+     "wapePct": 12.83
+    }
+   },
+   {
+    "id": "g031",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1295.7,
+     "medianAeCad": 984.56,
+     "wapePct": 12.49
+    }
+   },
+   {
+    "id": "g032",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1330.05,
+     "medianAeCad": 1013.33,
+     "wapePct": 12.822
+    }
+   },
+   {
+    "id": "g033",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1305.47,
+     "medianAeCad": 987.72,
+     "wapePct": 12.585
+    }
+   },
+   {
+    "id": "g034",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1352.43,
+     "medianAeCad": 1022.6,
+     "wapePct": 13.037
+    }
+   },
+   {
+    "id": "g035",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1308.49,
+     "medianAeCad": 990.18,
+     "wapePct": 12.614
+    }
+   },
+   {
+    "id": "g036",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1349.67,
+     "medianAeCad": 1021.16,
+     "wapePct": 13.011
+    }
+   },
+   {
+    "id": "g037",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1320.58,
+     "medianAeCad": 1006.78,
+     "wapePct": 12.73
+    }
+   },
+   {
+    "id": "g038",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1351.55,
+     "medianAeCad": 1030.51,
+     "wapePct": 13.029
+    }
+   },
+   {
+    "id": "g039",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1319.07,
+     "medianAeCad": 1006.41,
+     "wapePct": 12.716
+    }
+   },
+   {
+    "id": "g040",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1344.84,
+     "medianAeCad": 1024.84,
+     "wapePct": 12.964
+    }
+   },
+   {
+    "id": "g041",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1333.51,
+     "medianAeCad": 1013.2,
+     "wapePct": 12.855
+    }
+   },
+   {
+    "id": "g042",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1366.56,
+     "medianAeCad": 1037.81,
+     "wapePct": 13.174
+    }
+   },
+   {
+    "id": "g043",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1330.2,
+     "medianAeCad": 1014.24,
+     "wapePct": 12.823
+    }
+   },
+   {
+    "id": "g044",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1356.93,
+     "medianAeCad": 1031.85,
+     "wapePct": 13.081
+    }
+   },
+   {
+    "id": "g045",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1352.45,
+     "medianAeCad": 1021.82,
+     "wapePct": 13.038
+    }
+   },
+   {
+    "id": "g046",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1390.77,
+     "medianAeCad": 1048.44,
+     "wapePct": 13.407
+    }
+   },
+   {
+    "id": "g047",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1348.68,
+     "medianAeCad": 1022.42,
+     "wapePct": 13.001
+    }
+   },
+   {
+    "id": "g048",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1384.15,
+     "medianAeCad": 1043.38,
+     "wapePct": 13.343
+    }
+   },
+   {
+    "id": "g049",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1322.17,
+     "medianAeCad": 1007.57,
+     "wapePct": 12.746
+    }
+   },
+   {
+    "id": "g050",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1352.59,
+     "medianAeCad": 1030.31,
+     "wapePct": 13.039
+    }
+   },
+   {
+    "id": "g051",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1319.37,
+     "medianAeCad": 1006.13,
+     "wapePct": 12.719
+    }
+   },
+   {
+    "id": "g052",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1344.88,
+     "medianAeCad": 1024.62,
+     "wapePct": 12.965
+    }
+   },
+   {
+    "id": "g053",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1333.14,
+     "medianAeCad": 1013.89,
+     "wapePct": 12.851
+    }
+   },
+   {
+    "id": "g054",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1365.57,
+     "medianAeCad": 1037.94,
+     "wapePct": 13.164
+    }
+   },
+   {
+    "id": "g055",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1329.22,
+     "medianAeCad": 1013.94,
+     "wapePct": 12.814
+    }
+   },
+   {
+    "id": "g056",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1357.49,
+     "medianAeCad": 1033.34,
+     "wapePct": 13.086
+    }
+   },
+   {
+    "id": "g057",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1350.31,
+     "medianAeCad": 1021.73,
+     "wapePct": 13.017
+    }
+   },
+   {
+    "id": "g058",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1387.2,
+     "medianAeCad": 1044.47,
+     "wapePct": 13.372
+    }
+   },
+   {
+    "id": "g059",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1349.66,
+     "medianAeCad": 1023.36,
+     "wapePct": 13.011
+    }
+   },
+   {
+    "id": "g060",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1381.01,
+     "medianAeCad": 1043.62,
+     "wapePct": 13.313
+    }
+   },
+   {
+    "id": "g061",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1321.07,
+     "medianAeCad": 1005.17,
+     "wapePct": 12.735
+    }
+   },
+   {
+    "id": "g062",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1354.23,
+     "medianAeCad": 1028.85,
+     "wapePct": 13.055
+    }
+   },
+   {
+    "id": "g063",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1321.42,
+     "medianAeCad": 1006.54,
+     "wapePct": 12.738
+    }
+   },
+   {
+    "id": "g064",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1346.2,
+     "medianAeCad": 1025.44,
+     "wapePct": 12.977
+    }
+   },
+   {
+    "id": "g065",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1331.51,
+     "medianAeCad": 1013.1,
+     "wapePct": 12.836
+    }
+   },
+   {
+    "id": "g066",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1366.06,
+     "medianAeCad": 1038.02,
+     "wapePct": 13.169
+    }
+   },
+   {
+    "id": "g067",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1330.03,
+     "medianAeCad": 1012.84,
+     "wapePct": 12.821
+    }
+   },
+   {
+    "id": "g068",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1355.24,
+     "medianAeCad": 1030.72,
+     "wapePct": 13.064
+    }
+   },
+   {
+    "id": "g069",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1352.49,
+     "medianAeCad": 1020.98,
+     "wapePct": 13.038
+    }
+   },
+   {
+    "id": "g070",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1389.5,
+     "medianAeCad": 1047.15,
+     "wapePct": 13.395
+    }
+   },
+   {
+    "id": "g071",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1350.17,
+     "medianAeCad": 1022.38,
+     "wapePct": 13.016
+    }
+   },
+   {
+    "id": "g072",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1378.94,
+     "medianAeCad": 1041.11,
+     "wapePct": 13.293
+    }
+   },
+   {
+    "id": "g073",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1350.09,
+     "medianAeCad": 1027.64,
+     "wapePct": 13.015
+    }
+   },
+   {
+    "id": "g074",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1364.47,
+     "medianAeCad": 1037.45,
+     "wapePct": 13.153
+    }
+   },
+   {
+    "id": "g075",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1342.14,
+     "medianAeCad": 1021.61,
+     "wapePct": 12.938
+    }
+   },
+   {
+    "id": "g076",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1346.02,
+     "medianAeCad": 1024.22,
+     "wapePct": 12.976
+    }
+   },
+   {
+    "id": "g077",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1363.94,
+     "medianAeCad": 1035.02,
+     "wapePct": 13.148
+    }
+   },
+   {
+    "id": "g078",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1379.7,
+     "medianAeCad": 1043.67,
+     "wapePct": 13.3
+    }
+   },
+   {
+    "id": "g079",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1357.21,
+     "medianAeCad": 1031.49,
+     "wapePct": 13.083
+    }
+   },
+   {
+    "id": "g080",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1361.23,
+     "medianAeCad": 1034.76,
+     "wapePct": 13.122
+    }
+   },
+   {
+    "id": "g081",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1387.84,
+     "medianAeCad": 1048.15,
+     "wapePct": 13.379
+    }
+   },
+   {
+    "id": "g082",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1406.49,
+     "medianAeCad": 1055.81,
+     "wapePct": 13.558
+    }
+   },
+   {
+    "id": "g083",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1386.3,
+     "medianAeCad": 1044.38,
+     "wapePct": 13.364
+    }
+   },
+   {
+    "id": "g084",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1404.55,
+     "medianAeCad": 1054.02,
+     "wapePct": 13.54
+    }
+   },
+   {
+    "id": "g085",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1351.47,
+     "medianAeCad": 1029.86,
+     "wapePct": 13.028
+    }
+   },
+   {
+    "id": "g086",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1366.46,
+     "medianAeCad": 1041.92,
+     "wapePct": 13.173
+    }
+   },
+   {
+    "id": "g087",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1340.94,
+     "medianAeCad": 1020.39,
+     "wapePct": 12.927
+    }
+   },
+   {
+    "id": "g088",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1344.09,
+     "medianAeCad": 1022.92,
+     "wapePct": 12.957
+    }
+   },
+   {
+    "id": "g089",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1363.18,
+     "medianAeCad": 1035.09,
+     "wapePct": 13.141
+    }
+   },
+   {
+    "id": "g090",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1379.76,
+     "medianAeCad": 1043.23,
+     "wapePct": 13.301
+    }
+   },
+   {
+    "id": "g091",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1357.5,
+     "medianAeCad": 1032.84,
+     "wapePct": 13.086
+    }
+   },
+   {
+    "id": "g092",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1362.39,
+     "medianAeCad": 1037.17,
+     "wapePct": 13.133
+    }
+   },
+   {
+    "id": "g093",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1387.78,
+     "medianAeCad": 1047.99,
+     "wapePct": 13.378
+    }
+   },
+   {
+    "id": "g094",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1408.03,
+     "medianAeCad": 1058.07,
+     "wapePct": 13.573
+    }
+   },
+   {
+    "id": "g095",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1382.73,
+     "medianAeCad": 1045.05,
+     "wapePct": 13.329
+    }
+   },
+   {
+    "id": "g096",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1400.1,
+     "medianAeCad": 1054.92,
+     "wapePct": 13.497
+    }
+   },
+   {
+    "id": "g097",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1349.02,
+     "medianAeCad": 1025.45,
+     "wapePct": 13.004
+    }
+   },
+   {
+    "id": "g098",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1363.83,
+     "medianAeCad": 1037.44,
+     "wapePct": 13.147
+    }
+   },
+   {
+    "id": "g099",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1344.41,
+     "medianAeCad": 1023.56,
+     "wapePct": 12.96
+    }
+   },
+   {
+    "id": "g100",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1347.67,
+     "medianAeCad": 1026.8,
+     "wapePct": 12.991
+    }
+   },
+   {
+    "id": "g101",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1360.06,
+     "medianAeCad": 1035.13,
+     "wapePct": 13.111
+    }
+   },
+   {
+    "id": "g102",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1378.84,
+     "medianAeCad": 1042.57,
+     "wapePct": 13.292
+    }
+   },
+   {
+    "id": "g103",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1356.18,
+     "medianAeCad": 1030.43,
+     "wapePct": 13.073
+    }
+   },
+   {
+    "id": "g104",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1360.86,
+     "medianAeCad": 1033.36,
+     "wapePct": 13.119
+    }
+   },
+   {
+    "id": "g105",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1384.55,
+     "medianAeCad": 1043.25,
+     "wapePct": 13.347
+    }
+   },
+   {
+    "id": "g106",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1404.57,
+     "medianAeCad": 1052.65,
+     "wapePct": 13.54
+    }
+   },
+   {
+    "id": "g107",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1381.54,
+     "medianAeCad": 1044.9,
+     "wapePct": 13.318
+    }
+   },
+   {
+    "id": "g108",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1390.03,
+     "medianAeCad": 1049.78,
+     "wapePct": 13.4
+    }
+   },
+   {
+    "id": "g109",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1310.12,
+     "medianAeCad": 998.99,
+     "wapePct": 12.629
+    }
+   },
+   {
+    "id": "g110",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1351.02,
+     "medianAeCad": 1029.96,
+     "wapePct": 13.024
+    }
+   },
+   {
+    "id": "g111",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1308.26,
+     "medianAeCad": 998.84,
+     "wapePct": 12.612
+    }
+   },
+   {
+    "id": "g112",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1348.95,
+     "medianAeCad": 1026.23,
+     "wapePct": 13.004
+    }
+   },
+   {
+    "id": "g113",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1324.21,
+     "medianAeCad": 1010.91,
+     "wapePct": 12.765
+    }
+   },
+   {
+    "id": "g114",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1365.61,
+     "medianAeCad": 1034.7,
+     "wapePct": 13.164
+    }
+   },
+   {
+    "id": "g115",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1322.22,
+     "medianAeCad": 1009.2,
+     "wapePct": 12.746
+    }
+   },
+   {
+    "id": "g116",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1364.22,
+     "medianAeCad": 1034.94,
+     "wapePct": 13.151
+    }
+   },
+   {
+    "id": "g117",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1346.24,
+     "medianAeCad": 1019.88,
+     "wapePct": 12.978
+    }
+   },
+   {
+    "id": "g118",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1394.8,
+     "medianAeCad": 1050.89,
+     "wapePct": 13.446
+    }
+   },
+   {
+    "id": "g119",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1344.5,
+     "medianAeCad": 1021.61,
+     "wapePct": 12.961
+    }
+   },
+   {
+    "id": "g120",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1390.6,
+     "medianAeCad": 1047.72,
+     "wapePct": 13.405
+    }
+   },
+   {
+    "id": "g121",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1311.19,
+     "medianAeCad": 1000.79,
+     "wapePct": 12.64
+    }
+   },
+   {
+    "id": "g122",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1351.83,
+     "medianAeCad": 1029.28,
+     "wapePct": 13.032
+    }
+   },
+   {
+    "id": "g123",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1310.58,
+     "medianAeCad": 1001.14,
+     "wapePct": 12.634
+    }
+   },
+   {
+    "id": "g124",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1349.73,
+     "medianAeCad": 1028.3,
+     "wapePct": 13.011
+    }
+   },
+   {
+    "id": "g125",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1324.7,
+     "medianAeCad": 1011.43,
+     "wapePct": 12.77
+    }
+   },
+   {
+    "id": "g126",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1366.82,
+     "medianAeCad": 1036.92,
+     "wapePct": 13.176
+    }
+   },
+   {
+    "id": "g127",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1323.3,
+     "medianAeCad": 1009.64,
+     "wapePct": 12.757
+    }
+   },
+   {
+    "id": "g128",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1364.89,
+     "medianAeCad": 1037.35,
+     "wapePct": 13.157
+    }
+   },
+   {
+    "id": "g129",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1346.73,
+     "medianAeCad": 1020.95,
+     "wapePct": 12.982
+    }
+   },
+   {
+    "id": "g130",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1395.95,
+     "medianAeCad": 1050.43,
+     "wapePct": 13.457
+    }
+   },
+   {
+    "id": "g131",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1347.05,
+     "medianAeCad": 1024.53,
+     "wapePct": 12.985
+    }
+   },
+   {
+    "id": "g132",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1392.04,
+     "medianAeCad": 1049.48,
+     "wapePct": 13.419
+    }
+   },
+   {
+    "id": "g133",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1307.59,
+     "medianAeCad": 996.72,
+     "wapePct": 12.605
+    }
+   },
+   {
+    "id": "g134",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1348.88,
+     "medianAeCad": 1025.5,
+     "wapePct": 13.003
+    }
+   },
+   {
+    "id": "g135",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1309.36,
+     "medianAeCad": 999.67,
+     "wapePct": 12.622
+    }
+   },
+   {
+    "id": "g136",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1352.7,
+     "medianAeCad": 1028.01,
+     "wapePct": 13.04
+    }
+   },
+   {
+    "id": "g137",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1321.25,
+     "medianAeCad": 1006.11,
+     "wapePct": 12.737
+    }
+   },
+   {
+    "id": "g138",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1365.0,
+     "medianAeCad": 1033.57,
+     "wapePct": 13.159
+    }
+   },
+   {
+    "id": "g139",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1323.08,
+     "medianAeCad": 1009.44,
+     "wapePct": 12.754
+    }
+   },
+   {
+    "id": "g140",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1367.47,
+     "medianAeCad": 1037.32,
+     "wapePct": 13.182
+    }
+   },
+   {
+    "id": "g141",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1346.18,
+     "medianAeCad": 1021.76,
+     "wapePct": 12.977
+    }
+   },
+   {
+    "id": "g142",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1396.77,
+     "medianAeCad": 1045.27,
+     "wapePct": 13.465
+    }
+   },
+   {
+    "id": "g143",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1345.22,
+     "medianAeCad": 1023.05,
+     "wapePct": 12.968
+    }
+   },
+   {
+    "id": "g144",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1395.2,
+     "medianAeCad": 1047.2,
+     "wapePct": 13.45
+    }
+   },
+   {
+    "id": "g145",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1349.58,
+     "medianAeCad": 1028.21,
+     "wapePct": 13.01
+    }
+   },
+   {
+    "id": "g146",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1366.86,
+     "medianAeCad": 1037.87,
+     "wapePct": 13.176
+    }
+   },
+   {
+    "id": "g147",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1349.41,
+     "medianAeCad": 1027.18,
+     "wapePct": 13.008
+    }
+   },
+   {
+    "id": "g148",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1367.19,
+     "medianAeCad": 1038.02,
+     "wapePct": 13.18
+    }
+   },
+   {
+    "id": "g149",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1365.21,
+     "medianAeCad": 1035.17,
+     "wapePct": 13.161
+    }
+   },
+   {
+    "id": "g150",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1384.04,
+     "medianAeCad": 1045.67,
+     "wapePct": 13.342
+    }
+   },
+   {
+    "id": "g151",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1364.61,
+     "medianAeCad": 1037.01,
+     "wapePct": 13.155
+    }
+   },
+   {
+    "id": "g152",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1379.64,
+     "medianAeCad": 1039.92,
+     "wapePct": 13.3
+    }
+   },
+   {
+    "id": "g153",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1394.15,
+     "medianAeCad": 1049.32,
+     "wapePct": 13.44
+    }
+   },
+   {
+    "id": "g154",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1411.25,
+     "medianAeCad": 1058.56,
+     "wapePct": 13.604
+    }
+   },
+   {
+    "id": "g155",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1391.77,
+     "medianAeCad": 1048.94,
+     "wapePct": 13.417
+    }
+   },
+   {
+    "id": "g156",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1405.72,
+     "medianAeCad": 1056.46,
+     "wapePct": 13.551
+    }
+   },
+   {
+    "id": "g157",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1351.23,
+     "medianAeCad": 1028.3,
+     "wapePct": 13.026
+    }
+   },
+   {
+    "id": "g158",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1366.1,
+     "medianAeCad": 1038.56,
+     "wapePct": 13.169
+    }
+   },
+   {
+    "id": "g159",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1350.81,
+     "medianAeCad": 1028.65,
+     "wapePct": 13.022
+    }
+   },
+   {
+    "id": "g160",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1363.97,
+     "medianAeCad": 1036.23,
+     "wapePct": 13.149
+    }
+   },
+   {
+    "id": "g161",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1364.73,
+     "medianAeCad": 1037.53,
+     "wapePct": 13.156
+    }
+   },
+   {
+    "id": "g162",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1381.86,
+     "medianAeCad": 1045.16,
+     "wapePct": 13.321
+    }
+   },
+   {
+    "id": "g163",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1364.53,
+     "medianAeCad": 1038.33,
+     "wapePct": 13.154
+    }
+   },
+   {
+    "id": "g164",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1380.79,
+     "medianAeCad": 1043.22,
+     "wapePct": 13.311
+    }
+   },
+   {
+    "id": "g165",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1396.16,
+     "medianAeCad": 1049.1,
+     "wapePct": 13.459
+    }
+   },
+   {
+    "id": "g166",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1410.6,
+     "medianAeCad": 1056.72,
+     "wapePct": 13.598
+    }
+   },
+   {
+    "id": "g167",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1389.92,
+     "medianAeCad": 1049.77,
+     "wapePct": 13.399
+    }
+   },
+   {
+    "id": "g168",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1409.28,
+     "medianAeCad": 1060.07,
+     "wapePct": 13.585
+    }
+   },
+   {
+    "id": "g169",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1349.23,
+     "medianAeCad": 1024.62,
+     "wapePct": 13.006
+    }
+   },
+   {
+    "id": "g170",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1366.68,
+     "medianAeCad": 1034.36,
+     "wapePct": 13.175
+    }
+   },
+   {
+    "id": "g171",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1353.28,
+     "medianAeCad": 1028.88,
+     "wapePct": 13.045
+    }
+   },
+   {
+    "id": "g172",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1367.29,
+     "medianAeCad": 1039.04,
+     "wapePct": 13.181
+    }
+   },
+   {
+    "id": "g173",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1363.87,
+     "medianAeCad": 1033.4,
+     "wapePct": 13.148
+    }
+   },
+   {
+    "id": "g174",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1382.88,
+     "medianAeCad": 1041.36,
+     "wapePct": 13.331
+    }
+   },
+   {
+    "id": "g175",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1366.5,
+     "medianAeCad": 1037.73,
+     "wapePct": 13.173
+    }
+   },
+   {
+    "id": "g176",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1385.68,
+     "medianAeCad": 1042.67,
+     "wapePct": 13.358
+    }
+   },
+   {
+    "id": "g177",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1397.64,
+     "medianAeCad": 1046.59,
+     "wapePct": 13.473
+    }
+   },
+   {
+    "id": "g178",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1411.81,
+     "medianAeCad": 1052.22,
+     "wapePct": 13.61
+    }
+   },
+   {
+    "id": "g179",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1396.1,
+     "medianAeCad": 1048.41,
+     "wapePct": 13.458
+    }
+   },
+   {
+    "id": "g180",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1406.41,
+     "medianAeCad": 1053.27,
+     "wapePct": 13.558
+    }
+   },
+   {
+    "id": "g181",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1365.33,
+     "medianAeCad": 1035.64,
+     "wapePct": 13.162
+    }
+   },
+   {
+    "id": "g182",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1375.79,
+     "medianAeCad": 1040.68,
+     "wapePct": 13.263
+    }
+   },
+   {
+    "id": "g183",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1363.92,
+     "medianAeCad": 1034.09,
+     "wapePct": 13.148
+    }
+   },
+   {
+    "id": "g184",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1374.17,
+     "medianAeCad": 1039.65,
+     "wapePct": 13.247
+    }
+   },
+   {
+    "id": "g185",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1384.64,
+     "medianAeCad": 1044.89,
+     "wapePct": 13.348
+    }
+   },
+   {
+    "id": "g186",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1395.44,
+     "medianAeCad": 1052.43,
+     "wapePct": 13.452
+    }
+   },
+   {
+    "id": "g187",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1379.99,
+     "medianAeCad": 1039.79,
+     "wapePct": 13.303
+    }
+   },
+   {
+    "id": "g188",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1385.93,
+     "medianAeCad": 1042.54,
+     "wapePct": 13.36
+    }
+   },
+   {
+    "id": "g189",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1414.17,
+     "medianAeCad": 1058.02,
+     "wapePct": 13.632
+    }
+   },
+   {
+    "id": "g190",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1423.48,
+     "medianAeCad": 1064.44,
+     "wapePct": 13.722
+    }
+   },
+   {
+    "id": "g191",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1408.8,
+     "medianAeCad": 1059.9,
+     "wapePct": 13.581
+    }
+   },
+   {
+    "id": "g192",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1416.59,
+     "medianAeCad": 1064.58,
+     "wapePct": 13.656
+    }
+   },
+   {
+    "id": "g193",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1367.24,
+     "medianAeCad": 1039.93,
+     "wapePct": 13.18
+    }
+   },
+   {
+    "id": "g194",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1376.17,
+     "medianAeCad": 1043.87,
+     "wapePct": 13.266
+    }
+   },
+   {
+    "id": "g195",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1362.68,
+     "medianAeCad": 1037.07,
+     "wapePct": 13.136
+    }
+   },
+   {
+    "id": "g196",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1371.11,
+     "medianAeCad": 1043.48,
+     "wapePct": 13.217
+    }
+   },
+   {
+    "id": "g197",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1384.05,
+     "medianAeCad": 1046.17,
+     "wapePct": 13.342
+    }
+   },
+   {
+    "id": "g198",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1394.66,
+     "medianAeCad": 1050.1,
+     "wapePct": 13.444
+    }
+   },
+   {
+    "id": "g199",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1381.9,
+     "medianAeCad": 1044.71,
+     "wapePct": 13.321
+    }
+   },
+   {
+    "id": "g200",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1388.02,
+     "medianAeCad": 1051.15,
+     "wapePct": 13.38
+    }
+   },
+   {
+    "id": "g201",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1408.53,
+     "medianAeCad": 1054.63,
+     "wapePct": 13.578
+    }
+   },
+   {
+    "id": "g202",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1422.32,
+     "medianAeCad": 1061.26,
+     "wapePct": 13.711
+    }
+   },
+   {
+    "id": "g203",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1410.74,
+     "medianAeCad": 1058.96,
+     "wapePct": 13.599
+    }
+   },
+   {
+    "id": "g204",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1414.01,
+     "medianAeCad": 1060.28,
+     "wapePct": 13.631
+    }
+   },
+   {
+    "id": "g205",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1365.04,
+     "medianAeCad": 1035.01,
+     "wapePct": 13.159
+    }
+   },
+   {
+    "id": "g206",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1378.21,
+     "medianAeCad": 1041.51,
+     "wapePct": 13.286
+    }
+   },
+   {
+    "id": "g207",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1360.61,
+     "medianAeCad": 1033.96,
+     "wapePct": 13.116
+    }
+   },
+   {
+    "id": "g208",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1369.62,
+     "medianAeCad": 1041.18,
+     "wapePct": 13.203
+    }
+   },
+   {
+    "id": "g209",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1377.56,
+     "medianAeCad": 1039.37,
+     "wapePct": 13.28
+    }
+   },
+   {
+    "id": "g210",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1392.97,
+     "medianAeCad": 1047.41,
+     "wapePct": 13.428
+    }
+   },
+   {
+    "id": "g211",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1383.59,
+     "medianAeCad": 1041.22,
+     "wapePct": 13.338
+    }
+   },
+   {
+    "id": "g212",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1393.05,
+     "medianAeCad": 1049.94,
+     "wapePct": 13.429
+    }
+   },
+   {
+    "id": "g213",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1410.33,
+     "medianAeCad": 1054.79,
+     "wapePct": 13.595
+    }
+   },
+   {
+    "id": "g214",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1425.0,
+     "medianAeCad": 1058.34,
+     "wapePct": 13.737
+    }
+   },
+   {
+    "id": "g215",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1410.86,
+     "medianAeCad": 1054.25,
+     "wapePct": 13.601
+    }
+   },
+   {
+    "id": "g216",
+    "family": "plain",
+    "max_depth": 3,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1415.54,
+     "medianAeCad": 1055.03,
+     "wapePct": 13.646
+    }
+   },
+   {
+    "id": "g217",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1333.66,
+     "medianAeCad": 1019.33,
+     "wapePct": 12.856
+    }
+   },
+   {
+    "id": "g218",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1366.18,
+     "medianAeCad": 1038.42,
+     "wapePct": 13.17
+    }
+   },
+   {
+    "id": "g219",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1332.3,
+     "medianAeCad": 1017.95,
+     "wapePct": 12.843
+    }
+   },
+   {
+    "id": "g220",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1362.87,
+     "medianAeCad": 1038.34,
+     "wapePct": 13.138
+    }
+   },
+   {
+    "id": "g221",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1348.45,
+     "medianAeCad": 1025.73,
+     "wapePct": 12.999
+    }
+   },
+   {
+    "id": "g222",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1384.35,
+     "medianAeCad": 1045.71,
+     "wapePct": 13.345
+    }
+   },
+   {
+    "id": "g223",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1347.05,
+     "medianAeCad": 1025.43,
+     "wapePct": 12.985
+    }
+   },
+   {
+    "id": "g224",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1380.83,
+     "medianAeCad": 1045.4,
+     "wapePct": 13.311
+    }
+   },
+   {
+    "id": "g225",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1368.79,
+     "medianAeCad": 1034.59,
+     "wapePct": 13.195
+    }
+   },
+   {
+    "id": "g226",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1410.18,
+     "medianAeCad": 1057.87,
+     "wapePct": 13.594
+    }
+   },
+   {
+    "id": "g227",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1367.72,
+     "medianAeCad": 1033.36,
+     "wapePct": 13.185
+    }
+   },
+   {
+    "id": "g228",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1407.7,
+     "medianAeCad": 1060.78,
+     "wapePct": 13.57
+    }
+   },
+   {
+    "id": "g229",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1332.68,
+     "medianAeCad": 1017.04,
+     "wapePct": 12.847
+    }
+   },
+   {
+    "id": "g230",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1366.45,
+     "medianAeCad": 1038.65,
+     "wapePct": 13.173
+    }
+   },
+   {
+    "id": "g231",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1333.14,
+     "medianAeCad": 1018.51,
+     "wapePct": 12.851
+    }
+   },
+   {
+    "id": "g232",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1363.8,
+     "medianAeCad": 1039.07,
+     "wapePct": 13.147
+    }
+   },
+   {
+    "id": "g233",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1348.4,
+     "medianAeCad": 1026.85,
+     "wapePct": 12.998
+    }
+   },
+   {
+    "id": "g234",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1383.42,
+     "medianAeCad": 1045.21,
+     "wapePct": 13.336
+    }
+   },
+   {
+    "id": "g235",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1346.01,
+     "medianAeCad": 1024.49,
+     "wapePct": 12.975
+    }
+   },
+   {
+    "id": "g236",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1380.5,
+     "medianAeCad": 1044.17,
+     "wapePct": 13.308
+    }
+   },
+   {
+    "id": "g237",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1368.66,
+     "medianAeCad": 1033.24,
+     "wapePct": 13.194
+    }
+   },
+   {
+    "id": "g238",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1410.69,
+     "medianAeCad": 1056.55,
+     "wapePct": 13.599
+    }
+   },
+   {
+    "id": "g239",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1367.88,
+     "medianAeCad": 1032.27,
+     "wapePct": 13.186
+    }
+   },
+   {
+    "id": "g240",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1406.2,
+     "medianAeCad": 1056.71,
+     "wapePct": 13.556
+    }
+   },
+   {
+    "id": "g241",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1334.54,
+     "medianAeCad": 1016.01,
+     "wapePct": 12.865
+    }
+   },
+   {
+    "id": "g242",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1368.37,
+     "medianAeCad": 1039.46,
+     "wapePct": 13.191
+    }
+   },
+   {
+    "id": "g243",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1333.44,
+     "medianAeCad": 1017.79,
+     "wapePct": 12.854
+    }
+   },
+   {
+    "id": "g244",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1367.37,
+     "medianAeCad": 1038.9,
+     "wapePct": 13.181
+    }
+   },
+   {
+    "id": "g245",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1349.4,
+     "medianAeCad": 1025.87,
+     "wapePct": 13.008
+    }
+   },
+   {
+    "id": "g246",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1385.14,
+     "medianAeCad": 1044.17,
+     "wapePct": 13.353
+    }
+   },
+   {
+    "id": "g247",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1347.59,
+     "medianAeCad": 1025.63,
+     "wapePct": 12.991
+    }
+   },
+   {
+    "id": "g248",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1384.29,
+     "medianAeCad": 1045.56,
+     "wapePct": 13.344
+    }
+   },
+   {
+    "id": "g249",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1365.23,
+     "medianAeCad": 1031.32,
+     "wapePct": 13.161
+    }
+   },
+   {
+    "id": "g250",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1407.6,
+     "medianAeCad": 1052.63,
+     "wapePct": 13.569
+    }
+   },
+   {
+    "id": "g251",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1365.18,
+     "medianAeCad": 1033.31,
+     "wapePct": 13.16
+    }
+   },
+   {
+    "id": "g252",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1405.7,
+     "medianAeCad": 1053.82,
+     "wapePct": 13.551
+    }
+   },
+   {
+    "id": "g253",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1365.98,
+     "medianAeCad": 1039.39,
+     "wapePct": 13.168
+    }
+   },
+   {
+    "id": "g254",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1375.77,
+     "medianAeCad": 1043.76,
+     "wapePct": 13.262
+    }
+   },
+   {
+    "id": "g255",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1364.11,
+     "medianAeCad": 1037.21,
+     "wapePct": 13.15
+    }
+   },
+   {
+    "id": "g256",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1371.04,
+     "medianAeCad": 1042.23,
+     "wapePct": 13.217
+    }
+   },
+   {
+    "id": "g257",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1384.38,
+     "medianAeCad": 1047.33,
+     "wapePct": 13.345
+    }
+   },
+   {
+    "id": "g258",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1394.78,
+     "medianAeCad": 1053.77,
+     "wapePct": 13.446
+    }
+   },
+   {
+    "id": "g259",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1381.23,
+     "medianAeCad": 1046.78,
+     "wapePct": 13.315
+    }
+   },
+   {
+    "id": "g260",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1388.13,
+     "medianAeCad": 1047.6,
+     "wapePct": 13.381
+    }
+   },
+   {
+    "id": "g261",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1412.54,
+     "medianAeCad": 1056.82,
+     "wapePct": 13.617
+    }
+   },
+   {
+    "id": "g262",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1424.13,
+     "medianAeCad": 1065.6,
+     "wapePct": 13.729
+    }
+   },
+   {
+    "id": "g263",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1406.06,
+     "medianAeCad": 1057.15,
+     "wapePct": 13.554
+    }
+   },
+   {
+    "id": "g264",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1416.14,
+     "medianAeCad": 1063.72,
+     "wapePct": 13.651
+    }
+   },
+   {
+    "id": "g265",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1366.11,
+     "medianAeCad": 1039.23,
+     "wapePct": 13.169
+    }
+   },
+   {
+    "id": "g266",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1375.59,
+     "medianAeCad": 1044.91,
+     "wapePct": 13.261
+    }
+   },
+   {
+    "id": "g267",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1364.18,
+     "medianAeCad": 1039.11,
+     "wapePct": 13.151
+    }
+   },
+   {
+    "id": "g268",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1371.82,
+     "medianAeCad": 1043.56,
+     "wapePct": 13.224
+    }
+   },
+   {
+    "id": "g269",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1383.0,
+     "medianAeCad": 1045.21,
+     "wapePct": 13.332
+    }
+   },
+   {
+    "id": "g270",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1393.75,
+     "medianAeCad": 1052.72,
+     "wapePct": 13.436
+    }
+   },
+   {
+    "id": "g271",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1381.99,
+     "medianAeCad": 1045.49,
+     "wapePct": 13.322
+    }
+   },
+   {
+    "id": "g272",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1390.09,
+     "medianAeCad": 1051.0,
+     "wapePct": 13.4
+    }
+   },
+   {
+    "id": "g273",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1409.29,
+     "medianAeCad": 1055.42,
+     "wapePct": 13.586
+    }
+   },
+   {
+    "id": "g274",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1421.88,
+     "medianAeCad": 1060.43,
+     "wapePct": 13.707
+    }
+   },
+   {
+    "id": "g275",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1406.63,
+     "medianAeCad": 1056.54,
+     "wapePct": 13.56
+    }
+   },
+   {
+    "id": "g276",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1415.84,
+     "medianAeCad": 1060.44,
+     "wapePct": 13.649
+    }
+   },
+   {
+    "id": "g277",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1366.74,
+     "medianAeCad": 1038.9,
+     "wapePct": 13.175
+    }
+   },
+   {
+    "id": "g278",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1377.9,
+     "medianAeCad": 1042.99,
+     "wapePct": 13.283
+    }
+   },
+   {
+    "id": "g279",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1365.49,
+     "medianAeCad": 1036.92,
+     "wapePct": 13.163
+    }
+   },
+   {
+    "id": "g280",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1376.84,
+     "medianAeCad": 1044.02,
+     "wapePct": 13.273
+    }
+   },
+   {
+    "id": "g281",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1383.24,
+     "medianAeCad": 1046.57,
+     "wapePct": 13.334
+    }
+   },
+   {
+    "id": "g282",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1393.95,
+     "medianAeCad": 1049.53,
+     "wapePct": 13.438
+    }
+   },
+   {
+    "id": "g283",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1384.9,
+     "medianAeCad": 1045.48,
+     "wapePct": 13.35
+    }
+   },
+   {
+    "id": "g284",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1393.71,
+     "medianAeCad": 1051.72,
+     "wapePct": 13.435
+    }
+   },
+   {
+    "id": "g285",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1407.53,
+     "medianAeCad": 1049.92,
+     "wapePct": 13.569
+    }
+   },
+   {
+    "id": "g286",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1418.87,
+     "medianAeCad": 1051.68,
+     "wapePct": 13.678
+    }
+   },
+   {
+    "id": "g287",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1407.37,
+     "medianAeCad": 1054.43,
+     "wapePct": 13.567
+    }
+   },
+   {
+    "id": "g288",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1414.01,
+     "medianAeCad": 1054.06,
+     "wapePct": 13.631
+    }
+   },
+   {
+    "id": "g289",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1375.75,
+     "medianAeCad": 1041.67,
+     "wapePct": 13.262
+    }
+   },
+   {
+    "id": "g290",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1383.27,
+     "medianAeCad": 1047.73,
+     "wapePct": 13.335
+    }
+   },
+   {
+    "id": "g291",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1370.06,
+     "medianAeCad": 1040.42,
+     "wapePct": 13.207
+    }
+   },
+   {
+    "id": "g292",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1377.72,
+     "medianAeCad": 1043.49,
+     "wapePct": 13.281
+    }
+   },
+   {
+    "id": "g293",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1392.54,
+     "medianAeCad": 1052.08,
+     "wapePct": 13.424
+    }
+   },
+   {
+    "id": "g294",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1401.83,
+     "medianAeCad": 1057.64,
+     "wapePct": 13.514
+    }
+   },
+   {
+    "id": "g295",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1386.96,
+     "medianAeCad": 1043.96,
+     "wapePct": 13.37
+    }
+   },
+   {
+    "id": "g296",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1391.58,
+     "medianAeCad": 1046.23,
+     "wapePct": 13.415
+    }
+   },
+   {
+    "id": "g297",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1426.66,
+     "medianAeCad": 1067.59,
+     "wapePct": 13.753
+    }
+   },
+   {
+    "id": "g298",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1435.72,
+     "medianAeCad": 1072.11,
+     "wapePct": 13.84
+    }
+   },
+   {
+    "id": "g299",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1419.46,
+     "medianAeCad": 1064.07,
+     "wapePct": 13.683
+    }
+   },
+   {
+    "id": "g300",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 40,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1424.03,
+     "medianAeCad": 1065.47,
+     "wapePct": 13.728
+    }
+   },
+   {
+    "id": "g301",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1378.21,
+     "medianAeCad": 1046.31,
+     "wapePct": 13.286
+    }
+   },
+   {
+    "id": "g302",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1387.25,
+     "medianAeCad": 1051.32,
+     "wapePct": 13.373
+    }
+   },
+   {
+    "id": "g303",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1372.55,
+     "medianAeCad": 1044.48,
+     "wapePct": 13.231
+    }
+   },
+   {
+    "id": "g304",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1378.19,
+     "medianAeCad": 1046.99,
+     "wapePct": 13.286
+    }
+   },
+   {
+    "id": "g305",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1394.08,
+     "medianAeCad": 1052.71,
+     "wapePct": 13.439
+    }
+   },
+   {
+    "id": "g306",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1402.07,
+     "medianAeCad": 1057.15,
+     "wapePct": 13.516
+    }
+   },
+   {
+    "id": "g307",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1390.15,
+     "medianAeCad": 1049.76,
+     "wapePct": 13.401
+    }
+   },
+   {
+    "id": "g308",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1394.43,
+     "medianAeCad": 1051.18,
+     "wapePct": 13.442
+    }
+   },
+   {
+    "id": "g309",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1421.54,
+     "medianAeCad": 1062.98,
+     "wapePct": 13.704
+    }
+   },
+   {
+    "id": "g310",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1433.58,
+     "medianAeCad": 1069.4,
+     "wapePct": 13.82
+    }
+   },
+   {
+    "id": "g311",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1417.33,
+     "medianAeCad": 1059.03,
+     "wapePct": 13.663
+    }
+   },
+   {
+    "id": "g312",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 80,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1422.63,
+     "medianAeCad": 1060.02,
+     "wapePct": 13.714
+    }
+   },
+   {
+    "id": "g313",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1375.28,
+     "medianAeCad": 1040.64,
+     "wapePct": 13.258
+    }
+   },
+   {
+    "id": "g314",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1384.6,
+     "medianAeCad": 1046.5,
+     "wapePct": 13.347
+    }
+   },
+   {
+    "id": "g315",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1376.79,
+     "medianAeCad": 1044.98,
+     "wapePct": 13.272
+    }
+   },
+   {
+    "id": "g316",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1378.65,
+     "medianAeCad": 1045.87,
+     "wapePct": 13.29
+    }
+   },
+   {
+    "id": "g317",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1390.84,
+     "medianAeCad": 1047.05,
+     "wapePct": 13.408
+    }
+   },
+   {
+    "id": "g318",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1401.59,
+     "medianAeCad": 1052.69,
+     "wapePct": 13.511
+    }
+   },
+   {
+    "id": "g319",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1393.45,
+     "medianAeCad": 1050.63,
+     "wapePct": 13.433
+    }
+   },
+   {
+    "id": "g320",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1395.42,
+     "medianAeCad": 1053.58,
+     "wapePct": 13.452
+    }
+   },
+   {
+    "id": "g321",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1418.06,
+     "medianAeCad": 1054.6,
+     "wapePct": 13.67
+    }
+   },
+   {
+    "id": "g322",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 0.8,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1430.01,
+     "medianAeCad": 1063.02,
+     "wapePct": 13.785
+    }
+   },
+   {
+    "id": "g323",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1416.32,
+     "medianAeCad": 1055.2,
+     "wapePct": 13.653
+    }
+   },
+   {
+    "id": "g324",
+    "family": "plain",
+    "max_depth": 4,
+    "learning_rate": 0.08,
+    "min_samples_leaf": 160,
+    "loss": "squared_error",
+    "subsample": 1.0,
+    "n_estimators": 280,
+    "validation": {
+     "maeCad": 1419.45,
+     "medianAeCad": 1053.58,
+     "wapePct": 13.683
+    }
+   },
+   {
+    "id": "w-recency",
+    "family": "weighted",
+    "weight": "recency",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "alpha": 0.9,
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1325.55,
+     "medianAeCad": 1009.81,
+     "wapePct": 12.778
+    }
+   },
+   {
+    "id": "w-peer-count",
+    "family": "weighted",
+    "weight": "peer",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "alpha": 0.9,
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1287.28,
+     "medianAeCad": 966.16,
+     "wapePct": 12.409
+    }
+   },
+   {
+    "id": "w-price-level",
+    "family": "weighted",
+    "weight": "price",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "alpha": 0.9,
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1280.42,
+     "medianAeCad": 971.38,
+     "wapePct": 12.343
+    }
+   }
+  ],
+  "top10": [
+   {
+    "id": "w-price-level",
+    "family": "weighted",
+    "weight": "price",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "alpha": 0.9,
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1280.42,
+     "medianAeCad": 971.38,
+     "wapePct": 12.343
+    }
+   },
+   {
+    "id": "w-peer-count",
+    "family": "weighted",
+    "weight": "peer",
+    "max_depth": 2,
+    "learning_rate": 0.04,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "alpha": 0.9,
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "validation": {
+     "maeCad": 1287.28,
+     "medianAeCad": 966.16,
+     "wapePct": 12.409
+    }
+   },
+   {
+    "id": "g001",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1288.98,
+     "medianAeCad": 979.09,
+     "wapePct": 12.426
+    }
+   },
+   {
+    "id": "g013",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1288.98,
+     "medianAeCad": 979.52,
+     "wapePct": 12.426
+    }
+   },
+   {
+    "id": "g025",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1290.04,
+     "medianAeCad": 981.3,
+     "wapePct": 12.436
+    }
+   },
+   {
+    "id": "g027",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1290.09,
+     "medianAeCad": 979.65,
+     "wapePct": 12.436
+    }
+   },
+   {
+    "id": "g003",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 40,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1290.72,
+     "medianAeCad": 979.77,
+     "wapePct": 12.442
+    }
+   },
+   {
+    "id": "g015",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 80,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.9,
+    "validation": {
+     "maeCad": 1290.73,
+     "medianAeCad": 979.77,
+     "wapePct": 12.443
+    }
+   },
+   {
+    "id": "g029",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 0.8,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1295.39,
+     "medianAeCad": 983.88,
+     "wapePct": 12.488
+    }
+   },
+   {
+    "id": "g031",
+    "family": "plain",
+    "max_depth": 2,
+    "learning_rate": 0.02,
+    "min_samples_leaf": 160,
+    "loss": "huber",
+    "subsample": 1.0,
+    "n_estimators": 140,
+    "alpha": 0.95,
+    "validation": {
+     "maeCad": 1295.7,
+     "medianAeCad": 984.56,
+     "wapePct": 12.49
+    }
+   }
+  ],
+  "championRank": 1
+ },
+ "selection": {
+  "winnerId": "w-price-level",
+  "winner": {
+   "id": "w-price-level",
+   "family": "weighted",
+   "weight": "price",
+   "max_depth": 2,
+   "learning_rate": 0.04,
+   "min_samples_leaf": 80,
+   "loss": "huber",
+   "alpha": 0.9,
+   "subsample": 0.8,
+   "n_estimators": 140,
+   "validation": {
+    "maeCad": 1280.42,
+    "medianAeCad": 971.38,
+    "wapePct": 12.343
+   }
+  }
+ },
+ "testEvaluation": {
+  "winner": {
+   "id": "w-price-level",
+   "family": "weighted",
+   "weight": "price",
+   "max_depth": 2,
+   "learning_rate": 0.04,
+   "min_samples_leaf": 80,
+   "loss": "huber",
+   "alpha": 0.9,
+   "subsample": 0.8,
+   "n_estimators": 140,
+   "validation": {
+    "maeCad": 1280.42,
+    "medianAeCad": 971.38,
+    "wapePct": 12.343
+   }
+  },
+  "finalTrainRows": 52146,
+  "testRows": 39132,
+  "test": {
+   "maeCad": 1142.13,
+   "medianAeCad": 842.74,
+   "wapePct": 11.058
+  },
+  "championTest": {
+   "maeCad": 1198.19,
+   "medianAeCad": 884.56,
+   "wapePct": 11.601
+  },
+  "logResidualP10": -0.169941,
+  "logResidualP90": 0.254546,
+  "segments": {
+   "auctionGrade": {
+    "definition": "Auction condition grade (conrepgrade); all six grades are reported",
+    "baseline": [
+     {
+      "segment": "Salvage",
+      "n": 69,
+      "maeCad": 3724.57,
+      "medianAeCad": 2622.39,
+      "wapePct": 156.181
+     },
+     {
+      "segment": "Extra Rough",
+      "n": 1142,
+      "maeCad": 1796.93,
+      "medianAeCad": 1253.06,
+      "wapePct": 34.991
+     },
+     {
+      "segment": "Rough",
+      "n": 9184,
+      "maeCad": 1255.62,
+      "medianAeCad": 919.76,
+      "wapePct": 18.419
+     },
+     {
+      "segment": "Average",
+      "n": 18546,
+      "maeCad": 1259.39,
+      "medianAeCad": 925.69,
+      "wapePct": 13.246
+     },
+     {
+      "segment": "Clean",
+      "n": 9607,
+      "maeCad": 1138.54,
+      "medianAeCad": 780.4,
+      "wapePct": 7.369
+     },
+     {
+      "segment": "Extra Clean",
+      "n": 584,
+      "maeCad": 1460.93,
+      "medianAeCad": 1012.69,
+      "wapePct": 7.934
+     }
+    ],
+    "model": [
+     {
+      "segment": "Salvage",
+      "n": 69,
+      "maeCad": 2888.24,
+      "medianAeCad": 2038.98,
+      "wapePct": 121.111,
+      "coverage80Pct": 14.49,
+      "intervalWidthPct": 44.62
+     },
+     {
+      "segment": "Extra Rough",
+      "n": 1142,
+      "maeCad": 1228.91,
+      "medianAeCad": 856.69,
+      "wapePct": 23.93,
+      "coverage80Pct": 52.45,
+      "intervalWidthPct": 44.62
+     },
+     {
+      "segment": "Rough",
+      "n": 9184,
+      "maeCad": 1045.13,
+      "medianAeCad": 767.86,
+      "wapePct": 15.331,
+      "coverage80Pct": 68.79,
+      "intervalWidthPct": 44.62
+     },
+     {
+      "segment": "Average",
+      "n": 18546,
+      "maeCad": 1104.3,
+      "medianAeCad": 812.96,
+      "wapePct": 11.614,
+      "coverage80Pct": 80.49,
+      "intervalWidthPct": 44.62
+     },
+     {
+      "segment": "Clean",
+      "n": 9607,
+      "maeCad": 1263.81,
+      "medianAeCad": 977.63,
+      "wapePct": 8.179,
+      "coverage80Pct": 92.6,
+      "intervalWidthPct": 44.62
+     },
+     {
+      "segment": "Extra Clean",
+      "n": 584,
+      "maeCad": 1490.95,
+      "medianAeCad": 1124.8,
+      "wapePct": 8.097,
+      "coverage80Pct": 94.69,
+      "intervalWidthPct": 44.62
+     }
+    ]
+   },
+   "saleYear": {
+    "definition": "Sale year of the auction outcome",
+    "baseline": [
+     {
+      "segment": "2009",
+      "n": 36116,
+      "maeCad": 1282.86,
+      "medianAeCad": 931.95,
+      "wapePct": 12.799
+     },
+     {
+      "segment": "2010",
+      "n": 3016,
+      "maeCad": 880.85,
+      "medianAeCad": 558.91,
+      "wapePct": 6.301
+     }
+    ],
+    "model": [
+     {
+      "segment": "2009",
+      "n": 36116,
+      "maeCad": 1162.63,
+      "medianAeCad": 863.24,
+      "wapePct": 11.599,
+      "coverage80Pct": 78.84,
+      "intervalWidthPct": 44.62
+     },
+     {
+      "segment": "2010",
+      "n": 3016,
+      "maeCad": 896.65,
+      "medianAeCad": 645.5,
+      "wapePct": 6.414,
+      "coverage80Pct": 93.87,
+      "intervalWidthPct": 44.62
+     }
+    ]
+   },
+   "priceBand": {
+    "definition": "Actual sale price (USD), half-open bands: $0-5k [0,5000), $5-10k [5000,10000), $10-20k [10000,20000), $20k+ [20000,inf)",
+    "baseline": [
+     {
+      "segment": "$0-5k",
+      "n": 8496,
+      "maeCad": 991.42,
+      "medianAeCad": 734.42,
+      "wapePct": 30.28
+     },
+     {
+      "segment": "$5-10k",
+      "n": 12544,
+      "maeCad": 1193.87,
+      "medianAeCad": 920.15,
+      "wapePct": 16.141
+     },
+     {
+      "segment": "$10-20k",
+      "n": 14737,
+      "maeCad": 1342.76,
+      "medianAeCad": 937.64,
+      "wapePct": 9.647
+     },
+     {
+      "segment": "$20k+",
+      "n": 3355,
+      "maeCad": 1729.14,
+      "medianAeCad": 1219.03,
+      "wapePct": 7.396
+     }
+    ],
+    "model": [
+     {
+      "segment": "$0-5k",
+      "n": 8496,
+      "maeCad": 772.49,
+      "medianAeCad": 585.06,
+      "wapePct": 23.594,
+      "coverage80Pct": 55.43,
+      "intervalWidthPct": 44.62
+     },
+     {
+      "segment": "$5-10k",
+      "n": 12544,
+      "maeCad": 970.02,
+      "medianAeCad": 779.14,
+      "wapePct": 13.114,
+      "coverage80Pct": 79.67,
+      "intervalWidthPct": 44.62
+     },
+     {
+      "segment": "$10-20k",
+      "n": 14737,
+      "maeCad": 1322.87,
+      "medianAeCad": 1040.1,
+      "wapePct": 9.504,
+      "coverage80Pct": 90.99,
+      "intervalWidthPct": 44.62
+     },
+     {
+      "segment": "$20k+",
+      "n": 3355,
+      "maeCad": 1927.76,
+      "medianAeCad": 1525.93,
+      "wapePct": 8.246,
+      "coverage80Pct": 95.14,
+      "intervalWidthPct": 44.62
+     }
+    ]
+   },
+   "logOdometerDeltaSextile": {
+    "definition": "Quantile sextiles of test-row log(odometer / peer median odometer); tied values at an edge keep that bin's counts uneven. Quantile edges [-0.313414, -0.112846, 0.0, 0.107762, 0.282942]",
+    "baseline": [
+     {
+      "segment": "S1",
+      "n": 6522,
+      "maeCad": 1745.05,
+      "medianAeCad": 1367.76,
+      "wapePct": 14.345
+     },
+     {
+      "segment": "S2",
+      "n": 6522,
+      "maeCad": 1246.29,
+      "medianAeCad": 979.15,
+      "wapePct": 11.777
+     },
+     {
+      "segment": "S3",
+      "n": 7007,
+      "maeCad": 991.86,
+      "medianAeCad": 733.1,
+      "wapePct": 9.764
+     },
+     {
+      "segment": "S4",
+      "n": 6037,
+      "maeCad": 876.59,
+      "medianAeCad": 621.53,
+      "wapePct": 9.043
+     },
+     {
+      "segment": "S5",
+      "n": 6522,
+      "maeCad": 977.19,
+      "medianAeCad": 711.16,
+      "wapePct": 10.234
+     },
+     {
+      "segment": "S6",
+      "n": 6522,
+      "maeCad": 1665.71,
+      "medianAeCad": 1247.91,
+      "wapePct": 17.02
+     }
+    ],
+    "model": [
+     {
+      "segment": "S1",
+      "n": 6522,
+      "maeCad": 1550.04,
+      "medianAeCad": 1285.89,
+      "wapePct": 12.742,
+      "coverage80Pct": 75.31,
+      "intervalWidthPct": 44.62
+     },
+     {
+      "segment": "S2",
+      "n": 6522,
+      "maeCad": 1136.32,
+      "medianAeCad": 885.2,
+      "wapePct": 10.737,
+      "coverage80Pct": 79.19,
+      "intervalWidthPct": 44.62
+     },
+     {
+      "segment": "S3",
+      "n": 7007,
+      "maeCad": 974.06,
+      "medianAeCad": 729.24,
+      "wapePct": 9.589,
+      "coverage80Pct": 82.35,
+      "intervalWidthPct": 44.62
+     },
+     {
+      "segment": "S4",
+      "n": 6037,
+      "maeCad": 902.49,
+      "medianAeCad": 656.81,
+      "wapePct": 9.31,
+      "coverage80Pct": 84.59,
+      "intervalWidthPct": 44.62
+     },
+     {
+      "segment": "S5",
+      "n": 6522,
+      "maeCad": 966.47,
+      "medianAeCad": 700.14,
+      "wapePct": 10.121,
+      "coverage80Pct": 82.92,
+      "intervalWidthPct": 44.62
+     },
+     {
+      "segment": "S6",
+      "n": 6522,
+      "maeCad": 1318.06,
+      "medianAeCad": 976.28,
+      "wapePct": 13.468,
+      "coverage80Pct": 75.77,
+      "intervalWidthPct": 44.62
+     }
+    ]
+   },
+   "peerCountTercile": {
+    "definition": "Quantile terciles of matched peer count; integer peer counts make edge bins uneven. Quantile edges [14.0, 33.0]",
+    "baseline": [
+     {
+      "segment": "T1",
+      "n": 13070,
+      "maeCad": 1401.74,
+      "medianAeCad": 1039.65,
+      "wapePct": 15.675
+     },
+     {
+      "segment": "T2",
+      "n": 13232,
+      "maeCad": 1258.61,
+      "medianAeCad": 912.08,
+      "wapePct": 12.987
+     },
+     {
+      "segment": "T3",
+      "n": 12830,
+      "maeCad": 1092.26,
+      "medianAeCad": 771.2,
+      "wapePct": 8.811
+     }
+    ],
+    "model": [
+     {
+      "segment": "T1",
+      "n": 13070,
+      "maeCad": 1184.17,
+      "medianAeCad": 876.28,
+      "wapePct": 13.242,
+      "coverage80Pct": 73.01,
+      "intervalWidthPct": 44.62
+     },
+     {
+      "segment": "T2",
+      "n": 13232,
+      "maeCad": 1114.96,
+      "medianAeCad": 828.36,
+      "wapePct": 11.505,
+      "coverage80Pct": 77.65,
+      "intervalWidthPct": 44.62
+     },
+     {
+      "segment": "T3",
+      "n": 12830,
+      "maeCad": 1127.32,
+      "medianAeCad": 830.16,
+      "wapePct": 9.093,
+      "coverage80Pct": 89.53,
+      "intervalWidthPct": 44.62
+     }
+    ]
+   }
+  },
+  "gate": {
+   "testMaeMaxCad": 1162.24,
+   "testMae": 1142.13,
+   "maePass": true,
+   "segmentMinN": 2000,
+   "segmentMaxDegradePct": 2.0,
+   "segmentViolations": [
+    {
+     "axis": "priceBand",
+     "segment": "$0-5k",
+     "n": 8496,
+     "championMaeCad": 722.48,
+     "candidateMaeCad": 772.49,
+     "relativePct": 6.922
+    }
+   ],
+   "segmentPass": false,
+   "maxSegmentDegrade": {
+    "segment": "$0-5k",
+    "axis": "priceBand",
+    "relativePct": 6.922
+   },
+   "artifactMaxBytes": 153600,
+   "estimatedArtifactBytes": 37891,
+   "artifactPass": true,
+   "pass": false
+  },
+  "verdict": "reject"
+ },
+ "verdict": "reject"
+}
