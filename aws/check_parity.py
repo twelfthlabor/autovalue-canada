@@ -98,7 +98,8 @@ def main() -> None:
           f"clean {clean['estimate']} vs avg {average['estimate']}")
 
     # 2b. Odometer extrapolation vectors (mirrored from lib/condition-model.test.ts).
-    # Support is 100-350,000 km inclusive; the log-delta quantile cap is 0.880628.
+    # Support is 100-350,000 km inclusive; the train-only log-delta quantile
+    # bounds are -1.150765 and 0.856905.
     odometer_vectors = [
         (300000, 400000, True, 0.1542),
         (200000, 500000, True, 0.5596),
@@ -109,13 +110,13 @@ def main() -> None:
         (350000, 350000, False, 0),
         (300000, 350000, False, 0.1542),
         (300000, 350001, True, 0.1542),
-        (100, 350000, True, 0.8806),
+        (100, 350000, True, 0.8569),
         (90, 90, True, 0),
         (-5, -6, True, 0),
-        (-100, 50000, True, 0.8806),
+        (-100, 50000, True, 0.8569),
         (100000, 80000, False, -0.2231),
         (300000, 100000, False, -1.0986),
-        (350000, 100, True, -1.1618),
+        (350000, 100, True, -1.1508),
     ]
     for baseline, target, expected_flag, expected_delta in odometer_vectors:
         vector = model.predict(30000, 25000, 35000, baseline, target, {"conditionGrade": "average", **NEUTRAL})

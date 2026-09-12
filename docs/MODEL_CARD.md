@@ -47,6 +47,16 @@ Training uses sale years 2006–2008. The untouched temporal test uses 2009–20
 
 MAE improves 4.29% over the leave-one-out matched-peer baseline after applying the same Average-grade centering used in the browser. The consumer range combines the Canadian anchor range with the model's temporal-test P10/P90 log-residuals. It is an empirical model range, not a formally calibrated Canadian coverage guarantee.
 
+### Segment validation
+
+`validation.segments` (schema v2) publishes n, MAE, median absolute error and WAPE for the baseline and the model, sliced by auction grade, sale year, price band, log-odometer-delta quantile and peer-count quantile. Model slices also carry the share of actuals inside the global P10/P90 log-residual interval (45.86% of the central estimate).
+
+Coverage is uneven. Ten of the twenty-one slices sit below 80%: Salvage 15.9% (n=69), Extra Rough 49.6%, Rough 69.5%, sale year 2009 at 78.9%, the $0–5k band at 58.1%, odometer-delta sextiles S1 74.1%, S2 79.6% and S6 76.3%, and peer-count terciles T1 74.2% and T2 78.2%. The interval is not re-fit per slice, so these are descriptive gaps, not corrected intervals.
+
+The model's WAPE advantage is uneven too: it wins 13 of 21 slices. The largest gains are the $0–5k band (30.3% → 22.1%), Extra Rough (35.0% → 25.7%) and Rough (18.4% → 16.1%). It is worse than the baseline for Clean (7.4% → 8.7%), Extra Clean (7.9% → 8.7%), 2010 (6.3% → 7.3%), $10–20k (9.6% → 10.4%), $20k+ (7.4% → 9.1%) and the top peer-count tercile (8.8% → 9.9%) — segments where matched peers already price tightly. Salvage WAPE exceeds 90% under both methods, on a slice too thin to conclude much from.
+
+One inference fix ships in the same artifact: `featureBounds.logOdometerDelta` is now computed from training rows only, recorded as `boundsSource: "train-only"`. The previous release took those quantiles from the full frame, so 2009–2010 test rows could shift a bound the deployed evaluator clamps against. The interval moved from `[-1.161765, 0.880628]` to `[-1.150765, 0.856905]`. The three TypeScript/parity vectors that sit exactly on the clamp were updated in the same commit; the model trees, grade multipliers and global metrics are unchanged.
+
 ## Inference and reproducibility
 
 The trainer serializes the gradient-boosted tree nodes to `public/data/condition-model.json`. A pure TypeScript evaluator runs those exact trees in the browser; no remote prediction service or secret is involved.

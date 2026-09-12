@@ -109,6 +109,104 @@ def metrics(actual: np.ndarray, predicted: np.ndarray) -> dict[str, float]:
     }
 
 
+def segment_metrics(
+    actual: np.ndarray,
+    predicted: np.ndarray,
+    log_residual: np.ndarray | None = None,
+    p10: float | None = None,
+    p90: float | None = None,
+) -> dict[str, float | int]:
+    """Metrics for one temporal-test slice.
+
+    coverage80Pct is the share (%) of the slice's actual prices whose global
+    residual log(actual / modelPrediction) falls inside the artifact's global
+    temporal-test interval [logResidualP10, logResidualP90]. The interval is
+    global on purpose: a slice-local interval would hide the segments where the
+    published uncertainty band under-covers. intervalWidthPct reports that same
+    multiplicative band as a share of the central prediction,
+    100 * (exp(P90) - exp(P10)); it is constant across slices by construction.
+    """
+    if len(actual) == 0:
+        return {"n": 0}
+    absolute_error = np.abs(actual - predicted)
+    result: dict[str, float | int] = {
+        "n": int(len(actual)),
+        "maeCad": round(float(mean_absolute_error(actual, predicted)), 2),
+        "medianAeCad": round(float(median_absolute_error(actual, predicted)), 2),
+        "wapePct": round(float(100 * absolute_error.sum() / actual.sum()), 3),
+    }
+    if log_residual is not None:
+        inside = (log_residual >= p10) & (log_residual <= p90)
+        result["coverage80Pct"] = round(float(100 * inside.mean()), 2)
+        result["intervalWidthPct"] = round(float(100 * (np.exp(p90) - np.exp(p10))), 2)
+    return result
+
+
+def build_segments(
+    test: pd.DataFrame,
+    actual: np.ndarray,
+    baseline_price: np.ndarray,
+    predicted_price: np.ndarray,
+    log_residual: np.ndarray,
+    p10: float,
+    p90: float,
+) -> dict[str, dict]:
+    """Slice the temporal test by five axes for the baseline and the model."""
+    odometer_delta = test["log_odometer_delta"].to_numpy(dtype=float)
+    sextile_edges = np.quantile(odometer_delta, [index / 6 for index in range(1, 6)])
+    sextile = pd.cut(odometer_delta, bins=[-np.inf, *sextile_edges, np.inf], labels=[f"S{i}" for i in range(1, 7)])
+    peer_count = test["peer_count"].to_numpy(dtype=float)
+    tercile_edges = np.quantile(peer_count, [1 / 3, 2 / 3])
+    tercile = pd.cut(peer_count, bins=[-np.inf, *tercile_edges, np.inf], labels=["T1", "T2", "T3"])
+    price = test["finalprice"].to_numpy(dtype=float)
+
+    axes: dict[str, tuple[str, list[tuple[str, np.ndarray]]]] = {
+        "auctionGrade": (
+            "Auction condition grade (conrepgrade); all six grades are reported",
+            [(grade, test["conrepgrade"].eq(grade).to_numpy()) for grade in GRADE_SCORE],
+        ),
+        "saleYear": (
+            "Sale year of the auction outcome",
+            [(str(year), test["sale_year"].eq(year).to_numpy()) for year in sorted(test["sale_year"].unique())],
+        ),
+        "priceBand": (
+            "Actual sale price (USD), half-open bands: $0-5k [0,5000), $5-10k [5000,10000), "
+            "$10-20k [10000,20000), $20k+ [20000,inf)",
+            [
+                ("$0-5k", (price >= 0) & (price < 5_000)),
+                ("$5-10k", (price >= 5_000) & (price < 10_000)),
+                ("$10-20k", (price >= 10_000) & (price < 20_000)),
+                ("$20k+", price >= 20_000),
+            ],
+        ),
+        "logOdometerDeltaSextile": (
+            "Quantile sextiles of test-row log(odometer / peer median odometer); tied values at an edge "
+            f"keep that bin's counts uneven. Quantile edges {[round(float(edge), 6) for edge in sextile_edges]}",
+            [(f"S{index}", (sextile == f"S{index}")) for index in range(1, 7)],
+        ),
+        "peerCountTercile": (
+            "Quantile terciles of matched peer count; integer peer counts make edge bins uneven. "
+            f"Quantile edges {[round(float(edge), 6) for edge in tercile_edges]}",
+            [(f"T{index}", (tercile == f"T{index}")) for index in range(1, 4)],
+        ),
+    }
+
+    segments: dict[str, dict] = {}
+    for name, (definition, slices) in axes.items():
+        baseline_slices = []
+        model_slices = []
+        for label, mask in slices:
+            baseline_slices.append({"segment": label, **segment_metrics(actual[mask], baseline_price[mask])})
+            model_slices.append(
+                {
+                    "segment": label,
+                    **segment_metrics(actual[mask], predicted_price[mask], log_residual[mask], p10, p90),
+                }
+            )
+        segments[name] = {"definition": definition, "baseline": baseline_slices, "model": model_slices}
+    return segments
+
+
 def export_tree(estimator) -> dict[str, list[int] | list[float]]:
     tree = estimator.tree_
     return {
@@ -170,8 +268,31 @@ def main() -> None:
         for grade, score in GRADE_SCORE.items()
     }
 
+    log_residual_p10 = round(float(np.quantile(log_residual, 0.1)), 6)
+    log_residual_p90 = round(float(np.quantile(log_residual, 0.9)), 6)
+    segments = build_segments(test, actual_price, baseline_price, predicted_price, log_residual, log_residual_p10, log_residual_p90)
+    for name, axis in segments.items():
+        for side in ("baseline", "model"):
+            covered = sum(slice_result["n"] for slice_result in axis[side])
+            if covered != len(test):
+                raise RuntimeError(f"Segment axis {name}/{side} covers {covered} rows, expected {len(test)}")
+
+    # The inference clamp must never be widened by temporal-test rows: an
+    # inference bound derived from 2009-2010 data leaks test outcomes into the
+    # deployed evaluator. Quantiles are computed on the training years only.
+    train_log_odometer_delta = train["log_odometer_delta"]
+    feature_bounds = {
+        "odometerKm": [100, 350_000],
+        "logOdometerDelta": [
+            round(float(train_log_odometer_delta.quantile(0.01)), 6),
+            round(float(train_log_odometer_delta.quantile(0.99)), 6),
+        ],
+        "conditionScore": [-1, 4],
+        "boundsSource": "train-only",
+    }
+
     artifact = {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "modelType": "gradient-boosted sold-price adjustment",
         "status": "production-prototype",
         "predictionRole": "Condition and odometer adjustment around a current Canadian peer-market anchor",
@@ -192,16 +313,23 @@ def main() -> None:
             "baseline": {"name": "Leave-one-out matched-peer geometric mean", **baseline_metrics},
             "model": model_metrics,
             "maeImprovementPct": round(float(improvement), 2),
-            "logResidualP10": round(float(np.quantile(log_residual, 0.1)), 6),
-            "logResidualP90": round(float(np.quantile(log_residual, 0.9)), 6),
+            "logResidualP10": log_residual_p10,
+            "logResidualP90": log_residual_p90,
+            "segmentDefinitions": {
+                "coverage80Pct": (
+                    "share of slice actual prices with log(actual / model prediction) inside the global "
+                    "temporal-test [logResidualP10, logResidualP90] interval"
+                ),
+                "intervalWidthPct": (
+                    "global 80% interval width as 100 * (exp(logResidualP90) - exp(logResidualP10)), "
+                    "a constant share of the central prediction"
+                ),
+            },
+            "segments": segments,
         },
         "representativeGradeMultipliers": grade_multipliers,
         "inferenceCenter": {"conditionScore": 2, "logOdometerDelta": 0, "logAdjustment": round(inference_center, 9)},
-        "featureBounds": {
-            "odometerKm": [100, 350_000],
-            "logOdometerDelta": [round(float(frame["log_odometer_delta"].quantile(0.01)), 6), round(float(frame["log_odometer_delta"].quantile(0.99)), 6)],
-            "conditionScore": [-1, 4],
-        },
+        "featureBounds": feature_bounds,
         "monotonicGuard": "Scores above Average cannot predict less than Average at the same odometer delta",
         "model": {
             "initial": round(float(np.asarray(model.init_.constant_).ravel()[0]), 9),
@@ -216,7 +344,43 @@ def main() -> None:
         ],
         "reproducibility": {"randomState": RANDOM_STATE},
     }
-    summary = {"rows": artifact["rows"], "baseline": baseline_metrics, "model": model_metrics, "maeImprovementPct": artifact["validation"]["maeImprovementPct"], "gradeMultipliers": grade_multipliers}
+    segment_summary = {
+        name: {
+            "baselineN": sum(slice_result["n"] for slice_result in axis["baseline"]),
+            "modelN": sum(slice_result["n"] for slice_result in axis["model"]),
+            "baselineWorstWape": max(
+                (slice_result for slice_result in axis["baseline"] if slice_result["n"]),
+                key=lambda slice_result: slice_result["wapePct"],
+            ),
+            "modelWorstWape": max(
+                (slice_result for slice_result in axis["model"] if slice_result["n"]),
+                key=lambda slice_result: slice_result["wapePct"],
+            ),
+            "modelWorstCoverage80": min(
+                (slice_result for slice_result in axis["model"] if slice_result["n"]),
+                key=lambda slice_result: slice_result["coverage80Pct"],
+            ),
+        }
+        for name, axis in segments.items()
+    }
+    summary = {
+        "rows": artifact["rows"],
+        "baseline": baseline_metrics,
+        "model": model_metrics,
+        "maeImprovementPct": artifact["validation"]["maeImprovementPct"],
+        "featureBounds": feature_bounds,
+        "segments": {
+            name: {
+                "baselineN": axis_summary["baselineN"],
+                "modelN": axis_summary["modelN"],
+                "baselineWorstWape": f"{axis_summary['baselineWorstWape']['segment']} {axis_summary['baselineWorstWape']['wapePct']}%",
+                "modelWorstWape": f"{axis_summary['modelWorstWape']['segment']} {axis_summary['modelWorstWape']['wapePct']}%",
+                "modelWorstCoverage80": f"{axis_summary['modelWorstCoverage80']['segment']} {axis_summary['modelWorstCoverage80']['coverage80Pct']}%",
+            }
+            for name, axis_summary in segment_summary.items()
+        },
+        "gradeMultipliers": grade_multipliers,
+    }
     print(json.dumps(summary, indent=2))
     if improvement <= 0:
         raise RuntimeError("Condition adjustment model did not beat the matched-peer baseline")

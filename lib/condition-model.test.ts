@@ -74,10 +74,11 @@ describe("transaction-trained condition model", () => {
 
 describe("odometer extrapolation flag", () => {
   // Odometer support is 100–350,000 km (inclusive) and the log-delta quantile
-  // bound is 0.880628. A comparison is "outside support" when either raw
-  // odometer crosses a bound, or when clamping moved the raw mileage delta away
-  // from the model's clamped delta. The returned logOdometerDelta is the model
-  // feature (from clamped odometers), not the raw delta.
+  // bounds are -1.150765 and 0.856905, computed from training rows only. A
+  // comparison is "outside support" when either raw odometer crosses a bound,
+  // or when clamping moved the raw mileage delta away from the model's clamped
+  // delta. The returned logOdometerDelta is the model feature (from clamped
+  // odometers), not the raw delta.
   const vectors: Array<{ baseline: number; target: number; flag: boolean; logOdometerDelta: number }> = [
     { baseline: 300_000, target: 400_000, flag: true, logOdometerDelta: 0.1542 },
     { baseline: 200_000, target: 500_000, flag: true, logOdometerDelta: 0.5596 },
@@ -88,13 +89,13 @@ describe("odometer extrapolation flag", () => {
     { baseline: 350_000, target: 350_000, flag: false, logOdometerDelta: 0 },
     { baseline: 300_000, target: 350_000, flag: false, logOdometerDelta: 0.1542 },
     { baseline: 300_000, target: 350_001, flag: true, logOdometerDelta: 0.1542 },
-    { baseline: 100, target: 350_000, flag: true, logOdometerDelta: 0.8806 },
+    { baseline: 100, target: 350_000, flag: true, logOdometerDelta: 0.8569 },
     { baseline: 90, target: 90, flag: true, logOdometerDelta: 0 },
     { baseline: -5, target: -6, flag: true, logOdometerDelta: 0 },
-    { baseline: -100, target: 50_000, flag: true, logOdometerDelta: 0.8806 },
+    { baseline: -100, target: 50_000, flag: true, logOdometerDelta: 0.8569 },
     { baseline: 100_000, target: 80_000, flag: false, logOdometerDelta: -0.2231 },
     { baseline: 300_000, target: 100_000, flag: false, logOdometerDelta: -1.0986 },
-    { baseline: 350_000, target: 100, flag: true, logOdometerDelta: -1.1618 },
+    { baseline: 350_000, target: 100, flag: true, logOdometerDelta: -1.1508 },
   ];
 
   for (const { baseline, target, flag, logOdometerDelta } of vectors) {
