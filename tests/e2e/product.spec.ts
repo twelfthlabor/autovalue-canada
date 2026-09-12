@@ -124,7 +124,7 @@ test("methodology and control-room evidence are public", async ({ page }, testIn
   await expect(page.getByRole("heading", { name: /Here is the price/ })).toBeVisible();
   await expect(page.getByText("LIVE DATA CONTRACT", { exact: true })).toBeVisible();
   await expect(page.getByText(/NO EMBEDDED LISTINGS/i)).toBeVisible();
-  await expect(page.getByText("No seller snapshot is treated as live.")).toBeVisible();
+  await expect(page.getByText("The app never treats a seller snapshot as live.")).toBeVisible();
   const navLabels = await page.locator(".site-header nav a").allTextContents();
   expect(navLabels.slice(-2)).toEqual(["Methodology", "How we calculate"]);
   await page.screenshot({ path: testInfo.outputPath("calculation-page.png"), fullPage: true });
