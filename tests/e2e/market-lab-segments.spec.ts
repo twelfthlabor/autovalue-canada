@@ -21,6 +21,14 @@ test("segment table renders the artifact's baseline-vs-model slices", async ({ p
   const dataRows = axes.reduce((total, axis) => total + segments[axis].baseline.length, 0);
   await expect(table.locator("tbody tr:has(td)")).toHaveCount(dataRows);
 
+  // The label / WAPE / coverage trio must fit without horizontal scrolling at
+  // every supported width, the reading legend must be present, and every row
+  // must carry a model-vs-baseline WAPE cue.
+  await expect(page.locator(".seg-legend")).toContainText("lower is better");
+  const overflow = await page.locator(".segment-table-wrap").evaluate((el) => el.scrollWidth - el.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
+  await expect(table.locator("td.seg-wape.is-better, td.seg-wape.is-worse")).toHaveCount(dataRows);
+
   // Spot-check the thinnest grade (worst WAPE) against the artifact values.
   const salvageBaseline = segments.auctionGrade.baseline.find((row) => row.segment === "Salvage")!;
   const salvageModel = segments.auctionGrade.model.find((row) => row.segment === "Salvage")!;

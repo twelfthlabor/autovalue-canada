@@ -154,12 +154,12 @@ export default function MarketLabPage() {
               <thead>
                 <tr>
                   <th scope="col">Segment</th>
-                  <th scope="col">n</th>
+                  <th scope="col" className="seg-n">n</th>
                   <th scope="col" className="seg-mae">Baseline MAE</th>
                   <th scope="col" className="seg-mae">Model MAE</th>
-                  <th scope="col">Baseline WAPE</th>
+                  <th scope="col"><span className="seg-long">Baseline WAPE</span><span className="seg-short">Base WAPE</span></th>
                   <th scope="col">Model WAPE</th>
-                  <th scope="col">Model 80% coverage</th>
+                  <th scope="col"><span className="seg-long">Model 80% coverage</span><span className="seg-short">Coverage</span></th>
                 </tr>
               </thead>
               {segmentAxes.map(([axisKey, axisTitle]) => (
@@ -169,14 +169,15 @@ export default function MarketLabPage() {
                   </tr>
                   {segments[axisKey].baseline.map((row, index) => {
                     const model = segments[axisKey].model[index];
+                    const modelBetter = model.wapePct !== undefined && row.wapePct !== undefined && model.wapePct < row.wapePct;
                     return (
                       <tr key={row.segment}>
                         <th scope="row">{row.segment}</th>
-                        <td>{row.n.toLocaleString("en-CA")}</td>
+                        <td className="seg-n">{row.n.toLocaleString("en-CA")}</td>
                         <td className="seg-mae">${row.maeCad?.toLocaleString("en-CA")}</td>
                         <td className="seg-mae">${model.maeCad?.toLocaleString("en-CA")}</td>
                         <td>{row.wapePct?.toFixed(2)}%</td>
-                        <td>{model.wapePct?.toFixed(2)}%</td>
+                        <td className={`seg-wape ${modelBetter ? "is-better" : "is-worse"}`}>{model.wapePct?.toFixed(2)}%</td>
                         <td className={model.coverage80Pct !== undefined && model.coverage80Pct < 80 ? "cov-under" : undefined}>
                           {model.coverage80Pct?.toFixed(2)}%
                         </td>
@@ -187,6 +188,7 @@ export default function MarketLabPage() {
               ))}
             </table>
           </div>
+          <p className="seg-legend">MAE/WAPE: lower is better — ▾ model beats baseline, ▴ model trails; coverage red when below 80%.</p>
           <p className="seg-note">
             80% coverage is the share of each segment&apos;s actual sale prices inside the global temporal-test
             interval [P10, P90] of log(actual / model prediction); its width is {intervalWidthPct?.toFixed(2)}% of the
