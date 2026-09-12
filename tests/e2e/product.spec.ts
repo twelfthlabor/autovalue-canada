@@ -63,6 +63,9 @@ test("level-only out-of-support odometer copy says no mileage comparison was app
   const odometerFactor = page.locator(".factor-grid article").nth(2);
   await expect(odometerFactor.locator("strong")).toHaveText("Market median used");
   await expect(odometerFactor.locator("strong")).toHaveAttribute("title", /no mileage comparison was applied/);
+  await expect(page.locator(".ask-tile .stat-foot b[title]")).toHaveAttribute("title", /no mileage comparison was applied/);
+  await expect(page.locator(".ask-tile .stat-foot b[title]")).not.toHaveAttribute("title", /capped/);
+  await expect(page.locator(".signal-line small")).toHaveText("Outside trained mileage support");
 });
 
 test("VIN lookup stays focused and the result remains a single valuation sheet", async ({ page }) => {
