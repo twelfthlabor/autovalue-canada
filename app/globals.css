@@ -547,13 +547,16 @@ button:focus-visible, a:focus-visible, summary:focus-visible, select:focus-visib
   .valuation-band { margin-top: 5px; padding: 3px 11px 2px; }
   .band-caption b { font-size: 10px; }
   .price-band { height: 60px; margin-top: 4px; }
-  .band-median i { top: calc(100% + 3px); }
+  /* Compact short-height tier has zero slack for the stacked ask label:
+     the median label sits at +0 (not +3) so the measured stack drop fits
+     the 60px band without growing the card (one-page-fit). */
+  .band-median i { top: calc(100% + 0px); }
   .band-asking i { top: calc(100% + 19px); }
   /* Close labels stay centered; the compact stagger starts tighter so the
      band keeps its 60px height (product.spec fit assertions). */
   .price-band.band-close .band-median i { top: calc(100% + 0px); }
   .price-band.band-close .band-asking i { top: calc(100% + 22px); }
-  .band-median i, .band-asking i { font-size: 11px; }
+  .band-median i, .band-asking i { font-size: 11px; line-height: 1.1; }
   .band-median i b, .band-asking i b { font-size: 9px; }
   .price-anatomy { margin-top: 4px; padding: 3px 11px 4px; }
   .anatomy-tile strong { font-size: 15px; }
