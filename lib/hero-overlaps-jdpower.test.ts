@@ -72,6 +72,23 @@ describe("hero overlap fixes (fix/hero-overlaps-jdpower-theme)", () => {
     expect(css).toMatch(/\.band-exact\s+\.band-median\s*\{[^}]*z-index:\s*2/);
   });
 
+  it("uses a measured vertical stack for colliding marker labels", () => {
+    // The component reuses layoutBandItems to decide whether the two measured
+    // label boxes collide, then writes the minimal vertical stack.
+    expect(workbench).toContain("--band-label-stack");
+    expect(workbench).toContain("layoutBandItems(labelItems");
+    // Direction matters: layoutBandItems assigns the ask label a second row
+    // exactly when the clamped boxes collide horizontally (labels never render
+    // --band-row), so the stack triggers on a row MISMATCH. Same-row boxes are
+    // already >=6px apart and must not be displaced.
+    expect(workbench).toMatch(/labelLayout\.rows\[0\]\s*!==\s*labelLayout\.rows\[1\]/);
+    expect(workbench).not.toMatch(/labelLayout\.rows\[0\]\s*===\s*labelLayout\.rows\[1\]/);
+    expect(css).toMatch(/\.band-asking i\s*\{[^}]*translateY\(var\(--band-label-stack, 0px\)\)/);
+    // Close mode tightens the label line boxes so the measured drop needed to
+    // clear the median label stays small; the fixed band height never grows.
+    expect(css).toMatch(/\.price-band\.band-close\s+\.band-median\s+i,\s*\.price-band\.band-close\s+\.band-asking\s+i\s*\{[^}]*line-height:\s*1\.1/);
+  });
+
   it("uses a 5-col lab-stats grid (no 4+1 orphan)", () => {
     expect(css).toMatch(/\.lab-stats\s*\{[^}]*repeat\(5,\s*1fr\)/);
     expect(css).not.toMatch(/\.lab-stats\s*\{[^}]*repeat\(4,\s*1fr\)/);

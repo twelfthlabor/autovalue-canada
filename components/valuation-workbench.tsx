@@ -102,6 +102,25 @@ function PredictionBand({ valuation, askingPrice, row }: { valuation: ConditionV
         element.style.setProperty("--band-shift", `${labelLayout.shifts[index]}px`);
       });
 
+      // `layoutBandItems` pushes the ask label to a second row exactly when the
+      // two clamped label boxes collide on the horizontal axis — but labels
+      // never render `--band-row`, so that stacking is invisible. The only
+      // remaining separation axis is vertical: drop the ask label just enough
+      // to clear the median label's measured height plus 2px. Labels sharing a
+      // row are already >=6px apart horizontally, so they get zero
+      // displacement and this never moves a label that already clears its
+      // neighbour.
+      if (labels.length === 2) {
+        const [upperLabel, lowerLabel] = labels;
+        const currentStack = Number.parseFloat(lowerLabel.element.style.getPropertyValue("--band-label-stack")) || 0;
+        const upperRect = upperLabel.element.getBoundingClientRect();
+        const lowerRect = lowerLabel.element.getBoundingClientRect();
+        const baseGap = lowerRect.top - upperRect.top - currentStack;
+        const collides = labelLayout.rows[0] !== labelLayout.rows[1];
+        const needed = collides ? Math.max(0, upperRect.height + 2 - baseGap) : 0;
+        lowerLabel.element.style.setProperty("--band-label-stack", `${needed}px`);
+      }
+
       const captions = Array.from(captionEl.querySelectorAll<HTMLElement>("span[data-band-pos]"));
       const captionItems = captions.map((caption) => {
         const rect = caption.getBoundingClientRect();
