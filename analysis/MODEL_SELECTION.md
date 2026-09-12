@@ -169,8 +169,9 @@ Full qualification table (segments with n ≥ 2,000):
 - Family (b) is closed until the estimator/tree-format migration is scoped; the post-hoc monotonic guard stays.
 - Price-weighted training is a promising direction (best validation and test MAE of 327 candidates) but needs an explicit fix for the $0–5k band. Any revision is a new pre-registration; it must not be tuned against the 2009–2010 numbers already observed here.
 - Run note: the first execution computed the single test evaluation but crashed while estimating artifact bytes (`model.estimators_` is a 2-D array; fixed to `estimator[0]`). The rerun reproduced the identical winner and identical test metrics deterministically. No other candidate was ever scored on test.
+- Defect-fix rerun (2026-09-12): after restricting the champion lookup to `family == "plain"` and recording `validation.rankedIds`, the script ran again. It reproduced the identical winner, validation table and single-candidate test evaluation ($1,142.13 MAE, gate still rejected); only the stored ranking fields changed (`championRank` 39, ordered ids). No candidate was re-scored on test.
 
-## Appendix — full validation grid, ranked by 2008 MAE
+## Appendix — full validation grid, ordered by the pre-registered rule (lowest 2008 MAE; ties: fewer trees, lower depth, lower leaf, then id)
 
 | Rank | id | family | weight | max_depth | learning_rate | min_samples_leaf | loss | alpha | subsample | n_estimators | val MAE | val medAE | val WAPE |
 |---|---|---|---|---|---|---|---|---|---|---|---:|---:|---:|
@@ -367,8 +368,8 @@ Full qualification table (segments with n ≥ 2,000):
 | 191 | `g292` | plain |  | 4 | 0.08 | 40 | huber | 0.9 | 1.0 | 280 | 1377.72 | 1043.49 | 13.281 |
 | 192 | `g278` | plain |  | 4 | 0.04 | 160 | huber | 0.9 | 0.8 | 280 | 1377.9 | 1042.99 | 13.283 |
 | 193 | `g304` | plain |  | 4 | 0.08 | 80 | huber | 0.9 | 1.0 | 280 | 1378.19 | 1046.99 | 13.286 |
-| 194 | `g206` | plain |  | 3 | 0.08 | 160 | huber | 0.9 | 0.8 | 280 | 1378.21 | 1041.51 | 13.286 |
-| 195 | `g301` | plain |  | 4 | 0.08 | 80 | huber | 0.9 | 0.8 | 140 | 1378.21 | 1046.31 | 13.286 |
+| 194 | `g301` | plain |  | 4 | 0.08 | 80 | huber | 0.9 | 0.8 | 140 | 1378.21 | 1046.31 | 13.286 |
+| 195 | `g206` | plain |  | 3 | 0.08 | 160 | huber | 0.9 | 0.8 | 280 | 1378.21 | 1041.51 | 13.286 |
 | 196 | `g316` | plain |  | 4 | 0.08 | 160 | huber | 0.9 | 1.0 | 280 | 1378.65 | 1045.87 | 13.29 |
 | 197 | `g102` | plain |  | 2 | 0.08 | 160 | huber | 0.95 | 0.8 | 280 | 1378.84 | 1042.57 | 13.292 |
 | 198 | `g072` | plain |  | 2 | 0.04 | 160 | squared_error |  | 1.0 | 280 | 1378.94 | 1041.11 | 13.293 |

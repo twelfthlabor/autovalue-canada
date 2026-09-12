@@ -332,8 +332,10 @@ def main() -> None:
             "championRank": next(
                 index
                 for index, result in enumerate(ranked, start=1)
-                if all(result.get(key) == value for key, value in CHAMPION_PARAMS.items())
+                if result.get("family") == "plain"
+                and all(result.get(key) == value for key, value in CHAMPION_PARAMS.items())
             ),
+            "rankedIds": [result["id"] for result in ranked],
         },
         "selection": {"winnerId": winner["id"], "winner": winner},
     }
