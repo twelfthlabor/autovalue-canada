@@ -186,6 +186,17 @@ export function dealSignalForMarket(askingPrice: number, row: MarketRow): DealSi
   return { label: "Inside broad-market range", detail: "The ask sits inside the model-family middle 50%; this is not yet a trim-level verdict.", tone: "typical" };
 }
 
+export function dealSignalForPrediction(askingPrice: number, valuation: ConditionValuation, odometerEntered: boolean): DealSignal {
+  if (valuation.isOdometerExtrapolation) {
+    return odometerEntered
+      ? { label: "Outside trained mileage support", detail: "The mileage comparison was capped at the edge of the model's trained support, so this estimate needs additional comparable evidence.", tone: "high" }
+      : { label: "Outside trained mileage support", detail: "The market median is outside the model's trained odometer support; no mileage comparison was applied, so this estimate needs additional comparable evidence.", tone: "high" };
+  }
+  if (askingPrice < valuation.low) return { label: "Below predicted range", detail: "The ask is below the condition-aware range; verify history, condition, fees and title status before treating it as favourable.", tone: "watch" };
+  if (askingPrice > valuation.high) return { label: "Above predicted range", detail: "The ask is above the condition-aware range produced from the current market anchor and transaction-trained adjustment.", tone: "high" };
+  return { label: "Within predicted range", detail: "The ask is consistent with the condition-aware prediction interval, subject to the unpriced factors shown below.", tone: "typical" };
+}
+
 export function formatCad(value: number) {
   return new Intl.NumberFormat("en-CA", {
     style: "currency",

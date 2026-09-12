@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { predictConditionAdjustedValue, type ConditionProfile } from "./condition-model";
-import { approximatePercentile, confidenceForSample, dealSignalForMatched, deriveComparableBenchmark, displayBandValues, marketPosition, type ComparableObservation, type MarketRow } from "./market";
+import { approximatePercentile, confidenceForSample, dealSignalForMatched, dealSignalForPrediction, deriveComparableBenchmark, displayBandValues, marketPosition, type ComparableObservation, type MarketRow } from "./market";
 
 const row: MarketRow = {
   p: "ON", mk: "Toyota", md: "RAV4", y: 2021, c: "Used", n: 204,
@@ -90,5 +90,50 @@ describe("prediction band scaling", () => {
     expect(band.p50).toBe(valuation.estimate);
     expect(band.p10).toBe(valuation.low);
     expect(band.p90).toBe(valuation.high);
+  });
+});
+
+describe("prediction deal signal", () => {
+  const averageProfile: ConditionProfile = {
+    conditionGrade: "average",
+    accidentHistory: "none",
+    mechanicalCondition: "sound",
+    cosmeticCondition: "light",
+    serviceHistory: "partial",
+    wearItems: "good",
+  };
+
+  it("describes a clamped mileage comparison when the odometer was entered", () => {
+    const valuation = predictConditionAdjustedValue({
+      baseValue: 30000,
+      baseLow: 27000,
+      baseHigh: 33000,
+      baselineOdometerKm: 95000,
+      targetOdometerKm: 400000,
+      profile: averageProfile,
+    });
+
+    expect(valuation.isOdometerExtrapolation).toBe(true);
+    const signal = dealSignalForPrediction(30000, valuation, true);
+    expect(signal.label).toBe("Outside trained mileage support");
+    expect(signal.detail).toContain("capped");
+    expect(signal.detail).not.toContain("no mileage comparison");
+  });
+
+  it("describes a level-only out-of-support row when no odometer was entered", () => {
+    const valuation = predictConditionAdjustedValue({
+      baseValue: 37792,
+      baseLow: 35758,
+      baseHigh: 41789,
+      baselineOdometerKm: 6,
+      targetOdometerKm: 6,
+      profile: averageProfile,
+    });
+
+    expect(valuation.isOdometerExtrapolation).toBe(true);
+    const signal = dealSignalForPrediction(31995, valuation, false);
+    expect(signal.label).toBe("Outside trained mileage support");
+    expect(signal.detail).toContain("no mileage comparison was applied");
+    expect(signal.detail).not.toContain("capped");
   });
 });

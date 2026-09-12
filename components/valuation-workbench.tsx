@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { conditionModelMetadata, predictConditionAdjustedValue, type ConditionProfile, type ConditionValuation } from "@/lib/condition-model";
-import { confidenceForSample, displayBandValues, formatCad, formatNumber, type DealSignal, type MarketRow } from "@/lib/market";
+import { confidenceForSample, dealSignalForPrediction, displayBandValues, formatCad, formatNumber, type MarketRow } from "@/lib/market";
 import { normalizeVin, validateNorthAmericanVin, vinStatusCopy } from "@/lib/vin";
 import { resolveVinMarketSelection, vinMarketEditAction } from "@/lib/vin-market-match";
 import type { VinLookupResponse } from "@/lib/vin-report";
@@ -82,13 +82,6 @@ function PredictionBand({ valuation, askingPrice, row }: { valuation: ConditionV
       </div>
     </div>
   );
-}
-
-function dealSignalForPrediction(askingPrice: number, valuation: ConditionValuation): DealSignal {
-  if (valuation.isOdometerExtrapolation) return { label: "Outside trained mileage support", detail: "The mileage comparison was capped at the edge of the model's trained support, so this estimate needs additional comparable evidence.", tone: "high" };
-  if (askingPrice < valuation.low) return { label: "Below predicted range", detail: "The ask is below the condition-aware range; verify history, condition, fees and title status before treating it as favourable.", tone: "watch" };
-  if (askingPrice > valuation.high) return { label: "Above predicted range", detail: "The ask is above the condition-aware range produced from the current market anchor and transaction-trained adjustment.", tone: "high" };
-  return { label: "Within predicted range", detail: "The ask is consistent with the condition-aware prediction interval, subject to the unpriced factors shown below.", tone: "typical" };
 }
 
 type FactorState = "modelled" | "context" | "missing";
@@ -219,7 +212,7 @@ export function ValuationWorkbench() {
     targetOdometerKm: odometer ?? result.km,
     profile: conditionProfile,
   }) : undefined;
-  const dealSignal = askingPrice && conditionValuation ? dealSignalForPrediction(askingPrice, conditionValuation) : undefined;
+  const dealSignal = askingPrice && conditionValuation ? dealSignalForPrediction(askingPrice, conditionValuation, odometer !== undefined) : undefined;
   const vinStatus = validateNorthAmericanVin(form.vin);
   const estimate = conditionValuation?.estimate;
   const estimateDifference = askingPrice && estimate ? askingPrice - estimate : undefined;
