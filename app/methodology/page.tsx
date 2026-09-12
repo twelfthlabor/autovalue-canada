@@ -10,7 +10,7 @@ const decisions = [
   ["What we do not show", "Known transaction value, certified appraisal, recommended offer, or residual forecast."],
   ["Why the range", "The range combines the asking-market spread in the Canadian anchor with condition and odometer effects from later-year models."],
   ["Minimum evidence", `A price cell is shown only when the Canadian anchor has n ≥ ${manifest.quality.minimumCellSize} dealer listings.`],
-  ["Condition evidence", "Six condition selections form one auction-grade equivalent. The model learns one composite effect instead of six separate dollar adjustments."],
+  ["Condition evidence", "Six condition selections form one auction-grade equivalent. The model learns one effect for that composite grade instead of six separate dollar adjustments."],
 ] as const;
 
 const [trainYears, testYears] = [...conditionModel.validation.split.matchAll(/(\d{4})-(\d{4})/g)].map((match) => `${match[1]}–${match[2]}`);
@@ -61,14 +61,14 @@ export default function MethodologyPage() {
         <article>
           <i className="pipe-icon" aria-hidden="true"><PulseIcon /></i>
           <h3>Condition + odometer model</h3>
-          <p>Trained on {conditionModel.rows.eligibleSoldOutcomes.toLocaleString("en-CA")} completed US wholesale outcomes with close-peer matching and a gradient-boosted residual. Average grade at the anchor odometer is neutral.</p>
+          <p>Trained on {conditionModel.rows.eligibleSoldOutcomes.toLocaleString("en-CA")} completed US wholesale outcomes with close-peer matching and a gradient-boosted residual.</p>
           <span className="pipe-tag">SOURCE: LARSEN NBER AUCTION OUTCOMES</span>
         </article>
         <b className="pipe-arrow" aria-hidden="true">→</b>
         <article>
           <i className="pipe-icon" aria-hidden="true"><TargetIcon /></i>
           <h3>Disclosed range</h3>
-          <p>The range combines the Canadian source spread with temporal-test residuals. It does not guarantee coverage of actual Canadian sale prices.</p>
+          <p>The range combines the Canadian source spread with temporal-test residuals. It does not guarantee coverage of Canadian sale prices.</p>
           <span className="pipe-tag">SCOPE: ASKING-MARKET ESTIMATE ONLY</span>
         </article>
       </section>

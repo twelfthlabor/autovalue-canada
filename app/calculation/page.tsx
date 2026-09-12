@@ -31,7 +31,7 @@ export default function CalculationPage() {
           <div>
             <span>WHAT THE RANGE MEANS</span>
             <h2>How the range is built.</h2>
-            <p>The range starts with the matched-market error and adds residuals from the later-year condition model. Both sources come from measured model error. Neither is a guarantee that the final sale price falls inside the range.</p>
+            <p>The range combines the matched-market spread in the Canadian anchor with the condition model’s temporal-test residuals. Both are measured from data. Neither is a guarantee that the final sale price falls inside the range.</p>
           </div>
         </article>
         <article>
