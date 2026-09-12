@@ -19,7 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "aws"))
 
-from condition_model_py import ConditionModel  # noqa: E402
+from condition_model_py import ConditionModel, js_round  # noqa: E402
 from lambda_predict import handler  # noqa: E402
 
 NEUTRAL = {
@@ -70,6 +70,11 @@ def main() -> None:
             f"got {result['multiplier']}, oracle {expected}",
         )
         check(f"oracle-score[{grade}]", result["conditionScore"] == score, f"got {result['conditionScore']}")
+        check(
+            f"exact-multiplier[{grade}]",
+            js_round(result["multiplierExact"] * 10_000) / 10_000 == result["multiplier"],
+            f"exact {result['multiplierExact']} -> {js_round(result['multiplierExact'] * 10_000) / 10_000}, stored {result['multiplier']}",
+        )
 
     # 2. TS test vectors (lib/condition-model.test.ts).
     average = model.predict(30000, 25000, 35000, 80000, 80000, {"conditionGrade": "average", **NEUTRAL})
@@ -91,6 +96,33 @@ def main() -> None:
     clean = model.predict(30000, 25000, 35000, 80000, 80000, {"conditionGrade": "extra-clean", **NEUTRAL})
     check("ts/monotonic-guard", clean["estimate"] >= average["estimate"],
           f"clean {clean['estimate']} vs avg {average['estimate']}")
+
+    # 2b. Odometer extrapolation vectors (mirrored from lib/condition-model.test.ts).
+    # Support is 100-350,000 km inclusive; the log-delta quantile cap is 0.880628.
+    odometer_vectors = [
+        (300000, 400000, True, 0.1542),
+        (200000, 500000, True, 0.5596),
+        (50, 100, True, 0),
+        (6, 6, True, 0),
+        (80000, 80000, False, 0),
+        (100, 100, False, 0),
+        (350000, 350000, False, 0),
+        (300000, 350000, False, 0.1542),
+        (300000, 350001, True, 0.1542),
+        (100, 350000, True, 0.8806),
+        (90, 90, True, 0),
+        (-5, -6, True, 0),
+        (-100, 50000, True, 0.8806),
+        (100000, 80000, False, -0.2231),
+        (300000, 100000, False, -1.0986),
+        (350000, 100, True, -1.1618),
+    ]
+    for baseline, target, expected_flag, expected_delta in odometer_vectors:
+        vector = model.predict(30000, 25000, 35000, baseline, target, {"conditionGrade": "average", **NEUTRAL})
+        check(f"ts/odometer-flag[{baseline}->{target}]", vector["isOdometerExtrapolation"] is expected_flag,
+              f"got {vector['isOdometerExtrapolation']}, want {expected_flag}")
+        check(f"ts/odometer-delta[{baseline}->{target}]", vector["logOdometerDelta"] == expected_delta,
+              f"got {vector['logOdometerDelta']}, want {expected_delta}")
 
     # 3. Handler contract via API Gateway proxy event.
     ok_event = {"queryStringParameters": {

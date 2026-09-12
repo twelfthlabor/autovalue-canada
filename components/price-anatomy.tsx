@@ -58,17 +58,17 @@ export function PriceAnatomy() {
         <article>
           <i className="step-num" aria-hidden="true">2</i>
           <div className="step-head"><PencilIcon /><div><span>LISTING FACTS</span><strong>USER ENTERED</strong></div></div>
-          <p>Asking price, kilometres and condition until a licensed feed is connected.</p>
+          <p>Asking price, kilometres, and condition stay user-entered until a licensed feed is connected.</p>
         </article>
         <article>
           <i className="step-num" aria-hidden="true">3</i>
           <div className="step-head"><BarsIcon /><div><span>CANADIAN ANCHOR</span><strong>MARKET</strong></div></div>
-          <p>Current province × make × model × year reference with sample size and percentiles.</p>
+          <p>The current province × make × model × year reference includes sample size and percentiles.</p>
         </article>
         <article className="ml">
           <i className="step-num" aria-hidden="true">4</i>
           <div className="step-head"><CpuIcon /><div><span>RELATIVE ADJUSTMENT</span><strong>ML</strong></div></div>
-          <p>{formatNumber(conditionModelMetadata.outcomes)} completed auction outcomes train condition and odometer effects.</p>
+          <p>The model learns condition and odometer effects from {formatNumber(conditionModelMetadata.outcomes)} completed auction outcomes.</p>
         </article>
       </div>
 
@@ -106,7 +106,7 @@ export function PriceAnatomy() {
         </article>
         <article className="guardrail">
           <ShieldIcon />
-          <div><span>MODEL GUARDRAIL</span><strong>Transparent limits</strong><p>No seller snapshot is treated as live. Missing or stale inputs stay visible.</p></div>
+          <div><span>MODEL GUARDRAIL</span><strong>Transparent limits</strong><p>The app never treats a seller snapshot as live. Missing or stale inputs stay visible.</p></div>
         </article>
       </div>
     </section>

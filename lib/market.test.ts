@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { approximatePercentile, confidenceForSample, dealSignalForMatched, deriveComparableBenchmark, marketPosition, type ComparableObservation, type MarketRow } from "./market";
+import { predictConditionAdjustedValue, type ConditionProfile } from "./condition-model";
+import { approximatePercentile, confidenceForSample, dealSignalForMatched, dealSignalForPrediction, deriveComparableBenchmark, displayBandValues, marketPosition, type ComparableObservation, type MarketRow } from "./market";
 
 const row: MarketRow = {
   p: "ON", mk: "Toyota", md: "RAV4", y: 2021, c: "Used", n: 204,
@@ -49,5 +50,90 @@ describe("market evidence helpers", () => {
       { vin: "4", askingPrice: 27000, odometerKm: 110000, location: "ON", transmission: "Automatic", observedAt: "2026-08-31" },
     ];
     expect(deriveComparableBenchmark(sparse, 90000)).toBeUndefined();
+  });
+});
+
+describe("prediction band scaling", () => {
+  const profile: ConditionProfile = {
+    conditionGrade: "average",
+    accidentHistory: "none",
+    mechanicalCondition: "sound",
+    cosmeticCondition: "light",
+    serviceHistory: "partial",
+    wearItems: "good",
+  };
+
+  it("scales the typical band from the exact model multiplier on the low-price case", () => {
+    const valuation = predictConditionAdjustedValue({
+      baseValue: 3150,
+      baseLow: 2500,
+      baseHigh: 3800,
+      baselineOdometerKm: 80000,
+      targetOdometerKm: 150000,
+      profile,
+    });
+
+    expect(valuation.multiplier).toBe(0.7784);
+    expect(valuation.multiplierExact).toBeCloseTo(0.778350080061302, 9);
+    expect(Math.round(valuation.multiplierExact * 10_000) / 10_000).toBe(valuation.multiplier);
+    expect(valuation.estimate).toBe(2500);
+
+    // Premise: the legacy estimate/baseValue ratio is not the model multiplier.
+    // On this low-price case it would move the scaled P25 by more than $1.
+    const legacyMultiplier = valuation.estimate / valuation.baseValue;
+    expect(legacyMultiplier).toBeCloseTo(0.7936508, 6);
+    expect(Math.abs(2700 * legacyMultiplier - 2700 * valuation.multiplierExact)).toBeGreaterThan(1);
+
+    const band = displayBandValues({ p25: 2700, p75: 3600 }, valuation);
+    expect(band.p25).toBe(2100);
+    expect(band.p75).toBe(2800);
+    expect(band.p50).toBe(valuation.estimate);
+    expect(band.p10).toBe(valuation.low);
+    expect(band.p90).toBe(valuation.high);
+  });
+});
+
+describe("prediction deal signal", () => {
+  const averageProfile: ConditionProfile = {
+    conditionGrade: "average",
+    accidentHistory: "none",
+    mechanicalCondition: "sound",
+    cosmeticCondition: "light",
+    serviceHistory: "partial",
+    wearItems: "good",
+  };
+
+  it("describes a clamped mileage comparison when the odometer was entered", () => {
+    const valuation = predictConditionAdjustedValue({
+      baseValue: 30000,
+      baseLow: 27000,
+      baseHigh: 33000,
+      baselineOdometerKm: 95000,
+      targetOdometerKm: 400000,
+      profile: averageProfile,
+    });
+
+    expect(valuation.isOdometerExtrapolation).toBe(true);
+    const signal = dealSignalForPrediction(30000, valuation, true);
+    expect(signal.label).toBe("Outside trained mileage support");
+    expect(signal.detail).toContain("capped");
+    expect(signal.detail).not.toContain("no mileage comparison");
+  });
+
+  it("describes a level-only out-of-support row when no odometer was entered", () => {
+    const valuation = predictConditionAdjustedValue({
+      baseValue: 37792,
+      baseLow: 35758,
+      baseHigh: 41789,
+      baselineOdometerKm: 6,
+      targetOdometerKm: 6,
+      profile: averageProfile,
+    });
+
+    expect(valuation.isOdometerExtrapolation).toBe(true);
+    const signal = dealSignalForPrediction(31995, valuation, false);
+    expect(signal.label).toBe("Outside trained mileage support");
+    expect(signal.detail).toContain("no mileage comparison was applied");
+    expect(signal.detail).not.toContain("capped");
   });
 });

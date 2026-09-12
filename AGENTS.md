@@ -30,8 +30,8 @@ npm test | npm run lint | npm run build | npm run test:e2e
 
 ## Environment gotchas (this Mac)
 
-- No docker/node/npm and no AWS CLI/creds here; CI is the only place Node steps run.
-- Python: use 3.11 (`/Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -m venv`). `python3.13`/`3.14` have no pip and `requirements.txt` pins (numpy 2.1.3, pandas 2.2.2) lack 3.13 wheels — installs hang building from source. Never upgrade pins without checking 3.11 wheels first.
+- Node v24.20.0 + npm 11.19.0 and Playwright 1.62.1 (chromium installed) are available locally: `npm test`, `npm run lint`, `npm run build` and `npm run test:e2e` all run here. Docker and AWS CLI/creds remain absent; CI stays authoritative for Postgres/ETL/model-training.
+- Python: use 3.11 (`/Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -m venv`). That bin has no `python` binary and `python` is not on PATH here — invoke `python3.11` by absolute path, e.g. `PYTHONDONTWRITEBYTECODE=1 /Library/Frameworks/Python.framework/Versions/3.11/bin/python3.11 aws/check_parity.py`. `python3.13`/`3.14` are unsupported for this pinned env (pandas 2.2.2 has no 3.13 wheel; 3.14 lacks pip). Never upgrade pins without checking 3.11 wheels first.
 - Postgres without docker: `brew install postgresql@16`, `initdb` a throwaway cluster (`/tmp/...`), `pg_ctl -D ... -o "-p 5432" start`, `CREATE ROLE/DATABASE autovalue`.
 
 ## Data traps (verified the hard way)

@@ -101,9 +101,21 @@ class ConditionModel:
         odo_lo, odo_hi = self.feature_bounds["odometerKm"]
         safe_baseline = clamp(baseline_odometer_km, odo_lo, odo_hi)
         safe_target = clamp(target_odometer_km, odo_lo, odo_hi)
-        raw_delta = math.log1p(safe_target) - math.log1p(safe_baseline)
+        model_odometer_delta = math.log1p(safe_target) - math.log1p(safe_baseline)
         d_lo, d_hi = self.feature_bounds["logOdometerDelta"]
-        log_delta = clamp(raw_delta, d_lo, d_hi)
+        log_delta = clamp(model_odometer_delta, d_lo, d_hi)
+        odometer_outside_support = (
+            baseline_odometer_km < odo_lo
+            or baseline_odometer_km > odo_hi
+            or target_odometer_km < odo_lo
+            or target_odometer_km > odo_hi
+        )
+        # Mirror the TS OR-short-circuit: the raw delta is only compared when
+        # both odometers are inside the trained support, so out-of-support
+        # (including negative) inputs must not reach math.log1p.
+        raw_delta = None
+        if not odometer_outside_support:
+            raw_delta = math.log1p(target_odometer_km) - math.log1p(baseline_odometer_km)
 
         prediction = self._raw_prediction(score, log_delta)
         if score > 2:
@@ -125,9 +137,10 @@ class ConditionModel:
             "baseValue": base_value,
             "adjustmentCad": estimate - base_value,
             "multiplier": js_round(multiplier * 10_000) / 10_000,
+            "multiplierExact": multiplier,
             "conditionScore": score,
             "logOdometerDelta": js_round(log_delta * 10_000) / 10_000,
-            "isOdometerExtrapolation": raw_delta != log_delta,
+            "isOdometerExtrapolation": odometer_outside_support or raw_delta != log_delta,
         }
 
     def metadata(self) -> dict:

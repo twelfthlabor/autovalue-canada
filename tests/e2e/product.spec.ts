@@ -44,6 +44,30 @@ test("inspection conditions run through the trained model and change the predict
   await expect(page.getByText(/Auction-grade equivalent -0.75 \/ 4/)).toBeVisible();
 });
 
+test("out-of-support odometer surfaces the capped-mileage caveat on both the signal and the odometer factor", async ({ page }) => {
+  await page.goto("/#check");
+  await page.getByLabel("Odometer in kilometres").fill("400000");
+  await expect(page.locator(".signal-line small")).toHaveText("Outside trained mileage support");
+  await expect(page.locator(".stat-foot b[title]")).toHaveAttribute("title", /mileage comparison was capped/);
+  await expect(page.locator(".factor-grid article:nth-child(3) strong[title]")).toHaveAttribute("title", /mileage comparison was capped/);
+});
+
+test("level-only out-of-support odometer copy says no mileage comparison was applied", async ({ page }) => {
+  await page.goto("/#check");
+  await page.getByLabel("Province").selectOption("AB");
+  await page.getByLabel("Make").selectOption("Buick");
+  await page.getByLabel("Model", { exact: true }).selectOption("Encore GX");
+  await page.getByLabel("Model year").selectOption("2026");
+  await page.getByLabel("Odometer in kilometres").fill("");
+
+  const odometerFactor = page.locator(".factor-grid article").nth(2);
+  await expect(odometerFactor.locator("strong")).toHaveText("Market median used");
+  await expect(odometerFactor.locator("strong")).toHaveAttribute("title", /no mileage comparison was applied/);
+  await expect(page.locator(".ask-tile .stat-foot b[title]")).toHaveAttribute("title", /no mileage comparison was applied/);
+  await expect(page.locator(".ask-tile .stat-foot b[title]")).not.toHaveAttribute("title", /capped/);
+  await expect(page.locator(".signal-line small")).toHaveText("Outside trained mileage support");
+});
+
 test("VIN lookup stays focused and the result remains a single valuation sheet", async ({ page }) => {
   await page.goto("/#check");
   await page.getByLabel("Vehicle identification number").fill("2T3DWRFV3LW077677");
@@ -100,7 +124,7 @@ test("methodology and control-room evidence are public", async ({ page }, testIn
   await expect(page.getByRole("heading", { name: /Here is the price/ })).toBeVisible();
   await expect(page.getByText("LIVE DATA CONTRACT", { exact: true })).toBeVisible();
   await expect(page.getByText(/NO EMBEDDED LISTINGS/i)).toBeVisible();
-  await expect(page.getByText("No seller snapshot is treated as live.")).toBeVisible();
+  await expect(page.getByText("The app never treats a seller snapshot as live.")).toBeVisible();
   const navLabels = await page.locator(".site-header nav a").allTextContents();
   expect(navLabels.slice(-2)).toEqual(["Methodology", "How we calculate"]);
   await page.screenshot({ path: testInfo.outputPath("calculation-page.png"), fullPage: true });

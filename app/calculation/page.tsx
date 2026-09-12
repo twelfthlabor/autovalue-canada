@@ -11,7 +11,7 @@ export default function CalculationPage() {
         </div>
         <aside className="hero-card">
           <span>WHAT “TRUE PRICE” MEANS HERE</span>
-          <p>A completed transaction price cannot be known before a vehicle sells. The defensible output is a current Canadian market anchor plus a transaction-trained relative condition and mileage adjustment—shown with uncertainty and exclusions.</p>
+          <p>A completed transaction price cannot be known before a vehicle sells. The output here is a current Canadian market anchor plus a relative condition and mileage adjustment trained on completed auctions. It is shown with uncertainty and exclusions.</p>
         </aside>
       </header>
 
@@ -23,15 +23,15 @@ export default function CalculationPage() {
           <div>
             <span>WHAT THE MODEL CONTROLS</span>
             <h2>Anchor + relative effect.</h2>
-            <p>The live VIN decode identifies year, make, model and available specifications. Historical completed auctions then supply the relative condition and odometer adjustment around the selected Canadian market cell.</p>
+            <p>The live VIN decode identifies the year, make, model, and available specifications. Completed auction outcomes supply the relative condition and odometer adjustment applied to the selected Canadian market cell.</p>
           </div>
         </article>
         <article>
           <i aria-hidden="true"><CurveIcon /></i>
           <div>
             <span>WHAT THE RANGE MEANS</span>
-            <h2>Two uncertainty sources.</h2>
-            <p>The final range keeps the matched-market error and expands to include later-year condition-model residuals. It is empirical model uncertainty, not guaranteed sale coverage.</p>
+            <h2>How the range is built.</h2>
+            <p>The range combines the matched-market spread in the Canadian anchor with the condition model’s temporal-test residuals. Both are measured from data. Neither is a guarantee that the final sale price falls inside the range.</p>
           </div>
         </article>
         <article>

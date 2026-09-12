@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { conditionModelMetadata, predictConditionAdjustedValue, type ConditionProfile, type ConditionValuation } from "@/lib/condition-model";
-import { confidenceForSample, formatCad, formatNumber, type DealSignal, type MarketRow } from "@/lib/market";
+import { bandPosition, bandScale, layoutBandItems } from "@/lib/band-layout";
+import { confidenceForSample, dealSignalForPrediction, displayBandValues, formatCad, formatNumber, type MarketRow } from "@/lib/market";
 import { normalizeVin, validateNorthAmericanVin, vinStatusCopy } from "@/lib/vin";
+import { resolveVinMarketSelection, vinMarketEditAction } from "@/lib/vin-market-match";
 import type { VinLookupResponse } from "@/lib/vin-report";
 
 type FormState = ConditionProfile & {
@@ -48,40 +50,112 @@ const FACTOR_ICONS: Record<string, ReactElement> = {
 };
 
 function PredictionBand({ valuation, askingPrice, row }: { valuation: ConditionValuation; askingPrice?: number; row: MarketRow }) {
-  const multiplier = valuation.baseValue ? valuation.estimate / valuation.baseValue : 1;
-  const p25 = row.p25 * multiplier;
-  const p75 = row.p75 * multiplier;
-  const padding = Math.max((valuation.high - valuation.low) * 0.1, 800);
-  const min = Math.max(0, Math.min(valuation.low, p25) - padding);
-  const max = Math.max(valuation.high, p75) + padding;
-  const position = (value: number) => Math.max(2.5, Math.min(97.5, ((value - min) / (max - min)) * 100));
+  const band = displayBandValues(row, valuation);
+  const scale = bandScale(band);
+  const position = (value: number) => bandPosition(value, scale.min, scale.max);
+  const medianPos = position(band.p50);
+  const askPos = askingPrice !== undefined ? position(askingPrice) : null;
+  const gapPp = askPos !== null ? Math.abs(askPos - medianPos) : null;
+  const labelsClose = gapPp !== null && gapPp < 14;
+  const labelsExact = gapPp !== null && gapPp < 2;
+  const bandRef = useRef<HTMLDivElement>(null);
+  const captionRef = useRef<HTMLDivElement>(null);
   const percentiles = [
-    { label: "P10", value: valuation.low },
-    { label: "P25", value: p25 },
-    { label: "MEDIAN (P50)", value: valuation.estimate, emphasis: true },
-    { label: "P75", value: p75 },
-    { label: "P90", value: valuation.high },
+    { label: "P10", value: band.p10 },
+    { label: "P25", value: band.p25 },
+    { label: "MEDIAN (P50)", value: band.p50, emphasis: true },
+    { label: "P75", value: band.p75 },
+    { label: "P90", value: band.p90 },
   ];
+
+  // One coordinate system: `position()` percent is the only source of truth.
+  // Measure the rendered boxes, then hand back only the minimal containment
+  // shift (`--band-shift`) and caption rows (`--band-row`). Nothing else moves
+  // a marker off its value.
+  useLayoutEffect(() => {
+    const bandEl = bandRef.current;
+    const captionEl = captionRef.current;
+    if (!bandEl || !captionEl) return;
+    const finiteBand = [band.p10, band.p25, band.p50, band.p75, band.p90].every((value) => Number.isFinite(value));
+    if (!finiteBand || (askingPrice !== undefined && !Number.isFinite(askingPrice))) return;
+
+    const apply = () => {
+      if (!bandEl.isConnected || !captionEl.isConnected) return;
+      const bandRect = bandEl.getBoundingClientRect();
+      if (bandRect.width <= 0) return;
+      const cardRect = (bandEl.closest(".valuation-band") ?? bandEl).getBoundingClientRect();
+      const minCenter = cardRect.left + 1 - bandRect.left;
+      const maxCenter = cardRect.right - 1 - bandRect.left;
+
+      const labels: Array<{ element: HTMLElement; position: number }> = [];
+      bandEl.querySelectorAll<HTMLElement>(".band-median, .band-asking").forEach((dot) => {
+        const element = dot.querySelector<HTMLElement>("i");
+        const declared = Number(dot.dataset.bandPos);
+        if (element && Number.isFinite(declared)) labels.push({ element, position: declared });
+      });
+      const labelItems = labels.map(({ element, position: itemPosition }) => {
+        const rect = element.getBoundingClientRect();
+        return { position: itemPosition, width: rect.width, height: rect.height };
+      });
+      const labelLayout = layoutBandItems(labelItems, bandRect.width, minCenter, maxCenter, 6);
+      labels.forEach(({ element }, index) => {
+        element.style.setProperty("--band-shift", `${labelLayout.shifts[index]}px`);
+      });
+
+      // `layoutBandItems` pushes the ask label to a second row exactly when the
+      // two clamped label boxes collide on the horizontal axis — but labels
+      // never render `--band-row`, so that stacking is invisible. The only
+      // remaining separation axis is vertical: drop the ask label just enough
+      // to clear the median label's measured height plus 1px. Labels sharing a
+      // row are already >=6px apart horizontally, so they get zero
+      // displacement and this never moves a label that already clears its
+      // neighbour. The 1px gap (not 2px) reclaims a pixel for the zero-slack
+      // compact short-height tier without growing the band.
+      if (labels.length === 2) {
+        const [upperLabel, lowerLabel] = labels;
+        const currentStack = Number.parseFloat(lowerLabel.element.style.getPropertyValue("--band-label-stack")) || 0;
+        const upperRect = upperLabel.element.getBoundingClientRect();
+        const lowerRect = lowerLabel.element.getBoundingClientRect();
+        const baseGap = lowerRect.top - upperRect.top - currentStack;
+        const collides = labelLayout.rows[0] !== labelLayout.rows[1];
+        const needed = collides ? Math.max(0, upperRect.height + 1 - baseGap) : 0;
+        lowerLabel.element.style.setProperty("--band-label-stack", `${needed}px`);
+      }
+
+      const captions = Array.from(captionEl.querySelectorAll<HTMLElement>("span[data-band-pos]"));
+      const captionItems = captions.map((caption) => {
+        const rect = caption.getBoundingClientRect();
+        return { position: Number(caption.dataset.bandPos), width: rect.width, height: rect.height };
+      });
+      const captionLayout = layoutBandItems(captionItems, bandRect.width, minCenter, maxCenter, 6);
+      captions.forEach((caption, index) => {
+        caption.style.setProperty("--band-shift", `${captionLayout.shifts[index]}px`);
+        caption.style.setProperty("--band-row", String(captionLayout.rows[index]));
+      });
+      captionEl.style.setProperty("--band-row-h", `${captionLayout.rowHeight}px`);
+      captionEl.style.height = `${captionLayout.rowCount * captionLayout.rowHeight}px`;
+    };
+
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(bandEl);
+    void document.fonts.ready.then(apply);
+    return () => observer.disconnect();
+  }, [band.p10, band.p25, band.p50, band.p75, band.p90, askingPrice]);
+
   return (
     <div className="band-wrap prediction-band">
-      <div className="band-caption">
-        {percentiles.map((p) => <span key={p.label} className={p.emphasis ? "emphasis" : undefined}><small>{p.label}</small><b>{formatCad(p.value)}</b></span>)}
+      <div className="band-caption" ref={captionRef}>
+        {percentiles.map((p) => <span key={p.label} className={p.emphasis ? "emphasis" : undefined} data-band-pos={position(p.value)} style={{ left: `${position(p.value)}%` }}><small>{p.label}</small><b>{formatCad(p.value)}</b></span>)}
       </div>
-      <div className="price-band">
+      <div ref={bandRef} className={`price-band${labelsClose ? " band-close" : ""}${labelsExact ? " band-exact" : ""}`}>
         <span className="band-outer" />
-        <span className="band-typical" style={{ left: `${position(valuation.low)}%`, right: `${100 - position(valuation.high)}%` }} />
-        <span className="band-median" style={{ left: `${position(valuation.estimate)}%` }}><i><b>ML estimate</b>{formatCad(valuation.estimate)}</i></span>
-        {askingPrice ? <span className="band-asking" style={{ left: `${position(askingPrice)}%` }}><i><b>Listing ask</b>{formatCad(askingPrice)}</i></span> : null}
+        <span className="band-typical" style={{ left: `${position(band.p10)}%`, right: `${100 - position(band.p90)}%` }} />
+        <span className="band-median" data-band-pos={medianPos} style={{ left: `${position(band.p50)}%` }}><i><b>ML estimate</b>{formatCad(band.p50)}</i></span>
+        {askingPrice ? <span className="band-asking" data-band-pos={askPos ?? undefined} style={{ left: `${position(askingPrice)}%` }}><i><b>Listing ask</b>{formatCad(askingPrice)}</i></span> : null}
       </div>
     </div>
   );
-}
-
-function dealSignalForPrediction(askingPrice: number, valuation: ConditionValuation): DealSignal {
-  if (valuation.isOdometerExtrapolation) return { label: "Outside trained mileage support", detail: "The odometer was capped at the model boundary, so this estimate needs additional comparable evidence.", tone: "high" };
-  if (askingPrice < valuation.low) return { label: "Below predicted range", detail: "The ask is below the condition-aware range; verify history, condition, fees and title status before treating it as favourable.", tone: "watch" };
-  if (askingPrice > valuation.high) return { label: "Above predicted range", detail: "The ask is above the condition-aware range produced from the current market anchor and transaction-trained adjustment.", tone: "high" };
-  return { label: "Within predicted range", detail: "The ask is consistent with the condition-aware prediction interval, subject to the unpriced factors shown below.", tone: "typical" };
 }
 
 type FactorState = "modelled" | "context" | "missing";
@@ -93,7 +167,7 @@ function FactorCoverage({ row, odometer, vinReport, valuation, profile }: { row:
   const factors: Array<{ label: string; value: string; note: string; state: FactorState }> = [
     { label: "Identity & age", value: `${row.y} ${row.mk} ${row.md}`, note: "Exact make, model family and model year", state: "modelled" },
     { label: "Local market", value: `${row.p} · ${formatNumber(row.n)} vehicles`, note: "Current province-level dealer inventory", state: "modelled" },
-    { label: "Odometer", value: odometer ? `${formatNumber(odometer)} km` : "Market median used", note: valuation.isOdometerExtrapolation ? "Outside trained support; the mileage input was capped" : "Transaction-trained relative to the Canadian cell median", state: "modelled" },
+    { label: "Odometer", value: odometer ? `${formatNumber(odometer)} km` : "Market median used", note: valuation.isOdometerExtrapolation ? (odometer ? "Outside the model's trained support; the mileage comparison was capped" : "The market median is outside the model's trained odometer support; no mileage comparison was applied") : "Transaction-trained relative to the Canadian cell median", state: "modelled" },
     { label: "Trim & drivetrain", value: trimLabel, note: "Decoded specifications are context until a live listing feed supplies row-level pricing", state: vinReport ? "context" : "missing" },
     { label: "Condition & history", value: `Auction-grade equivalent ${valuation.conditionScore.toFixed(2)} / 4`, note: `${profile.conditionGrade.replace("-", " ")} · ${profile.accidentHistory.replace("-", " ")} accident history · six user-entered signals`, state: "modelled" },
     { label: "Options & transaction", value: "Not available in public data", note: "Packages, fees, seller type and completed-sale price remain unpriced", state: "missing" },
@@ -146,11 +220,9 @@ export function ValuationWorkbench() {
   const result = marketBlockedByVin ? undefined : selectedResult;
 
   function update<K extends keyof FormState>(field: K, value: FormState[K]) {
-    if (field !== "vin") setMarketBlockedByVin(false);
-    if (field === "province" || field === "make" || field === "model" || field === "year") {
-      setVinReport(undefined);
-      setLookupState("idle");
-    }
+    const vinAction = vinMarketEditAction(field);
+    if (vinAction.clearsBlock) setMarketBlockedByVin(false);
+    if (vinAction.clearsReport) { setVinReport(undefined); setLookupState("idle"); }
     setForm((current) => {
       const next = { ...current, [field]: value };
       if (field === "province") {
@@ -179,13 +251,14 @@ export function ValuationWorkbench() {
       if (!response.ok) throw new Error(payload.error || "VIN lookup failed.");
       const report = payload as VinLookupResponse;
       setVinReport(report);
-      const province = form.province;
-      const make = uniqueSorted(rows.filter((row) => row.p === province).map((row) => row.mk)).find((candidate) => candidate.toLowerCase() === report.vehicle.make.toLowerCase());
-      const decodedMarketModel = report.vehicle.model;
-      const model = make ? uniqueSorted(rows.filter((row) => row.p === province && row.mk === make).map((row) => row.md)).find((candidate) => candidate.toLowerCase().replace(/[^a-z0-9]/g, "") === decodedMarketModel.toLowerCase().replace(/[^a-z0-9]/g, "")) : undefined;
-      const hasMarketCell = Boolean(make && model && rows.some((row) => row.p === province && row.mk === make && row.md === model && row.y === report.vehicle.year));
-      setMarketBlockedByVin(!hasMarketCell);
-      setForm((current) => ({ ...current, province, make: make ?? current.make, model: model ?? current.model, year: make && model ? String(report.vehicle.year) : current.year }));
+      const { selection, cellMatched } = resolveVinMarketSelection({
+        rows,
+        province: form.province,
+        current: { province: form.province, make: form.make, model: form.model, year: form.year },
+        decoded: { make: report.vehicle.make, model: report.vehicle.model, year: report.vehicle.year },
+      });
+      setMarketBlockedByVin(!cellMatched);
+      setForm((current) => ({ ...current, ...selection }));
       setLookupState("success"); setResultPulse((value) => value + 1);
       window.setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
     } catch (error) { setLookupState("error"); setLookupError(error instanceof Error ? error.message : "VIN lookup failed."); }
@@ -213,7 +286,7 @@ export function ValuationWorkbench() {
     targetOdometerKm: odometer ?? result.km,
     profile: conditionProfile,
   }) : undefined;
-  const dealSignal = askingPrice && conditionValuation ? dealSignalForPrediction(askingPrice, conditionValuation) : undefined;
+  const dealSignal = askingPrice && conditionValuation ? dealSignalForPrediction(askingPrice, conditionValuation, odometer !== undefined) : undefined;
   const vinStatus = validateNorthAmericanVin(form.vin);
   const estimate = conditionValuation?.estimate;
   const estimateDifference = askingPrice && estimate ? askingPrice - estimate : undefined;
@@ -248,7 +321,7 @@ export function ValuationWorkbench() {
         </details>
         <div className="history-input">
           <p className="kicker">VIN</p>
-          <label className="vin-field"><span>17-character VIN</span><div className="vin-control"><input value={form.vin} onChange={(event) => { update("vin", normalizeVin(event.target.value)); setLookupState("idle"); setVinReport(undefined); setMarketBlockedByVin(false); }} maxLength={17} spellCheck={false} autoCapitalize="characters" placeholder="Enter VIN (optional)" aria-label="Vehicle identification number" /><button type="button" onClick={decodeVin} disabled={loading || lookupState === "loading"}>{lookupState === "loading" ? "DECODING…" : "Decode VIN"}</button></div><small className={`vin-status ${vinStatus}`}>{vinStatusCopy[vinStatus]}</small></label>
+          <label className="vin-field"><span>17-character VIN</span><div className="vin-control"><input value={form.vin} onChange={(event) => update("vin", normalizeVin(event.target.value))} maxLength={17} spellCheck={false} autoCapitalize="characters" placeholder="Enter VIN (optional)" aria-label="Vehicle identification number" /><button type="button" onClick={decodeVin} disabled={loading || lookupState === "loading"}>{lookupState === "loading" ? "DECODING…" : "Decode VIN"}</button></div><small className={`vin-status ${vinStatus}`}>{vinStatusCopy[vinStatus]}</small></label>
           {lookupState === "error" ? <p className="lookup-error" role="alert">{lookupError}</p> : null}
           {vinReport ? <div className="decoded-mini"><span>DECODED BY {vinReport.vehicle.source}</span><strong>{vinReport.vehicle.year} {vinReport.vehicle.make} {vinReport.vehicle.model}</strong><p>{vinReport.vehicle.trim} · {vinReport.vehicle.driveType} · {vinReport.vehicle.displacementL ?? "—"} L</p><small>{vinReport.notice}{marketBlockedByVin ? " No matching price cell exists in this public release, so the previous manual selection is not used as a substitute." : ""}</small></div> : null}
           <p className="privacy-note"><LockIcon /> VIN is sent to the official NHTSA &amp; vPIC decoder only when you click Decode. AutoValue does not store it.</p>

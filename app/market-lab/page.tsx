@@ -18,10 +18,10 @@ export default function MarketLabPage() {
     <div className="inner-page">
       <header className="page-hero">
         <div>
-          <p className="eyebrow">Data control room</p>
-          <h1>Market data you can <em>interrogate.</em></h1>
+          <p className="eyebrow">Market data</p>
+          <h1>Coverage, provenance, quality gates, and <em>model benchmarks.</em></h1>
         </div>
-        <p className="page-hero-side">Coverage, provenance and automated quality gates from the exact artifact powering the public price check.</p>
+        <p className="page-hero-side">This page reports coverage, provenance, and automated quality checks from the same artifact that powers the public price check.</p>
       </header>
 
       <section className="lab-stats" aria-label="Coverage totals">
@@ -64,7 +64,7 @@ export default function MarketLabPage() {
 
         <article className="qa-card provenance-card">
           <p className="kicker">Artifact provenance</p>
-          <h2>Reproducible by construction</h2>
+          <h2>Reproducible from the released source</h2>
           <dl className="prov-list">
             <div><dt>Retrieved</dt><dd>{formatRetrievedDate(manifest.sourceRetrievedAt)}</dd></div>
             <div><dt>Licence</dt><dd>{manifest.sourceLicense}</dd></div>
@@ -77,7 +77,7 @@ export default function MarketLabPage() {
       <section className="lab-grid">
         <article className="model-card consumer">
           <div className="qa-head">
-            <div><p className="kicker">Consumer adjustment model</p><h2>Completed outcomes train the condition effect.</h2></div>
+            <div><p className="kicker">Consumer adjustment model</p><h2>Trained on completed auction outcomes.</h2></div>
             <span className="pill pill-blue">USED IN CONSUMER RESULTS</span>
           </div>
           <div className="scoreboard">
@@ -94,7 +94,7 @@ export default function MarketLabPage() {
 
         <article className="model-card research">
           <div className="qa-head">
-            <div><p className="kicker">Research benchmark</p><h2>A model that earns its place by beating a declared baseline.</h2></div>
+            <div><p className="kicker">Research benchmark</p><h2>Evaluated against a declared baseline.</h2></div>
             <span className="pill pill-red">NOT USED FOR CONSUMER RESULTS</span>
           </div>
           <div className="scoreboard">
