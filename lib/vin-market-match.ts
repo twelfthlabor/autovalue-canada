@@ -90,13 +90,12 @@ export function resolveVinMarketSelection(input: {
 export type VinMarketEditAction = { clearsBlock: boolean; clearsReport: boolean };
 
 /**
- * Commit A extraction: the workbench's previous inline block/report clearing
- * moved verbatim behind the final API, so the component change stays
- * behavior-neutral.
+ * A decoded VIN stays blocked until the user explicitly changes the vehicle
+ * identity (province / make / model / year) or edits the VIN itself. Price,
+ * odometer and condition edits preserve the block and the decoded report so a
+ * fallback-year row is never valued under the decoded vehicle's heading.
  */
 export function vinMarketEditAction(field: string): VinMarketEditAction {
-  return {
-    clearsBlock: true,
-    clearsReport: field === "province" || field === "make" || field === "model" || field === "year" || field === "vin",
-  };
+  const abandons = field === "province" || field === "make" || field === "model" || field === "year" || field === "vin";
+  return { clearsBlock: abandons, clearsReport: abandons };
 }
