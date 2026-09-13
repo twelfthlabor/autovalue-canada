@@ -84,6 +84,10 @@ describe("hero overlap fixes (fix/hero-overlaps-jdpower-theme)", () => {
     expect(workbench).toContain("--band-link-embed");
     expect(workbench).toContain("--band-link-sibling-embed");
     expect(workbench).not.toContain("--band-label-stack");
+    // Sibling avoidance comes from settled declared value positions, never the
+    // dots' live `left` rect (a re-measure can land while the spring is moving).
+    expect(workbench).toContain("declaredCenterX");
+    expect(workbench).toMatch(/offsetX = declaredCenterX\(position\) - declaredCenterX\(siblingEntry\.position\)/);
     expect(css).toMatch(/\.band-link\s*\{[^}]*top:\s*var\(--band-link-y/);
     expect(css).toMatch(/\.band-link\s*\{[^}]*width:\s*var\(--band-link-length/);
     expect(css).toMatch(/\.band-link\s*\{[^}]*height:\s*var\(--band-link-thickness\)/);

@@ -102,33 +102,41 @@ function PredictionBand({ valuation, askingPrice, row }: { valuation: ConditionV
         return { position: itemPosition, width: rect.width, height: rect.height };
       });
       const labelLayout = layoutBandItems(labelItems, bandRect.width, minCenter, maxCenter, 6);
-      const askDot = labels.find(({ dot }) => dot.classList.contains("band-asking"))?.dot;
-      const medianDot = labels.find(({ dot }) => dot.classList.contains("band-median"))?.dot;
+      const askEntry = labels.find(({ dot }) => dot.classList.contains("band-asking"));
+      const medianEntry = labels.find(({ dot }) => dot.classList.contains("band-median"));
       const bandStyle = getComputedStyle(bandEl);
       const borderWidth = Number.parseFloat(bandStyle.getPropertyValue("--band-dot-border")) || 3;
       const embed = Number.parseFloat(bandStyle.getPropertyValue("--band-link-embed")) || 2;
       const siblingEmbed = Number.parseFloat(bandStyle.getPropertyValue("--band-link-sibling-embed")) || 0.5;
       const linkThickness = Number.parseFloat(bandStyle.getPropertyValue("--band-link-thickness")) || 2;
-      labels.forEach(({ element, link, dot }, index) => {
-        element.style.setProperty("--band-shift", `${labelLayout.shifts[index]}px`);
+      // A dot's settled centre is its declared value position, NOT its live
+      // rect: `left` carries a 460ms spring, and a re-measure (cascade select,
+      // ResizeObserver, fonts) can land mid-flight. Sibling avoidance must use
+      // the settled distance or a transient overlap writes the short merged-disc
+      // link (7.5px) with nothing left to re-measure after the spring settles.
+      const declaredCenterX = (position: number) => bandRect.left + (bandRect.width * position) / 100;
+      labels.forEach(({ element, link, dot, position }, index) => {
+        const shift = labelLayout.shifts[index];
+        element.style.setProperty("--band-shift", `${shift}px`);
         if (!link) return;
         // Connector geometry is measured after the shift lands. The link renders
         // inside its dot, from the *visible* disc edge (the border box inset by
         // the background-coloured ring) to the measured callout edge, so no
         // background gap can appear; it rides the dot's `left` transition and
         // only the diagonal changes when a containment clamp shifts a callout.
+        // Vertical positions are not animated, so live y values stay exact.
         const dotRect = dot.getBoundingClientRect();
         const labelRect = element.getBoundingClientRect();
         const above = dot.classList.contains("band-asking");
-        const anchorX = dotRect.x + dotRect.width / 2;
         let anchorY = above ? dotRect.top + borderWidth + embed : dotRect.bottom - borderWidth - embed;
         // Exact/near-coincident discs: when the sibling's visible disc reaches
         // past this dot at the connector x, start on the outer visible edge (half
         // a pixel in) so the line never floats over the sibling's ring.
-        const siblingRect = (above ? medianDot : askDot)?.getBoundingClientRect();
-        if (siblingRect) {
+        const siblingEntry = above ? medianEntry : askEntry;
+        if (siblingEntry) {
+          const siblingRect = siblingEntry.dot.getBoundingClientRect();
           const radius = siblingRect.width / 2 - borderWidth;
-          const offsetX = anchorX - (siblingRect.x + siblingRect.width / 2);
+          const offsetX = declaredCenterX(position) - declaredCenterX(siblingEntry.position);
           if (Math.abs(offsetX) <= radius) {
             const siblingY = siblingRect.y + siblingRect.height / 2 + (above ? -1 : 1) * Math.sqrt(radius * radius - offsetX * offsetX);
             anchorY = above ? Math.min(anchorY, siblingY + siblingEmbed) : Math.max(anchorY, siblingY - siblingEmbed);
@@ -138,7 +146,9 @@ function PredictionBand({ valuation, askingPrice, row }: { valuation: ConditionV
         // starts at the anchor, so subtract the 2px bar's half height.
         const paddingTop = dotRect.top + borderWidth;
         const topPx = anchorY - paddingTop - linkThickness / 2;
-        const dx = labelRect.x + labelRect.width / 2 - anchorX;
+        // Callout-side x is the measured containment shift (dot centre + shift),
+        // independent of the dot's in-flight `left`.
+        const dx = shift;
         const dy = above ? labelRect.bottom - anchorY : labelRect.top - anchorY;
         link.style.setProperty("--band-link-y", `${topPx}px`);
         link.style.setProperty("--band-link-length", `${Math.hypot(dx, dy)}px`);
