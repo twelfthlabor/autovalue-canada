@@ -103,10 +103,42 @@ test("supplied VIN decodes live without inventing listing facts", async ({ page 
 
 test("asking-price marker has reserved space and does not overlap its caption", async ({ page }) => {
   await page.goto("/#check");
-  const captionBottom = await page.locator(".band-caption span").evaluateAll((elements) => Math.max(...elements.map((element) => element.getBoundingClientRect().bottom)));
-  const marker = await page.locator(".band-asking i").boundingBox();
-  expect(marker).not.toBeNull();
-  expect(marker!.y).toBeGreaterThanOrEqual(captionBottom);
+  // The band is client-measured: wait for fonts, the caption layout pass (the
+  // inline height is written by the band's useLayoutEffect) and a stable scroll
+  // position, so no hydration reflow or fragment scroll settles mid-test.
+  await page.evaluate(async () => { await document.fonts.ready; });
+  await page.waitForFunction(() => {
+    const caption = document.querySelector<HTMLElement>(".band-caption");
+    return !!caption && caption.style.height.trim() !== "";
+  });
+  await page.evaluate(() => new Promise<void>((resolve) => {
+    let lastScrollY = window.scrollY;
+    let stableFrames = 0;
+    let frames = 0;
+    const tick = () => {
+      frames += 1;
+      if (window.scrollY === lastScrollY) stableFrames += 1;
+      else { lastScrollY = window.scrollY; stableFrames = 0; }
+      if (stableFrames >= 2 || frames >= 90) { resolve(); return; }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }));
+  // Both boxes must come from ONE layout snapshot: two roundtrips can read
+  // across an interleaved reflow/scroll and compare boxes from different
+  // layouts. Throwing on missing nodes keeps the assertion from passing
+  // vacuously.
+  const { captionBottom, markerY } = await page.evaluate(() => {
+    const captions = Array.from(document.querySelectorAll<HTMLElement>(".band-caption span"));
+    const marker = document.querySelector<HTMLElement>(".band-asking i");
+    if (captions.length === 0) throw new Error("caption row not found");
+    if (!marker) throw new Error("ask-callout marker not found");
+    return {
+      captionBottom: Math.max(...captions.map((caption) => caption.getBoundingClientRect().bottom)),
+      markerY: marker.getBoundingClientRect().y,
+    };
+  });
+  expect(markerY).toBeGreaterThanOrEqual(captionBottom);
 });
 
 test("methodology and control-room evidence are public", async ({ page }, testInfo) => {
