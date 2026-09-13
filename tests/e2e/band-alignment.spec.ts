@@ -27,6 +27,13 @@ import { expect, test, type Page, type TestInfo } from "@playwright/test";
  * 15pp step above and below the median, and the narrow-width blind window
  * (RAV4 28,500 = 14.57pp and ask 34,947 = 23.00pp), with explicit 320x568
  * coverage for the narrowest supported tier.
+ *
+ * Split-callout oracle: the "Listing ask" callout hangs above its dot and the
+ * "ML estimate" callout below its dot, clear of the caption row. Each callout's
+ * decorative `.band-link` must end on its callout edge (reconstructed from the
+ * measured dot/label boxes, including the outer visible disc edge when the two
+ * dots coincide) and must not overlap the caption row, the other callout, the
+ * other dot or the other connector.
  */
 
 const DESKTOP_PROJECT = "chromium-desktop";
@@ -133,9 +140,11 @@ type SnapshotElement = {
 type BandSnapshot = {
   band: SnapshotRect;
   card: SnapshotRect;
+  captionBlock: SnapshotRect;
   elements: SnapshotElement[];
   medianText: SnapshotRect | null;
   askTagText: SnapshotRect | null;
+  links: Array<{ side: "above" | "below"; rect: SnapshotRect; length: number; angle: number }>;
 };
 
 type MeasurementRow = {
@@ -171,6 +180,15 @@ function containmentOverflow(rect: SnapshotRect, card: SnapshotRect) {
   );
 }
 
+/** Distance from a point to a line segment, used for connector-vs-disc checks. */
+function pointToSegmentDistance(px: number, py: number, ax: number, ay: number, bx: number, by: number) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const lengthSquared = dx * dx + dy * dy;
+  const t = lengthSquared === 0 ? 0 : Math.min(1, Math.max(0, ((px - ax) * dx + (py - ay) * dy) / lengthSquared));
+  return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+}
+
 async function settle(page: Page) {
   await page.evaluate(() => new Promise<void>((resolve) => {
     requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
@@ -190,8 +208,11 @@ async function waitForMeasuredLayout(page: Page) {
   await page
     .waitForFunction(() => {
       const label = document.querySelector(".band-median i");
+      const link = document.querySelector(".band-link");
       if (!label) return false;
-      return getComputedStyle(label).getPropertyValue("--band-shift").trim() !== "";
+      const shift = getComputedStyle(label).getPropertyValue("--band-shift").trim();
+      const length = link ? getComputedStyle(link).getPropertyValue("--band-link-length").trim() : "0px";
+      return shift !== "" && length !== "" && length !== "0px";
     }, undefined, { timeout: 1500 })
     .catch(() => undefined);
   await settle(page);
@@ -271,12 +292,27 @@ async function snapshotBand(page: Page) {
     });
 
     const askTagNode = askLabel ? textNodeOf(askLabel.querySelector("b")) : null;
+    const links: Array<{ side: "above" | "below"; rect: SnapshotRect; length: number; angle: number }> = [];
+    for (const [side, selector] of [["above", ".band-asking .band-link"], ["below", ".band-median .band-link"]] as const) {
+      const link = document.querySelector<HTMLElement>(selector);
+      if (!link) continue;
+      const style = getComputedStyle(link);
+      links.push({
+        side,
+        rect: toRect(link),
+        length: Number.parseFloat(style.getPropertyValue("--band-link-length")) || 0,
+        angle: Number.parseFloat(style.getPropertyValue("--band-link-angle")) || 0,
+      });
+    }
+    const captionBlock = document.querySelector(".band-caption");
     return {
       band: toRect(band),
       card: toRect(card),
+      captionBlock: captionBlock ? toRect(captionBlock) : toRect(band),
       elements,
       medianText: medianLabel ? rangeRect(textNodeOf(medianLabel)) : null,
       askTagText: rangeRect(askTagNode),
+      links,
     };
   });
 }
@@ -369,6 +405,93 @@ async function runBandState(page: Page, testInfo: TestInfo, state: BandState, vi
     const rowCount = new Set(captionRects.map((caption) => Math.round(caption.rect.y))).size;
     softCheck(rowCount >= state.minCaptionRows, `${tag}: captions wrapped into ${rowCount} row(s); expected at least ${state.minCaptionRows} (captions are not on the wrapped value scale)`);
     rows.push({ state: tag, element: "caption-rows", oracle: "layout", expectedPx: state.minCaptionRows, measuredPx: rowCount, deltaPx: null, note: "row count" });
+  }
+
+  // Split-callout contract: ask above its dot, median below its dot, ask clear
+  // of the caption row. The `.band-link` connectors are reconstructed from the
+  // measured boxes (independent of the component's own vars): each link must
+  // end on its callout edge and must not cross the caption row, the other
+  // callout, the other dot or the other connector.
+  const medianDotEl = snapshot.elements.find((element) => element.name === "median-dot");
+  const askDotEl = snapshot.elements.find((element) => element.name === "ask-dot");
+  const medianLabelEl = snapshot.elements.find((element) => element.name === "median-label");
+  const askLabelEl = snapshot.elements.find((element) => element.name === "ask-label");
+
+  if (medianDotEl && medianLabelEl) {
+    const medianLabelTop = medianLabelEl.rect.y;
+    const medianDotBottom = medianDotEl.rect.y + medianDotEl.rect.height;
+    softCheck(medianLabelTop >= medianDotBottom - 0.5, `${tag}: median callout hangs above its dot (${(medianDotBottom - medianLabelTop).toFixed(2)}px into the dot column)`);
+  } else {
+    softCheck(false, `${tag}: median dot or callout missing from the snapshot`);
+  }
+  if (askDotEl && askLabelEl) {
+    const askLabelBottom = askLabelEl.rect.y + askLabelEl.rect.height;
+    softCheck(askLabelBottom <= askDotEl.rect.y + 0.5, `${tag}: ask callout hangs below its dot by ${(askLabelBottom - askDotEl.rect.y).toFixed(2)}px`);
+    const captionGap = askLabelEl.rect.y - (snapshot.captionBlock.y + snapshot.captionBlock.height);
+    softCheck(captionGap >= -0.5, `${tag}: ask callout enters the caption row by ${(-captionGap).toFixed(2)}px`);
+    rows.push({ state: tag, element: "ask-caption-gap", oracle: "layout", expectedPx: 0, measuredPx: round(captionGap), deltaPx: null, note: "px between caption block and ask callout" });
+  }
+
+  const linkSpecs = [
+    { side: "below" as const, name: "median", dot: medianDotEl, label: medianLabelEl, sibling: askDotEl },
+    { side: "above" as const, name: "ask", dot: askDotEl, label: askLabelEl, sibling: medianDotEl },
+  ];
+  for (const spec of linkSpecs) {
+    const link = snapshot.links.find((candidate) => candidate.side === spec.side);
+    if (!link) {
+      softCheck(false, `${tag}: ${spec.name} connector missing (.band-link not rendered)`);
+      continue;
+    }
+    if (!spec.dot || !spec.label) continue;
+    const above = spec.side === "above";
+    // Outer visible disc edge at the connector x: this dot's edge, extended to
+    // the sibling disc when the discs coincide/nearly coincide (circle geometry
+    // from measured boxes — matches the component's split-disc contract).
+    let anchorY = above ? spec.dot.rect.y : spec.dot.rect.y + spec.dot.rect.height;
+    if (spec.sibling) {
+      const radius = spec.sibling.rect.width / 2;
+      const offsetX = spec.dot.rect.centerX - spec.sibling.rect.centerX;
+      if (Math.abs(offsetX) <= radius) {
+        const siblingY = spec.sibling.rect.y + radius + (above ? -1 : 1) * Math.sqrt(radius * radius - offsetX * offsetX);
+        anchorY = above ? Math.min(anchorY, siblingY) : Math.max(anchorY, siblingY);
+      }
+    }
+    const radians = (link.angle * Math.PI) / 180;
+    const farX = spec.dot.rect.centerX + link.length * Math.cos(radians);
+    const farY = anchorY + link.length * Math.sin(radians);
+    const attachX = spec.label.rect.centerX;
+    const attachY = above ? spec.label.rect.y + spec.label.rect.height : spec.label.rect.y;
+    const attach = Math.hypot(farX - attachX, farY - attachY);
+    softCheck(attach <= 1.5, `${tag}: ${spec.name} connector endpoint is ${attach.toFixed(2)}px off its callout edge (tolerance 1.5px)`);
+    rows.push({ state: tag, element: `link:${spec.name}`, oracle: "measured", expectedPx: 0, measuredPx: round(attach), deltaPx: null, note: "connector endpoint distance to callout edge (px)" });
+
+    const captionArea = intersectionArea(link.rect, snapshot.captionBlock);
+    softCheck(captionArea < 0.5, `${tag}: ${spec.name} connector overlaps the caption block by ${captionArea.toFixed(2)}px²`);
+    for (const caption of captionRects) {
+      const area = intersectionArea(link.rect, caption.rect);
+      softCheck(area < 0.5, `${tag}: ${spec.name} connector overlaps ${caption.name} by ${area.toFixed(2)}px²`);
+    }
+    const otherDot = above ? medianDotEl : askDotEl;
+    const otherLabel = above ? medianLabelEl : askLabelEl;
+    if (otherLabel) {
+      const area = intersectionArea(link.rect, otherLabel.rect);
+      softCheck(area < 0.5, `${tag}: ${spec.name} connector overlaps the other callout by ${area.toFixed(2)}px²`);
+    }
+    // Compare the connector centerline to the dots as discs, not square boxes:
+    // the 1px line may pass a disc's bounding corner without touching the disc
+    // (and must touch its own dot edge at the junction only).
+    for (const [dotName, dot] of [["its own dot", spec.dot], ["the other dot", otherDot]] as const) {
+      if (!dot) continue;
+      const radius = dot.rect.width / 2;
+      const distance = pointToSegmentDistance(dot.rect.centerX, dot.rect.centerY, spec.dot.rect.centerX, anchorY, farX, farY);
+      softCheck(distance >= radius - 0.75, `${tag}: ${spec.name} connector crosses ${dotName} (${(radius - distance).toFixed(2)}px inside the disc)`);
+    }
+    const overflow = containmentOverflow(link.rect, snapshot.card);
+    softCheck(overflow <= 0.5, `${tag}: ${spec.name} connector escapes .valuation-band by ${overflow.toFixed(2)}px`);
+  }
+  if (snapshot.links.length === 2) {
+    const area = intersectionArea(snapshot.links[0].rect, snapshot.links[1].rect);
+    softCheck(area < 0.5, `${tag}: connectors intersect each other by ${area.toFixed(2)}px²`);
   }
 
   if (snapshot.medianText && snapshot.askTagText) {
