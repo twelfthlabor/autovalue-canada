@@ -104,35 +104,43 @@ function PredictionBand({ valuation, askingPrice, row }: { valuation: ConditionV
       const labelLayout = layoutBandItems(labelItems, bandRect.width, minCenter, maxCenter, 6);
       const askDot = labels.find(({ dot }) => dot.classList.contains("band-asking"))?.dot;
       const medianDot = labels.find(({ dot }) => dot.classList.contains("band-median"))?.dot;
+      const bandStyle = getComputedStyle(bandEl);
+      const borderWidth = Number.parseFloat(bandStyle.getPropertyValue("--band-dot-border")) || 3;
+      const embed = Number.parseFloat(bandStyle.getPropertyValue("--band-link-embed")) || 2;
+      const siblingEmbed = Number.parseFloat(bandStyle.getPropertyValue("--band-link-sibling-embed")) || 0.5;
+      const linkThickness = Number.parseFloat(bandStyle.getPropertyValue("--band-link-thickness")) || 2;
       labels.forEach(({ element, link, dot }, index) => {
         element.style.setProperty("--band-shift", `${labelLayout.shifts[index]}px`);
         if (!link) return;
         // Connector geometry is measured after the shift lands. The link renders
-        // inside the dot (dot edge -> callout edge), so it keeps touching the dot
-        // through the 460ms `left` slide, and only the diagonal changes when the
-        // containment shift moves the callout off its dot centre.
+        // inside its dot, from the *visible* disc edge (the border box inset by
+        // the background-coloured ring) to the measured callout edge, so no
+        // background gap can appear; it rides the dot's `left` transition and
+        // only the diagonal changes when a containment clamp shifts a callout.
         const dotRect = dot.getBoundingClientRect();
         const labelRect = element.getBoundingClientRect();
         const above = dot.classList.contains("band-asking");
         const anchorX = dotRect.x + dotRect.width / 2;
-        let anchorY = above ? dotRect.top : dotRect.bottom;
-        // Exact/near-coincident discs: when the sibling disc reaches past this
-        // dot's edge at the connector x, start at the outer visible edge so the
-        // link never crosses the other marker (circle geometry from measured
-        // boxes, not a state-specific pixel nudge).
+        let anchorY = above ? dotRect.top + borderWidth + embed : dotRect.bottom - borderWidth - embed;
+        // Exact/near-coincident discs: when the sibling's visible disc reaches
+        // past this dot at the connector x, start on the outer visible edge (half
+        // a pixel in) so the line never floats over the sibling's ring.
         const siblingRect = (above ? medianDot : askDot)?.getBoundingClientRect();
         if (siblingRect) {
-          const radius = siblingRect.width / 2;
-          const offsetX = anchorX - (siblingRect.x + radius);
+          const radius = siblingRect.width / 2 - borderWidth;
+          const offsetX = anchorX - (siblingRect.x + siblingRect.width / 2);
           if (Math.abs(offsetX) <= radius) {
-            const siblingY = siblingRect.y + radius + (above ? -1 : 1) * Math.sqrt(radius * radius - offsetX * offsetX);
-            anchorY = above ? Math.min(anchorY, siblingY) : Math.max(anchorY, siblingY);
+            const siblingY = siblingRect.y + siblingRect.height / 2 + (above ? -1 : 1) * Math.sqrt(radius * radius - offsetX * offsetX);
+            anchorY = above ? Math.min(anchorY, siblingY + siblingEmbed) : Math.max(anchorY, siblingY - siblingEmbed);
           }
         }
-        const drop = anchorY - (above ? dotRect.top : dotRect.bottom);
+        // `top` is relative to the dot's padding box; the link's centreline
+        // starts at the anchor, so subtract the 2px bar's half height.
+        const paddingTop = dotRect.top + borderWidth;
+        const topPx = anchorY - paddingTop - linkThickness / 2;
         const dx = labelRect.x + labelRect.width / 2 - anchorX;
         const dy = above ? labelRect.bottom - anchorY : labelRect.top - anchorY;
-        link.style.setProperty("--band-link-drop", `${drop}px`);
+        link.style.setProperty("--band-link-y", `${topPx}px`);
         link.style.setProperty("--band-link-length", `${Math.hypot(dx, dy)}px`);
         link.style.setProperty("--band-link-angle", `${(Math.atan2(dy, dx) * 180) / Math.PI}deg`);
       });

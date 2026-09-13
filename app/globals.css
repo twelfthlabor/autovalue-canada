@@ -312,7 +312,7 @@ button:focus-visible, a:focus-visible, summary:focus-visible, select:focus-visib
 .band-caption b { font-size: 12px; font-weight: 620; color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .band-caption span.emphasis b { font-size: 13px; font-weight: 740; color: var(--ink); }
 .band-caption span.emphasis small { color: var(--ink-2); }
-.price-band { height: 90px; margin: 10px 0 0; position: relative; --band-track: 32px; --band-callout-gap: 7px; --band-dot-border: 3px; }
+.price-band { height: 94px; margin: 10px 0 0; position: relative; --band-track: 34px; --band-callout-gap: 9px; --band-dot-border: 3px; --band-link-embed: 2px; --band-link-sibling-embed: .5px; --band-link-thickness: 2px; }
 .band-outer, .band-typical, .band-median, .band-asking { position: absolute; }
 .band-outer { left: 0; right: 0; top: calc(10px + var(--band-track)); height: 7px; border-radius: 99px; background: #D8E4E4; }
 .band-median, .band-asking { transition: left 460ms var(--spring); }
@@ -328,21 +328,28 @@ button:focus-visible, a:focus-visible, summary:focus-visible, select:focus-visib
 .band-asking i { color: var(--accent-deep); }
 .band-asking i b { color: var(--accent-deep); opacity: .85; }
 
-/* Callout connectors: decorative 1px links drawn from the measured dot edge to
-   the measured callout edge. The ask link grows upward (top track), the median
-   link downward (bottom track); both are children of their dot so they ride the
-   `left` transition, and their length/angle come from the same measured boxes
-   as `--band-shift` (diagonal when a containment clamp shifts a callout). */
-.band-link { position: absolute; left: 50%; width: var(--band-link-length, 0px); height: 1px; border-radius: 1px; transform-origin: left center; transform: rotate(var(--band-link-angle, 0deg)); pointer-events: none; }
-.band-asking .band-link { top: calc(0px - var(--band-dot-border) + var(--band-link-drop, 0px)); background: rgba(211, 70, 18, .42); }
-.band-median .band-link { top: calc(100% + var(--band-dot-border) + var(--band-link-drop, 0px)); background: rgba(16, 35, 48, .35); }
+/* Callout connectors: decorative links drawn from the visible disc edge to the
+   measured callout edge. The link is a 2px solid bar so a fully covered pixel
+   column survives fractional device positions; the colour is the dot's own
+   solid token (>=4.2:1 on the band background) instead of a translucent tint.
+   It renders inside its dot, so it rides the 460ms `left` transition, and its
+   y/length/angle come from the same measured boxes as `--band-shift` (diagonal
+   when a containment clamp shifts a callout). `--band-link-embed` reaches 2px
+   inside the coloured disc and `--band-link-sibling-embed` covers the outer
+   visible disc when the two dots coincide, so the line never leaves the
+   background ring showing through. */
+.band-link { position: absolute; left: 50%; top: var(--band-link-y, 0px); width: var(--band-link-length, 0px); height: var(--band-link-thickness); border-radius: 1px; transform-origin: left center; transform: rotate(var(--band-link-angle, 0deg)); pointer-events: none; }
+.band-asking .band-link { background: var(--accent); }
+.band-median .band-link { background: var(--ink); }
 
 /* Close/exact no longer displace the callouts: ask above and median below the
    bar never share vertical space, and the measured `--band-shift` stays the
    only horizontal displacement. Exact coincidence (<2pp) keeps the 17px ink
    median disc painted above the 21px accent ask disc, showing an accent
-   annulus. */
-.band-exact .band-median { z-index: 2; }
+   annulus; its ring is transparent there so the coincident accent disc (and
+   the ask connector crossing it) stays visible up to the ink edge instead of
+   leaving a background-coloured break. */
+.band-exact .band-median { z-index: 2; border-color: transparent; }
 
 /* price anatomy */
 
@@ -479,7 +486,7 @@ button:focus-visible, a:focus-visible, summary:focus-visible, select:focus-visib
   .band-caption b { font-size: 10.5px; }
   .band-caption small { font-size: 9px; }
   .band-caption span.emphasis b { font-size: 11.5px; }
-  .price-band { --band-track: 32px; height: 81px; margin-top: 8px; }
+  .price-band { --band-track: 34px; height: 85px; margin-top: 8px; }
   .band-outer { top: calc(8px + var(--band-track)); height: 6px; }
   .band-typical { top: calc(6.5px + var(--band-track)); height: 9px; }
   .band-median { top: calc(2px + var(--band-track)); width: 15px; height: 15px; }
@@ -548,7 +555,7 @@ button:focus-visible, a:focus-visible, summary:focus-visible, select:focus-visib
   .band-caption b { font-size: 10px; }
   /* Compact short-height tier keeps the shared ask-above / median-below rhythm;
      only the track, band height and font metrics shrink. */
-  .price-band { --band-track: 29px; height: 75px; margin-top: 4px; }
+  .price-band { --band-track: 31px; height: 79px; margin-top: 4px; }
   .band-median i, .band-asking i { font-size: 11px; line-height: 1.1; }
   .band-median i b, .band-asking i b { font-size: 9px; }
   .price-anatomy { margin-top: 4px; padding: 3px 11px 4px; }
@@ -620,7 +627,7 @@ button:focus-visible, a:focus-visible, summary:focus-visible, select:focus-visib
   .result-stats { flex-direction: row; align-items: center; width: 100%; justify-content: space-between; }
   .result-stats > p { text-align: right; }
   .valuation-summary { grid-template-columns: 1fr; }
-  .price-band { height: 90px; }
+  .price-band { height: 94px; }
   .band-median i, .band-asking i { align-items: center; }
   .band-median i b, .band-asking i b { text-align: center; }
   .anatomy-row { grid-template-columns: 1fr; }

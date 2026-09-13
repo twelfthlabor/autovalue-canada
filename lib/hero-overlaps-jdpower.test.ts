@@ -74,18 +74,33 @@ describe("hero overlap fixes (fix/hero-overlaps-jdpower-theme)", () => {
     expect(css).toMatch(/\.band-exact\s+\.band-median\s*\{[^}]*z-index:\s*2/);
   });
 
-  it("links callouts to their dots with measured connector geometry", () => {
+  it("links callouts to their dots with visible measured connector geometry", () => {
     // The component measures the dot/label boxes after writing --band-shift and
-    // derives each decorative connector's length/angle from them.
+    // derives each decorative connector's y/length/angle from them.
     expect(workbench).toContain("band-link");
     expect(workbench).toContain("--band-link-length");
     expect(workbench).toContain("--band-link-angle");
+    expect(workbench).toContain("--band-link-y");
+    expect(workbench).toContain("--band-link-embed");
+    expect(workbench).toContain("--band-link-sibling-embed");
     expect(workbench).not.toContain("--band-label-stack");
+    expect(css).toMatch(/\.band-link\s*\{[^}]*top:\s*var\(--band-link-y/);
     expect(css).toMatch(/\.band-link\s*\{[^}]*width:\s*var\(--band-link-length/);
+    expect(css).toMatch(/\.band-link\s*\{[^}]*height:\s*var\(--band-link-thickness\)/);
     expect(css).toMatch(/\.band-link\s*\{[^}]*rotate\(var\(--band-link-angle/);
-    expect(css).toMatch(/\.band-asking \.band-link\s*\{[^}]*top:\s*calc\(0px - var\(--band-dot-border\)/);
-    expect(css).toMatch(/\.band-median \.band-link\s*\{[^}]*top:\s*calc\(100% \+ var\(--band-dot-border\)/);
-    // Both callouts keep the measured shift as their only displacement.
+    // Solid dot tokens (no translucent tint) reach >=3:1 on the band background
+    // so the 2px connector is visible at 100% zoom.
+    expect(css).toMatch(/\.band-asking \.band-link\s*\{[^}]*background:\s*var\(--accent\)/);
+    expect(css).toMatch(/\.band-median \.band-link\s*\{[^}]*background:\s*var\(--ink\)/);
+    const token = (name: string) => css.match(new RegExp(`--${name}:\\s*(#[0-9A-Fa-f]{6})`))?.[1] ?? "";
+    const contrastOn = (a: string, b: string) => {
+      const la = luminance(a);
+      const lb = luminance(b);
+      return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+    };
+    expect(contrastOn(token("accent"), token("surface-3"))).toBeGreaterThanOrEqual(3);
+    expect(contrastOn(token("ink"), token("surface-3"))).toBeGreaterThanOrEqual(3);
+    // Callout displacement stays on the measured shift only.
     expect(css).toMatch(/\.band-median i\s*\{[^}]*translateX\(calc\(-50% \+ var\(--band-shift, 0px\)\)\)/);
     expect(css).toMatch(/\.band-asking i\s*\{[^}]*translateX\(calc\(-50% \+ var\(--band-shift, 0px\)\)\)/);
   });
