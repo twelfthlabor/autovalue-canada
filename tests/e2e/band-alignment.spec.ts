@@ -30,10 +30,12 @@ import { expect, test, type Page, type TestInfo } from "@playwright/test";
  *
  * Split-callout oracle: the "Listing ask" callout hangs above its dot and the
  * "ML estimate" callout below its dot, clear of the caption row. Each callout's
- * decorative `.band-link` must end on its callout edge (reconstructed from the
- * measured dot/label boxes, including the outer visible disc edge when the two
- * dots coincide) and must not overlap the caption row, the other callout, the
- * other dot or the other connector.
+ * decorative `.band-link` must be >=8px long (>=7px at exact coincidence), reach
+ * at least 3:1 contrast against the band background (alpha-composited exactly as
+ * rendered), end on its callout edge (reconstructed from the measured dot/label
+ * boxes, including the visible disc edge — border box inset by the 3px ring —
+ * when the two dots coincide) and must not overlap the caption row, the other
+ * callout, the other disc beyond its embed or the other connector.
  */
 
 const DESKTOP_PROJECT = "chromium-desktop";
@@ -141,10 +143,14 @@ type BandSnapshot = {
   band: SnapshotRect;
   card: SnapshotRect;
   captionBlock: SnapshotRect;
+  cardBg: [number, number, number];
+  dotBorder: number;
+  linkEmbed: number;
+  siblingEmbed: number;
   elements: SnapshotElement[];
   medianText: SnapshotRect | null;
   askTagText: SnapshotRect | null;
-  links: Array<{ side: "above" | "below"; rect: SnapshotRect; length: number; angle: number }>;
+  links: Array<{ side: "above" | "below"; rect: SnapshotRect; length: number; angle: number; color: [number, number, number]; alpha: number }>;
 };
 
 type MeasurementRow = {
@@ -187,6 +193,24 @@ function pointToSegmentDistance(px: number, py: number, ax: number, ay: number, 
   const lengthSquared = dx * dx + dy * dy;
   const t = lengthSquared === 0 ? 0 : Math.min(1, Math.max(0, ((px - ax) * dx + (py - ay) * dy) / lengthSquared));
   return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+}
+
+/** WCAG 2.x contrast ratio between two RGB triples. */
+function contrastRatio(a: [number, number, number], b: [number, number, number]) {
+  const lin = (v: number) => { const s = v / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; };
+  const lum = (c: [number, number, number]) => 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
+  const la = lum(a);
+  const lb = lum(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+/** Alpha-composites a line colour over the card background, as rendered. */
+function compositeOver(color: [number, number, number], alpha: number, bg: [number, number, number]): [number, number, number] {
+  return [
+    Math.round(color[0] * alpha + bg[0] * (1 - alpha)),
+    Math.round(color[1] * alpha + bg[1] * (1 - alpha)),
+    Math.round(color[2] * alpha + bg[2] * (1 - alpha)),
+  ];
 }
 
 async function settle(page: Page) {
@@ -292,16 +316,28 @@ async function snapshotBand(page: Page) {
     });
 
     const askTagNode = askLabel ? textNodeOf(askLabel.querySelector("b")) : null;
-    const links: Array<{ side: "above" | "below"; rect: SnapshotRect; length: number; angle: number }> = [];
+    const bandStyle = getComputedStyle(band);
+    const numVar = (name: string, fallback: number) => Number.parseFloat(bandStyle.getPropertyValue(name)) || fallback;
+    const parseColor = (value: string): { rgb: [number, number, number]; alpha: number } | null => {
+      const match = value.match(/rgba?\(([^)]+)\)/);
+      if (!match) return null;
+      const parts = match[1].split(",").map((part) => Number.parseFloat(part.trim()));
+      return { rgb: [parts[0], parts[1], parts[2]], alpha: parts.length > 3 ? parts[3] : 1 };
+    };
+    const cardBg = parseColor(getComputedStyle(card).backgroundColor)?.rgb ?? [246, 250, 250];
+    const links: BandSnapshot["links"] = [];
     for (const [side, selector] of [["above", ".band-asking .band-link"], ["below", ".band-median .band-link"]] as const) {
       const link = document.querySelector<HTMLElement>(selector);
       if (!link) continue;
       const style = getComputedStyle(link);
+      const color = parseColor(style.backgroundColor) ?? { rgb: [0, 0, 0], alpha: 1 };
       links.push({
         side,
         rect: toRect(link),
         length: Number.parseFloat(style.getPropertyValue("--band-link-length")) || 0,
         angle: Number.parseFloat(style.getPropertyValue("--band-link-angle")) || 0,
+        color: color.rgb,
+        alpha: color.alpha,
       });
     }
     const captionBlock = document.querySelector(".band-caption");
@@ -309,6 +345,10 @@ async function snapshotBand(page: Page) {
       band: toRect(band),
       card: toRect(card),
       captionBlock: captionBlock ? toRect(captionBlock) : toRect(band),
+      cardBg,
+      dotBorder: numVar("--band-dot-border", 3),
+      linkEmbed: numVar("--band-link-embed", 0),
+      siblingEmbed: numVar("--band-link-sibling-embed", 0),
       elements,
       medianText: medianLabel ? rangeRect(textNodeOf(medianLabel)) : null,
       askTagText: rangeRect(askTagNode),
@@ -444,20 +484,26 @@ async function runBandState(page: Page, testInfo: TestInfo, state: BandState, vi
     }
     if (!spec.dot || !spec.label) continue;
     const above = spec.side === "above";
-    // Outer visible disc edge at the connector x: this dot's edge, extended to
-    // the sibling disc when the discs coincide/nearly coincide (circle geometry
-    // from measured boxes — matches the component's split-disc contract).
-    let anchorY = above ? spec.dot.rect.y : spec.dot.rect.y + spec.dot.rect.height;
+    const border = snapshot.dotBorder;
+    const otherDot = above ? medianDotEl : askDotEl;
+    // Visible disc edge at the connector x: the border box inset by the ring,
+    // plus the 2px embed inside this dot's own disc. When the sibling's visible
+    // disc reaches past that edge (coincident dots), it takes over with the
+    // half-pixel sibling embed.
+    let anchorY = above
+      ? spec.dot.rect.y + border + snapshot.linkEmbed
+      : spec.dot.rect.y + spec.dot.rect.height - border - snapshot.linkEmbed;
     if (spec.sibling) {
-      const radius = spec.sibling.rect.width / 2;
+      const radius = spec.sibling.rect.width / 2 - border;
       const offsetX = spec.dot.rect.centerX - spec.sibling.rect.centerX;
       if (Math.abs(offsetX) <= radius) {
-        const siblingY = spec.sibling.rect.y + radius + (above ? -1 : 1) * Math.sqrt(radius * radius - offsetX * offsetX);
-        anchorY = above ? Math.min(anchorY, siblingY) : Math.max(anchorY, siblingY);
+        const siblingY = spec.sibling.rect.y + spec.sibling.rect.height / 2 + (above ? -1 : 1) * Math.sqrt(radius * radius - offsetX * offsetX);
+        anchorY = above ? Math.min(anchorY, siblingY + snapshot.siblingEmbed) : Math.max(anchorY, siblingY - snapshot.siblingEmbed);
       }
     }
+    const anchorX = spec.dot.rect.centerX;
     const radians = (link.angle * Math.PI) / 180;
-    const farX = spec.dot.rect.centerX + link.length * Math.cos(radians);
+    const farX = anchorX + link.length * Math.cos(radians);
     const farY = anchorY + link.length * Math.sin(radians);
     const attachX = spec.label.rect.centerX;
     const attachY = above ? spec.label.rect.y + spec.label.rect.height : spec.label.rect.y;
@@ -465,26 +511,41 @@ async function runBandState(page: Page, testInfo: TestInfo, state: BandState, vi
     softCheck(attach <= 1.5, `${tag}: ${spec.name} connector endpoint is ${attach.toFixed(2)}px off its callout edge (tolerance 1.5px)`);
     rows.push({ state: tag, element: `link:${spec.name}`, oracle: "measured", expectedPx: 0, measuredPx: round(attach), deltaPx: null, note: "connector endpoint distance to callout edge (px)" });
 
+    // Visibility: long enough to read, and solid enough to clear the 3:1
+    // non-text minimum against the band background (alpha-composited exactly as
+    // rendered). Exact coincidence is allowed a shorter link (the callout sits
+    // on top of the merged disc).
+    const minLength = state.exact ? 7 : 8;
+    softCheck(link.length >= minLength, `${tag}: ${spec.name} connector is only ${link.length.toFixed(2)}px long (target >= ${minLength}px)`);
+    const effective = compositeOver(link.color, link.alpha, snapshot.cardBg);
+    const ratio = contrastRatio(effective, snapshot.cardBg);
+    softCheck(ratio >= 3, `${tag}: ${spec.name} connector contrast is ${ratio.toFixed(2)}:1 (target >= 3:1)`);
+    rows.push({ state: tag, element: `link:${spec.name}-contrast`, oracle: "wcag", expectedPx: 3, measuredPx: round(ratio), deltaPx: null, note: "contrast ratio vs band background" });
+
+    // Attachment: the disc-side endpoint must land on or inside a visible disc
+    // edge, and the centreline must not cross either visible disc beyond its
+    // measured embed.
+    const discs = [spec.dot, otherDot].filter((d): d is SnapshotElement => Boolean(d)).map((d) => ({ ...d, radius: d.rect.width / 2 - border }));
+    const edgeDistance = Math.min(...discs.map((d) => Math.hypot(anchorX - d.rect.centerX, anchorY - d.rect.centerY) - d.radius));
+    softCheck(edgeDistance <= 0.5, `${tag}: ${spec.name} connector ends ${edgeDistance.toFixed(2)}px away from the nearest visible disc edge (must touch or overlap)`);
+    for (const [dotName, dot] of [[`its own dot`, spec.dot], ["the other dot", otherDot]] as const) {
+      if (!dot) continue;
+      const radius = dot.rect.width / 2 - border;
+      const embed = dotName === "its own dot" ? snapshot.linkEmbed : snapshot.siblingEmbed;
+      const distance = pointToSegmentDistance(dot.rect.centerX, dot.rect.centerY, anchorX, anchorY, farX, farY);
+      softCheck(distance >= radius - embed - 0.75, `${tag}: ${spec.name} connector crosses ${dotName} (${(radius - embed - distance).toFixed(2)}px beyond its embed)`);
+    }
+
     const captionArea = intersectionArea(link.rect, snapshot.captionBlock);
     softCheck(captionArea < 0.5, `${tag}: ${spec.name} connector overlaps the caption block by ${captionArea.toFixed(2)}px²`);
     for (const caption of captionRects) {
       const area = intersectionArea(link.rect, caption.rect);
       softCheck(area < 0.5, `${tag}: ${spec.name} connector overlaps ${caption.name} by ${area.toFixed(2)}px²`);
     }
-    const otherDot = above ? medianDotEl : askDotEl;
     const otherLabel = above ? medianLabelEl : askLabelEl;
     if (otherLabel) {
       const area = intersectionArea(link.rect, otherLabel.rect);
       softCheck(area < 0.5, `${tag}: ${spec.name} connector overlaps the other callout by ${area.toFixed(2)}px²`);
-    }
-    // Compare the connector centerline to the dots as discs, not square boxes:
-    // the 1px line may pass a disc's bounding corner without touching the disc
-    // (and must touch its own dot edge at the junction only).
-    for (const [dotName, dot] of [["its own dot", spec.dot], ["the other dot", otherDot]] as const) {
-      if (!dot) continue;
-      const radius = dot.rect.width / 2;
-      const distance = pointToSegmentDistance(dot.rect.centerX, dot.rect.centerY, spec.dot.rect.centerX, anchorY, farX, farY);
-      softCheck(distance >= radius - 0.75, `${tag}: ${spec.name} connector crosses ${dotName} (${(radius - distance).toFixed(2)}px inside the disc)`);
     }
     const overflow = containmentOverflow(link.rect, snapshot.card);
     softCheck(overflow <= 0.5, `${tag}: ${spec.name} connector escapes .valuation-band by ${overflow.toFixed(2)}px`);
