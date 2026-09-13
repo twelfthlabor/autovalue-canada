@@ -66,27 +66,28 @@ describe("hero overlap fixes (fix/hero-overlaps-jdpower-theme)", () => {
     expect(css).toMatch(/\.band-caption span\s*\{[^}]*position:\s*absolute/);
     expect(css).toMatch(/\.band-caption span\s*\{[^}]*translateX\(calc\(-50% \+ var\(--band-shift, 0px\)\)\)/);
     expect(css).toMatch(/\.band-caption span\s*\{[^}]*top:\s*calc\(var\(--band-row, 0\) \* var\(--band-row-h, \d+px\)\)/);
-    // Close mode only adjusts the vertical stagger now.
-    expect(css).toMatch(/\.price-band\.band-close\s+\.band-asking\s+i\s*\{[^}]*top:\s*calc\(100% \+ \d+px\)/);
+    // Split callout sides: the ask callout hangs above its dot, the median
+    // callout below its dot, so close/exact states never need a vertical stack.
+    expect(css).toMatch(/\.band-asking i\s*\{[^}]*bottom:\s*calc\(100% \+ var\(--band-callout-gap/);
+    expect(css).toMatch(/\.band-median i\s*\{[^}]*top:\s*calc\(100% \+ var\(--band-callout-gap/);
     // Exact coincidence paints the 17px ink median above the 21px accent ask disc.
     expect(css).toMatch(/\.band-exact\s+\.band-median\s*\{[^}]*z-index:\s*2/);
   });
 
-  it("uses a measured vertical stack for colliding marker labels", () => {
-    // The component reuses layoutBandItems to decide whether the two measured
-    // label boxes collide, then writes the minimal vertical stack.
-    expect(workbench).toContain("--band-label-stack");
-    expect(workbench).toContain("layoutBandItems(labelItems");
-    // Direction matters: layoutBandItems assigns the ask label a second row
-    // exactly when the clamped boxes collide horizontally (labels never render
-    // --band-row), so the stack triggers on a row MISMATCH. Same-row boxes are
-    // already >=6px apart and must not be displaced.
-    expect(workbench).toMatch(/labelLayout\.rows\[0\]\s*!==\s*labelLayout\.rows\[1\]/);
-    expect(workbench).not.toMatch(/labelLayout\.rows\[0\]\s*===\s*labelLayout\.rows\[1\]/);
-    expect(css).toMatch(/\.band-asking i\s*\{[^}]*translateY\(var\(--band-label-stack, 0px\)\)/);
-    // Close mode tightens the label line boxes so the measured drop needed to
-    // clear the median label stays small; the fixed band height never grows.
-    expect(css).toMatch(/\.price-band\.band-close\s+\.band-median\s+i,\s*\.price-band\.band-close\s+\.band-asking\s+i\s*\{[^}]*line-height:\s*1\.1/);
+  it("links callouts to their dots with measured connector geometry", () => {
+    // The component measures the dot/label boxes after writing --band-shift and
+    // derives each decorative connector's length/angle from them.
+    expect(workbench).toContain("band-link");
+    expect(workbench).toContain("--band-link-length");
+    expect(workbench).toContain("--band-link-angle");
+    expect(workbench).not.toContain("--band-label-stack");
+    expect(css).toMatch(/\.band-link\s*\{[^}]*width:\s*var\(--band-link-length/);
+    expect(css).toMatch(/\.band-link\s*\{[^}]*rotate\(var\(--band-link-angle/);
+    expect(css).toMatch(/\.band-asking \.band-link\s*\{[^}]*top:\s*calc\(0px - var\(--band-dot-border\)/);
+    expect(css).toMatch(/\.band-median \.band-link\s*\{[^}]*top:\s*calc\(100% \+ var\(--band-dot-border\)/);
+    // Both callouts keep the measured shift as their only displacement.
+    expect(css).toMatch(/\.band-median i\s*\{[^}]*translateX\(calc\(-50% \+ var\(--band-shift, 0px\)\)\)/);
+    expect(css).toMatch(/\.band-asking i\s*\{[^}]*translateX\(calc\(-50% \+ var\(--band-shift, 0px\)\)\)/);
   });
 
   it("uses a 5-col lab-stats grid (no 4+1 orphan)", () => {

@@ -71,7 +71,11 @@ function PredictionBand({ valuation, askingPrice, row }: { valuation: ConditionV
   // One coordinate system: `position()` percent is the only source of truth.
   // Measure the rendered boxes, then hand back only the minimal containment
   // shift (`--band-shift`) and caption rows (`--band-row`). Nothing else moves
-  // a marker off its value.
+  // a marker off its value: the ask callout sits above the bar and the median
+  // callout below it, so the two never share vertical space. Each callout
+  // carries a decorative `.band-link` whose length/angle are computed from the
+  // same measured dot/label boxes, so a clamped (shifted) callout still gets a
+  // connector that lands on its dot.
   useLayoutEffect(() => {
     const bandEl = bandRef.current;
     const captionEl = captionRef.current;
@@ -87,40 +91,51 @@ function PredictionBand({ valuation, askingPrice, row }: { valuation: ConditionV
       const minCenter = cardRect.left + 1 - bandRect.left;
       const maxCenter = cardRect.right - 1 - bandRect.left;
 
-      const labels: Array<{ element: HTMLElement; position: number }> = [];
+      const labels: Array<{ element: HTMLElement; link: HTMLElement | null; dot: HTMLElement; position: number }> = [];
       bandEl.querySelectorAll<HTMLElement>(".band-median, .band-asking").forEach((dot) => {
         const element = dot.querySelector<HTMLElement>("i");
         const declared = Number(dot.dataset.bandPos);
-        if (element && Number.isFinite(declared)) labels.push({ element, position: declared });
+        if (element && Number.isFinite(declared)) labels.push({ element, link: dot.querySelector<HTMLElement>(".band-link"), dot, position: declared });
       });
       const labelItems = labels.map(({ element, position: itemPosition }) => {
         const rect = element.getBoundingClientRect();
         return { position: itemPosition, width: rect.width, height: rect.height };
       });
       const labelLayout = layoutBandItems(labelItems, bandRect.width, minCenter, maxCenter, 6);
-      labels.forEach(({ element }, index) => {
+      const askDot = labels.find(({ dot }) => dot.classList.contains("band-asking"))?.dot;
+      const medianDot = labels.find(({ dot }) => dot.classList.contains("band-median"))?.dot;
+      labels.forEach(({ element, link, dot }, index) => {
         element.style.setProperty("--band-shift", `${labelLayout.shifts[index]}px`);
+        if (!link) return;
+        // Connector geometry is measured after the shift lands. The link renders
+        // inside the dot (dot edge -> callout edge), so it keeps touching the dot
+        // through the 460ms `left` slide, and only the diagonal changes when the
+        // containment shift moves the callout off its dot centre.
+        const dotRect = dot.getBoundingClientRect();
+        const labelRect = element.getBoundingClientRect();
+        const above = dot.classList.contains("band-asking");
+        const anchorX = dotRect.x + dotRect.width / 2;
+        let anchorY = above ? dotRect.top : dotRect.bottom;
+        // Exact/near-coincident discs: when the sibling disc reaches past this
+        // dot's edge at the connector x, start at the outer visible edge so the
+        // link never crosses the other marker (circle geometry from measured
+        // boxes, not a state-specific pixel nudge).
+        const siblingRect = (above ? medianDot : askDot)?.getBoundingClientRect();
+        if (siblingRect) {
+          const radius = siblingRect.width / 2;
+          const offsetX = anchorX - (siblingRect.x + radius);
+          if (Math.abs(offsetX) <= radius) {
+            const siblingY = siblingRect.y + radius + (above ? -1 : 1) * Math.sqrt(radius * radius - offsetX * offsetX);
+            anchorY = above ? Math.min(anchorY, siblingY) : Math.max(anchorY, siblingY);
+          }
+        }
+        const drop = anchorY - (above ? dotRect.top : dotRect.bottom);
+        const dx = labelRect.x + labelRect.width / 2 - anchorX;
+        const dy = above ? labelRect.bottom - anchorY : labelRect.top - anchorY;
+        link.style.setProperty("--band-link-drop", `${drop}px`);
+        link.style.setProperty("--band-link-length", `${Math.hypot(dx, dy)}px`);
+        link.style.setProperty("--band-link-angle", `${(Math.atan2(dy, dx) * 180) / Math.PI}deg`);
       });
-
-      // `layoutBandItems` pushes the ask label to a second row exactly when the
-      // two clamped label boxes collide on the horizontal axis — but labels
-      // never render `--band-row`, so that stacking is invisible. The only
-      // remaining separation axis is vertical: drop the ask label just enough
-      // to clear the median label's measured height plus 1px. Labels sharing a
-      // row are already >=6px apart horizontally, so they get zero
-      // displacement and this never moves a label that already clears its
-      // neighbour. The 1px gap (not 2px) reclaims a pixel for the zero-slack
-      // compact short-height tier without growing the band.
-      if (labels.length === 2) {
-        const [upperLabel, lowerLabel] = labels;
-        const currentStack = Number.parseFloat(lowerLabel.element.style.getPropertyValue("--band-label-stack")) || 0;
-        const upperRect = upperLabel.element.getBoundingClientRect();
-        const lowerRect = lowerLabel.element.getBoundingClientRect();
-        const baseGap = lowerRect.top - upperRect.top - currentStack;
-        const collides = labelLayout.rows[0] !== labelLayout.rows[1];
-        const needed = collides ? Math.max(0, upperRect.height + 1 - baseGap) : 0;
-        lowerLabel.element.style.setProperty("--band-label-stack", `${needed}px`);
-      }
 
       const captions = Array.from(captionEl.querySelectorAll<HTMLElement>("span[data-band-pos]"));
       const captionItems = captions.map((caption) => {
@@ -151,8 +166,8 @@ function PredictionBand({ valuation, askingPrice, row }: { valuation: ConditionV
       <div ref={bandRef} className={`price-band${labelsClose ? " band-close" : ""}${labelsExact ? " band-exact" : ""}`}>
         <span className="band-outer" />
         <span className="band-typical" style={{ left: `${position(band.p10)}%`, right: `${100 - position(band.p90)}%` }} />
-        <span className="band-median" data-band-pos={medianPos} style={{ left: `${position(band.p50)}%` }}><i><b>ML estimate</b>{formatCad(band.p50)}</i></span>
-        {askingPrice ? <span className="band-asking" data-band-pos={askPos ?? undefined} style={{ left: `${position(askingPrice)}%` }}><i><b>Listing ask</b>{formatCad(askingPrice)}</i></span> : null}
+        <span className="band-median" data-band-pos={medianPos} style={{ left: `${position(band.p50)}%` }}><span className="band-link" aria-hidden="true" /><i><b>ML estimate</b>{formatCad(band.p50)}</i></span>
+        {askingPrice ? <span className="band-asking" data-band-pos={askPos ?? undefined} style={{ left: `${position(askingPrice)}%` }}><span className="band-link" aria-hidden="true" /><i><b>Listing ask</b>{formatCad(askingPrice)}</i></span> : null}
       </div>
     </div>
   );
