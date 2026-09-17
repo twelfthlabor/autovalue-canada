@@ -64,15 +64,17 @@ async function readCapped(response: Response) {
 }
 
 export async function POST(request: Request) {
-  const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "unknown";
-  if (isRateLimited(clientIp)) {
-    return NextResponse.json({ ok: false, reason: "Too many listing imports from this address. Please wait a minute and try again." }, { status: 429 });
-  }
+  // Cheap gates run first: a hostile no-cors post cannot spend a victim's
+  // rate-limit bucket because it never reaches the limiter.
   if (!(request.headers.get("content-type") ?? "").toLowerCase().startsWith("application/json")) {
     return NextResponse.json({ ok: false, reason: "Send the listing URL as JSON." }, { status: 415 });
   }
   if (!sameOrigin(request)) {
     return NextResponse.json({ ok: false, reason: "Cross-site requests are not accepted." }, { status: 403 });
+  }
+  const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "unknown";
+  if (isRateLimited(clientIp)) {
+    return NextResponse.json({ ok: false, reason: "Too many listing imports from this address. Please wait a minute and try again." }, { status: 429 });
   }
 
   try {
