@@ -12,6 +12,8 @@ export const LISTING_HOSTS = [
   "www.clutch.ca",
 ];
 
+const ALLOWLIST_REASON = "Only AutoTrader.ca, Kijiji.ca, Carpages.ca and Clutch.ca links are supported.";
+
 export type ListingFields = {
   province?: string;
   make?: string;
@@ -36,12 +38,59 @@ export function validateListingUrl(raw: string): { ok: true; url: URL } | { ok: 
   }
   if (url.protocol !== "https:") return { ok: false, reason: "Only https listing links are supported." };
   if (url.username || url.password || (url.port && url.port !== "443") || !isAllowedListingHost(url.hostname)) {
-    return { ok: false, reason: "Only AutoTrader.ca, Kijiji.ca, Carpages.ca and Clutch.ca links are supported." };
+    return { ok: false, reason: ALLOWLIST_REASON };
   }
   return { ok: true, url };
 }
 
-const PROVINCE_CODES = new Set(["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YT"]);
+const MAX_REDIRECTS = 3;
+
+export type ListingFetch = (input: URL, init: RequestInit) => Promise<Response>;
+
+/**
+ * Fetches one listing page with redirects disabled at the platform level and
+ * followed manually: every hop is checked with the same https/host allowlist
+ * as the entry URL, so a redirect cannot reach an internal or non-listing host.
+ */
+export async function fetchListingPage(
+  url: URL,
+  fetchImpl: ListingFetch = fetch,
+  signal?: AbortSignal,
+): Promise<{ ok: true; response: Response } | { ok: false; reason: string }> {
+  let current = url;
+  for (let redirects = 0; ; ) {
+    const response = await fetchImpl(current, {
+      headers: {
+        Accept: "text/html,application/xhtml+xml",
+        "User-Agent": "AutoValue-Canada/0.3 listing-import (one page per request; contact: portfolio demo)",
+      },
+      signal,
+      redirect: "manual",
+      cache: "no-store",
+    });
+    const location = response.status >= 300 && response.status < 400 ? response.headers.get("location") : null;
+    if (!location) {
+      const final = validateListingUrl(response.url || current.href);
+      return final.ok ? { ok: true, response } : { ok: false, reason: final.reason };
+    }
+    if (redirects >= MAX_REDIRECTS) {
+      return { ok: false, reason: "That link redirected too many times. Enter the details manually." };
+    }
+    redirects += 1;
+    void response.body?.cancel().catch(() => {});
+    let next: URL;
+    try {
+      next = new URL(location, current);
+    } catch {
+      return { ok: false, reason: ALLOWLIST_REASON };
+    }
+    const hop = validateListingUrl(next.href);
+    if (!hop.ok) return { ok: false, reason: hop.reason };
+    current = hop.url;
+  }
+}
+
+export const PROVINCE_CODES = new Set(["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YT"]);
 
 const PROVINCE_NAMES: Record<string, string> = {
   alberta: "AB", "british columbia": "BC", manitoba: "MB", "new brunswick": "NB",
@@ -100,6 +149,10 @@ function provinceFrom(value: string) {
   return PROVINCE_NAMES[value.trim().toLowerCase()];
 }
 
+// Linear block scan: the previous lazy regex rescanned to the end of the page
+// for every unclosed tag, so a 2 MB page of them took tens of seconds.
+const MAX_LD_BLOCKS = 64;
+
 function collectLdNodes(html: string) {
   const nodes: Record<string, unknown>[] = [];
   const visit = (value: unknown) => {
@@ -111,12 +164,26 @@ function collectLdNodes(html: string) {
     nodes.push(value as Record<string, unknown>);
     Object.values(value as Record<string, unknown>).forEach(visit);
   };
-  for (const block of html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
+  const lower = html.toLowerCase();
+  let cursor = 0;
+  for (let block = 0; block < MAX_LD_BLOCKS; block += 1) {
+    const open = lower.indexOf("<script", cursor);
+    if (open === -1) break;
+    const openEnd = html.indexOf(">", open);
+    if (openEnd === -1) break;
+    const tag = lower.slice(open, openEnd);
+    if (!tag.includes('type="application/ld+json"') && !tag.includes("type='application/ld+json'")) {
+      cursor = openEnd + 1;
+      continue;
+    }
+    const close = lower.indexOf("</script", openEnd);
+    if (close === -1) break;
     try {
-      visit(JSON.parse(block[1]));
+      visit(JSON.parse(html.slice(openEnd + 1, close)));
     } catch {
       // Malformed structured data is skipped; lower layers still run.
     }
+    cursor = close + 8;
   }
   return nodes;
 }
@@ -280,4 +347,30 @@ export function parseListingHtml(html: string): { fields: ListingFields; note: s
   set("odometer", textOdometer(html), "page text");
 
   return { fields, note: buildNote(fields, sources) };
+}
+
+const FIELD_MAX_TEXT = 40;
+
+/**
+ * Guards the import response before it reaches the form: only strings of the
+ * expected shape survive, anything else is dropped rather than cast.
+ */
+export function readListingFields(value: unknown): ListingFields {
+  const fields: ListingFields = {};
+  if (!value || typeof value !== "object") return fields;
+  const record = value as Record<string, unknown>;
+  const read = (field: keyof ListingFields) => (typeof record[field] === "string" ? cleanText(record[field]) : "");
+  const province = read("province").toUpperCase();
+  if (PROVINCE_CODES.has(province)) fields.province = province;
+  const year = read("year");
+  if (/^(19[89]\d|20[0-3]\d)$/.test(year)) fields.year = year;
+  for (const field of ["make", "model"] as const) {
+    const text = read(field);
+    if (text && text.length <= FIELD_MAX_TEXT) fields[field] = text;
+  }
+  for (const field of ["odometer", "askingPrice"] as const) {
+    const digits = read(field).replace(/,/g, "");
+    if (/^\d{1,7}$/.test(digits)) fields[field] = digits;
+  }
+  return fields;
 }

@@ -2,7 +2,7 @@
 
 import { animate } from "animejs";
 import { useEffect, useRef, useState } from "react";
-import type { ListingFields } from "@/lib/listing-import";
+import { readListingFields, type ListingFields } from "@/lib/listing-import";
 
 type ImportState = "idle" | "fetching" | "success" | "error";
 
@@ -39,10 +39,11 @@ export function ListingImport({ onImport, disabled }: { onImport: (fields: Listi
       });
       const payload = await response.json().catch(() => null);
       if (!payload?.ok) throw new Error(payload?.reason || "That listing could not be read. Enter the details manually.");
-      const fields = payload.fields as ListingFields;
+      const fields = readListingFields(payload.fields);
+      if (Object.keys(fields).length === 0) throw new Error("That listing did not contain usable vehicle details. Enter them manually.");
       onImport(fields);
       setSummary([fields.year, fields.make, fields.model].filter(Boolean).join(" ") || "Listing details");
-      setMessage(payload.note as string);
+      setMessage(typeof payload.note === "string" ? payload.note : "Listing details imported.");
       setState("success");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "That listing could not be read. Enter the details manually.");

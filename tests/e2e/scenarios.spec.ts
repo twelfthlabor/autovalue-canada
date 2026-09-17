@@ -150,5 +150,9 @@ test("a malformed share URL leaves the default scenario untouched", async ({ pag
   await expect(page.getByLabel("Odometer in kilometres")).toHaveValue("89000");
   await page.getByLabel("Odometer in kilometres").fill("150000");
   await expect(page.getByLabel("Odometer in kilometres")).toHaveValue("150000");
+
+  await page.goto("/?p=ZZ&mk=Toyota&md=RAV4&y=2021");
+  await expect(page.getByTestId("ml-estimate")).toHaveText(DEFAULT_ESTIMATE);
+  await expect(page.getByLabel("Province")).toHaveValue("ON");
   expect(pageErrors).toEqual([]);
 });

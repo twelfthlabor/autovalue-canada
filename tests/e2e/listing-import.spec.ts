@@ -56,6 +56,22 @@ test("a partial parse leaves untouched fields alone", async ({ page }) => {
   await expect(page.getByLabel("Asking price in Canadian dollars")).toHaveValue("9999");
 });
 
+test("malformed field values from the import response are ignored", async ({ page }) => {
+  await mockImport(page, 200, {
+    ok: true,
+    fields: { province: "BC", make: "Honda", model: "Civic", year: "2022", odometer: "12.5", askingPrice: "not-a-price" },
+    note: "Found year, make, model and province in structured data.",
+  });
+  await importListing(page);
+
+  await expect(page.getByLabel("Province")).toHaveValue("BC");
+  await expect(page.getByLabel("Make")).toHaveValue("Honda");
+  await expect(page.getByLabel("Model", { exact: true })).toHaveValue("Civic");
+  await expect(page.getByLabel("Model year")).toHaveValue("2022");
+  await expect(page.getByLabel("Odometer in kilometres")).toHaveValue("89000");
+  await expect(page.getByLabel("Asking price in Canadian dollars")).toHaveValue("31995");
+});
+
 test("a blocked fetch keeps manual entry and shows one short message", async ({ page }) => {
   await mockImport(page, 502, { ok: false, reason: "The listing site blocked the request (403). Enter the details manually." });
   await page.goto("/#check");

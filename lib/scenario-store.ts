@@ -3,6 +3,7 @@
 // failure, corrupted JSON or an older payload simply yields no saved scenarios.
 
 import type { ConditionTier } from "./condition-model";
+import { PROVINCE_CODES } from "./listing-import";
 
 export type ScenarioInputs = {
   province: string;
@@ -38,7 +39,6 @@ const QUERY_KEYS: Record<keyof ScenarioInputs, string> = {
   conditionTier: "c",
 };
 
-const PROVINCE_CODE = /^[A-Z]{2}$/;
 const MODEL_YEAR = /^(19[89]\d|20[0-3]\d)$/;
 const MAX_TEXT = 40;
 
@@ -62,7 +62,7 @@ export function normalizeScenarioInputs(raw: Record<string, unknown>): ScenarioI
   const make = text(raw.make);
   const model = text(raw.model);
   const year = text(raw.year);
-  if (!province || !PROVINCE_CODE.test(province)) return undefined;
+  if (!province || !PROVINCE_CODES.has(province)) return undefined;
   if (!make || make.length > MAX_TEXT || !model || model.length > MAX_TEXT) return undefined;
   if (!year || !MODEL_YEAR.test(year)) return undefined;
   const conditionTier = raw.conditionTier === undefined ? "average" : text(raw.conditionTier);

@@ -86,6 +86,15 @@ describe("scenario URL encoding", () => {
     }
   });
 
+  it("rejects province codes outside the app's province list", () => {
+    for (const province of ["ZZ", "XX", "US", "ONT", "ab", ""]) {
+      expect(decodeScenario(`p=${province}&mk=Toyota&md=RAV4&y=2021`), province).toBeUndefined();
+    }
+    for (const province of ["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YT"]) {
+      expect(decodeScenario(`p=${province}&mk=Toyota&md=RAV4&y=2021`)?.province, province).toBe(province);
+    }
+  });
+
   it("treats explicitly empty optional fields as not entered", () => {
     expect(decodeScenario("p=ON&mk=Toyota&md=RAV4&y=2021&km=&ask=")).toEqual({ ...INPUTS, odometer: "", askingPrice: "", conditionTier: "average" });
   });

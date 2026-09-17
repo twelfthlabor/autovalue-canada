@@ -1,6 +1,24 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { parseListingHtml, validateListingUrl } from "./listing-import";
+import { fetchListingPage, parseListingHtml, readListingFields, validateListingUrl } from "./listing-import";
+
+const ALLOWLIST_REASON = "Only AutoTrader.ca, Kijiji.ca, Carpages.ca and Clutch.ca links are supported.";
+
+function entry(raw: string) {
+  const check = validateListingUrl(raw);
+  if (!check.ok) throw new Error(check.reason);
+  return check.url;
+}
+
+function redirect(location: string) {
+  return new Response(null, { status: 302, headers: { location } });
+}
+
+function page(url = "") {
+  const response = new Response("<html></html>", { status: 200, headers: { "content-type": "text/html" } });
+  if (url) Object.defineProperty(response, "url", { value: url });
+  return response;
+}
 
 function fixture(name: string) {
   return readFileSync(new URL(`../tests/fixtures/${name}`, import.meta.url), "utf8");
@@ -101,5 +119,98 @@ describe("parseListingHtml", () => {
     const { fields, note } = parseListingHtml("<html><head><title>403 Forbidden</title></head></html>");
     expect(fields).toEqual({});
     expect(note).toBe("No vehicle details were found on that page. Enter them manually.");
+  });
+
+  it("parses a 2 MB page of unclosed JSON-LD tags in well under a second", () => {
+    const html = '<script type="application/ld+json">'.repeat(53_000);
+    const started = performance.now();
+    const { fields } = parseListingHtml(html);
+    const elapsed = performance.now() - started;
+    expect(fields).toEqual({});
+    expect(elapsed).toBeLessThan(1000);
+  });
+});
+
+describe("fetchListingPage", () => {
+  it("rejects a redirect to a non-allowlisted host without fetching it", async () => {
+    const fetched: string[] = [];
+    const result = await fetchListingPage(entry("https://www.autotrader.ca/a/1"), async (url) => {
+      fetched.push(url.href);
+      return redirect("https://evil.example/steal");
+    });
+    expect(fetched).toEqual(["https://www.autotrader.ca/a/1"]);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toBe(ALLOWLIST_REASON);
+  });
+
+  it("follows a redirect chain between allowlisted hosts and resolves relative Locations", async () => {
+    const fetched: string[] = [];
+    const result = await fetchListingPage(entry("https://www.autotrader.ca/a/1"), async (url) => {
+      fetched.push(url.href);
+      if (url.href === "https://www.autotrader.ca/a/1") return redirect("https://www.kijiji.ca/v-cars/ottawa/2");
+      if (url.href === "https://www.kijiji.ca/v-cars/ottawa/2") return redirect("/v-cars/ottawa/3");
+      return page(url.href);
+    });
+    expect(fetched).toEqual([
+      "https://www.autotrader.ca/a/1",
+      "https://www.kijiji.ca/v-cars/ottawa/2",
+      "https://www.kijiji.ca/v-cars/ottawa/3",
+    ]);
+    expect(result.ok).toBe(true);
+  });
+
+  it("rejects a chain of four redirects", async () => {
+    const fetched: string[] = [];
+    const result = await fetchListingPage(entry("https://www.autotrader.ca/a/1"), async (url) => {
+      fetched.push(url.href);
+      return redirect("https://www.autotrader.ca/a/next");
+    });
+    expect(fetched).toHaveLength(4);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toContain("redirected too many times");
+  });
+
+  it("rejects a non-https redirect target and a non-https final URL", async () => {
+    const hop = await fetchListingPage(entry("https://www.kijiji.ca/a/1"), async () => redirect("http://www.kijiji.ca/b/2"));
+    expect(hop.ok).toBe(false);
+    if (!hop.ok) expect(hop.reason).toBe("Only https listing links are supported.");
+
+    const final = await fetchListingPage(entry("https://www.kijiji.ca/a/1"), async () => page("http://www.kijiji.ca/final"));
+    expect(final.ok).toBe(false);
+  });
+
+  it("requests every hop with manual redirects", async () => {
+    const inits: RequestInit[] = [];
+    await fetchListingPage(entry("https://www.kijiji.ca/a/1"), async (url, init) => {
+      inits.push(init);
+      return url.href === "https://www.kijiji.ca/a/1" ? redirect("/b/2") : page(url.href);
+    });
+    expect(inits).toHaveLength(2);
+    expect(inits.every((init) => init.redirect === "manual")).toBe(true);
+  });
+});
+
+describe("readListingFields", () => {
+  it("normalizes valid fields and drops unknown keys", () => {
+    expect(readListingFields({
+      province: "bc", make: " Honda ", model: "Civic", year: "2022", odometer: "42,000", askingPrice: "24900", extra: "ignored",
+    })).toEqual({ province: "BC", make: "Honda", model: "Civic", year: "2022", odometer: "42000", askingPrice: "24900" });
+  });
+
+  it("ignores wrong types and out-of-range values", () => {
+    expect(readListingFields({
+      province: "ZZ",
+      make: 7,
+      model: "x".repeat(41),
+      year: "abcd",
+      odometer: "12.5",
+      askingPrice: "-100",
+    })).toEqual({});
+  });
+
+  it("treats non-object payloads as empty", () => {
+    expect(readListingFields(null)).toEqual({});
+    expect(readListingFields("not-an-object")).toEqual({});
+    expect(readListingFields(undefined)).toEqual({});
   });
 });
