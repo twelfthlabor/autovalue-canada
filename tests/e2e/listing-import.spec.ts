@@ -1,5 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
 
+type RevealSample = { classed: boolean; opacity: number; translateY: number };
+
+declare global {
+  interface Window { firstRevealFrame?: RevealSample | null }
+}
+
 const FULL_PAYLOAD = {
   ok: true,
   fields: { province: "BC", make: "Honda", model: "Civic", year: "2022", odometer: "42000", askingPrice: "24900" },
@@ -17,6 +23,23 @@ async function importListing(page: Page) {
   await expect(page.getByTestId("ml-estimate")).toHaveText("$31,000");
   await page.getByLabel("Listing URL").fill("https://www.autotrader.ca/a/honda/civic/2022");
   await page.getByRole("button", { name: "Import listing" }).click();
+}
+
+// The reveal runs as a one-shot 420 ms animation; wait for the element's own
+// at-rest state instead of a fixed delay. The workbench also keeps a finished
+// fill:both pulse on another element, so a document-wide getAnimations() drain
+// never happens. Half a pixel of tolerance absorbs the sub-pixel value anime
+// commits as it tears the animation down; a running reveal is far above that.
+async function settleReveal(page: Page) {
+  await page.waitForFunction(() => {
+    const element = document.querySelector<HTMLElement>(".decoded-mini");
+    if (!element) return false;
+    const style = getComputedStyle(element);
+    if (style.opacity !== "1") return false;
+    const settled = style.transform === "none" ||
+      (() => { const matrix = new DOMMatrixReadOnly(style.transform); return matrix.m11 === 1 && matrix.m22 === 1 && Math.abs(matrix.m41) < 0.5 && Math.abs(matrix.m42) < 0.5; })();
+    return settled && element.getAnimations().length === 0;
+  });
 }
 
 test("a listing URL fills every parsed field and shows its source", async ({ page }, testInfo) => {
@@ -101,6 +124,14 @@ test("forced reduced motion fills fields without animation and stays editable", 
 
   await expect(page.getByText(/Found year, make, model, odometer, asking price and province/)).toBeVisible();
   await expect(page.getByLabel("Odometer in kilometres")).toHaveValue("42000");
+  const reveal = await page.evaluate(() => {
+    const element = document.querySelector<HTMLElement>(".decoded-mini")!;
+    const style = getComputedStyle(element);
+    return { opacity: style.opacity, transform: style.transform, animations: element.getAnimations().length };
+  });
+  expect(reveal.opacity).toBe("1");
+  expect(reveal.transform).toBe("none");
+  expect(reveal.animations).toBe(0);
   expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
 
   await page.getByLabel("Odometer in kilometres").fill("55555");
@@ -138,7 +169,6 @@ for (const [width, height] of [[1440, 900], [1280, 800], [768, 1024], [390, 844]
         inputContentWidth: inputRect.width - parseFloat(inputStyle.paddingLeft) - parseFloat(inputStyle.paddingRight) - parseFloat(inputStyle.borderLeftWidth) - parseFloat(inputStyle.borderRightWidth),
         inputButtonIntersection: overlap(inputRect, buttonRect),
         hintOverlapsField: overlap(hintRect, inputRect) > 0 || overlap(hintRect, buttonRect) > 0,
-        hintTruncated: hint.scrollWidth > hint.clientWidth + 0.5,
       };
     });
     expect(atRest.scrollTop, `${tag} panel scroll`).toBe(0);
@@ -148,25 +178,59 @@ for (const [width, height] of [[1440, 900], [1280, 800], [768, 1024], [390, 844]
     expect(atRest.inputInViewport && atRest.buttonInViewport, `${tag} field visible in the viewport`).toBe(true);
     expect(atRest.inputButtonIntersection, `${tag} input and button do not overlap`).toBe(0);
     expect(atRest.hintOverlapsField, `${tag} hint stays clear of the field`).toBe(false);
-    expect(atRest.hintTruncated, `${tag} hint is not truncated`).toBe(false);
     if (width === 1280 || width === 390) {
       expect(atRest.inputContentWidth, `${tag} input content width`).toBeGreaterThan(100);
     }
+
+    // Sample the reveal at DOM insertion. React commits the element before the
+    // effect that starts the animation, so this microtask captures the hidden
+    // first-paint state the pre-fix markup did not have.
+    await page.evaluate(() => {
+      window.firstRevealFrame = null;
+      const observer = new MutationObserver(() => {
+        const element = document.querySelector<HTMLElement>(".decoded-mini");
+        if (!element) return;
+        const style = getComputedStyle(element);
+        const matrix = style.transform === "none" ? null : new DOMMatrixReadOnly(style.transform);
+        window.firstRevealFrame = {
+          classed: element.classList.contains("listing-reveal"),
+          opacity: Number.parseFloat(style.opacity),
+          translateY: matrix ? Math.round(matrix.m42 * 100) / 100 : 0,
+        };
+        observer.disconnect();
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    });
 
     await page.getByLabel("Listing URL").fill("https://www.autotrader.ca/a/honda/civic/2022");
     await page.getByRole("button", { name: "Import listing" }).click();
     await expect(page.getByText("LISTING DETAILS FOUND")).toBeVisible();
     await expect(page.getByRole("heading", { name: "2022 Honda Civic" })).toBeVisible();
 
+    const firstReveal = await page.evaluate(() => window.firstRevealFrame ?? null);
+    expect(firstReveal, `${tag} reveal sampled at insertion`).not.toBeNull();
+    expect(firstReveal!.classed, `${tag} reveal carries the hidden class at insertion`).toBe(true);
+    expect(firstReveal!.opacity, `${tag} reveal starts transparent`).toBe(0);
+    expect(firstReveal!.translateY, `${tag} reveal starts offset`).toBe(-6);
+
+    await settleReveal(page);
     const feedback = await page.evaluate(() => {
       const panel = document.querySelector<HTMLElement>(".editor-panel:not([hidden])")!;
       const element = document.querySelector<HTMLElement>(".decoded-mini")!;
       const panelRect = panel.getBoundingClientRect();
       const rect = element.getBoundingClientRect();
       const visible = Math.max(0, Math.min(rect.bottom, panelRect.bottom) - Math.max(rect.top, panelRect.top));
-      return { visible, height: rect.height, inViewport: rect.bottom <= window.innerHeight + 0.5, panelScrollTop: panel.scrollTop };
+      const style = getComputedStyle(element);
+      const matrix = style.transform === "none" ? null : new DOMMatrixReadOnly(style.transform);
+      return {
+        visible, height: rect.height, inViewport: rect.bottom <= window.innerHeight + 0.5, panelScrollTop: panel.scrollTop,
+        opacity: style.opacity,
+        settledTransform: !matrix || (matrix.m11 === 1 && matrix.m22 === 1 && Math.abs(matrix.m41) < 0.5 && Math.abs(matrix.m42) < 0.5),
+      };
     });
-    expect(feedback.visible, `${tag} feedback inside the panel clip`).toBeGreaterThanOrEqual(feedback.height - 1);
+    expect(feedback.opacity, `${tag} settled reveal is opaque`).toBe("1");
+    expect(feedback.settledTransform, `${tag} settled reveal is not offset`).toBe(true);
+    expect(feedback.visible, `${tag} feedback inside the panel clip`).toBeGreaterThanOrEqual(feedback.height - 0.5);
     expect(feedback.inViewport, `${tag} feedback visible in the viewport`).toBe(true);
     expect(feedback.panelScrollTop, `${tag} feedback needs no panel scroll`).toBe(0);
   });

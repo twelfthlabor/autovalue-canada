@@ -74,7 +74,7 @@ export function ListingImport({ onImport, disabled }: { onImport: (fields: Listi
         </div>
       </label>
       {state === "error" ? <div className="lookup-error listing-reveal" role="alert" ref={noteRef} style={{ margin: "6px 0 0", fontSize: 10 }}>{message}</div> : null}
-      {state === "success" ? <div className="decoded-mini listing-reveal" role="status" ref={noteRef} style={{ marginTop: 6, padding: "7px 9px" }}>
+      {state === "success" ? <div className="decoded-mini listing-reveal" role="status" ref={noteRef} style={{ marginTop: 2, padding: "7px 9px" }}>
         <p style={{ fontSize: 9, margin: 0, color: "var(--green)", letterSpacing: ".04em" }}>LISTING DETAILS FOUND</p>
         <strong style={{ fontSize: 12, lineHeight: 1.3 }}>{summary}</strong>
         <p style={{ fontSize: 9.5, margin: "2px 0 0", lineHeight: 1.4 }}>{message}</p>
