@@ -52,7 +52,7 @@ App reference, for you only: one page, with the listing form on the left (Vehicl
 
 ## 4. Tasks
 
-Run these in order, one at a time, and read each prompt as written. Use the release build: the live demo linked in the README, or `npm run dev` and open `http://localhost:3000`. Check it loads before the session.
+Run these in order, one at a time, and read each prompt as written. Use the build that includes the listing import: `npm run dev` from this checkout and open `http://localhost:3000`, or the live demo once it includes this release. Check it loads before the session.
 
 ### Task 1. Cold open and a real price check
 
@@ -91,13 +91,16 @@ Capture the next action they name (negotiate, ask for an inspection, check histo
 
 Record whether they open "Inspect the evidence" and whether the prediction boundary line changes how they read the number. Release criterion: nobody should read the result as a guaranteed value. Any slip, even half a sentence, is a finding.
 
-### Task 5. Paste a listing link (conditional)
+### Task 5. Paste a listing link
 
-Status: not live in this build. Listing price, odometer and condition are user-entered, and the VIN panel says no listing feed is connected. Confirm on the build you test before the first session.
+Live in this build (commit 03f2647). At the bottom of the Vehicle tab there is a "Paste a listing link" field for AutoTrader.ca, Kijiji.ca, Carpages.ca and Clutch.ca links. It fills make, model, year, odometer and asking price on a best-effort basis. Confirm the build you test shows the field; the deployed live demo may lag until this branch is released.
 
-If a paste or upload for a listing link is present: "Paste your listing link and check the price." Capture what carries over and what does not.
+Prompt: "If you have your listing link handy, paste it in and import it. Tell me what you think happened."
 
-If it is not present, skip the task and close with: "Was there anything you expected to be able to paste or upload?" Record the answer as a wish-list item, not a failure.
+- The import fetches the listing page on the server. Some listing sites refuse that fetch, and the app then shows an error. Manual entry is unaffected; note the refusal and let them type the details in or move on.
+- Imported fields stay editable, and any of them can be missing or wrong. Ask the participant to check each imported value against their listing page, and record whether they did that without being prompted.
+- Capture: imported or refused; which fields came through; any value they corrected; any confusion about what the import changed.
+- No link handy: skip the task and note it as a session limitation, not a failure.
 
 ## 5. Capture per participant
 

@@ -27,7 +27,7 @@ Results are market estimates, not certified appraisals, guaranteed offers or fut
 
 ## Frontend
 
-The centred valuation workspace pairs a tabbed listing editor with price scrubbing, model-based mileage exploration, provincial comparisons and pinned scenarios. It fits standard laptop screens at 100% zoom. Research pages include a provincial coverage explorer, a readable methodology and an interactive calculation breakdown. The palette uses J.D. Power blue. See [the frontend review](docs/FRONTEND_REVIEW.md) for design research, controls and browser verification.
+The centred valuation workspace pairs a tabbed listing editor with price scrubbing, model-based mileage exploration, provincial comparisons and pinned scenarios. It fits standard laptop screens at 100% zoom. An AutoTrader.ca, Kijiji.ca, Carpages.ca or Clutch.ca listing link can fill make, model, year, odometer and asking price where the listing site allows a fetch; imported values stay editable and anything it misses is entered by hand. Checks can be saved in the browser, restored later, or copied as a link that reopens the same inputs. Research pages include a provincial coverage explorer, a readable methodology and an interactive calculation breakdown. The palette uses J.D. Power blue. See [the frontend review](docs/FRONTEND_REVIEW.md) for design research, controls and browser verification.
 
 ## Run locally
 
