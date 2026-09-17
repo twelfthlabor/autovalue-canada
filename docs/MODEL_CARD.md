@@ -30,7 +30,9 @@ The target is:
 
 The two learned features are auction condition score and log odometer difference from the peer median. Gradient-boosted regression trees with Huber loss estimate the residual. A monotonic guard prevents a grade above Average from receiving less value than Average at the same mileage.
 
-The consumer form collects six signals: overall grade, accident/title history, mechanical state, cosmetic state, service history and tire/brake wear. Because the training data contains an auction inspection grade rather than six separately structured fields, the six selections are transparently consolidated into one bounded auction-grade equivalent. The mapping controls the model input; it is not a table of invented dollar discounts.
+The consumer form offers the three effective condition levels the auction panel resolves: below average (extra-rough, score 0, multiplier 0.7577), rough (score 1, 0.9091) and average or better (score 2, 1.0, the reference). The mapping is not a table of invented dollar discounts. The artifact and Lambda contract still accept all six auction grade strings; the six collapse to these three effective multipliers, so the form no longer exposes the rest. On the Larsen training panel Clean vs Average is +0.05% (not distinguishable, z=0.25) and Extra Clean is 2.2% below Average (z=-4.8); retraining for six distinct monotone levels would cost +1.2% to +3.4% MAE.
+
+An earlier form also collected accident/title, mechanical, cosmetic, service and tire/brake detail; those fields were removed because the training table has no separate labels for them, so they cannot become ML features, and the fitted trees split the condition score only at 0.5 / 1.5 / 2.5, so the adjustments behind those fields were individually inert at every level. Combinations could still cross a threshold, which made the controls unpredictable rather than useful (service and tires were inert outright; cosmetic moved only at the heavy setting; accident/mechanical only at major/rebuilt).
 
 The transferred adjustment is centred on an Average vehicle at the anchor mileage. This prevents the historical auction intercept from being counted again in a Canadian anchor that already represents a mix of used-car conditions.
 
@@ -71,11 +73,11 @@ The source archive SHA-256 is `7827d220499700868fec28e09288e67b7c35ae8235e9b13e4
 ## Limitations
 
 - Training outcomes are historical US wholesale auctions, not current Canadian retail transactions.
-- Accident, mechanical, cosmetic, service and wear effects are proxied through a composite grade; their individual dollar effects are not separately learned.
+- Accident, mechanical, cosmetic, service and wear effects are not separately collected or learned: the training table has no labels for them, the condition tier is the only condition input, and a branded or rebuilt title is priced through the below-average tier rather than as a separate adjustment.
 - Trim and drivetrain are priced only when reviewed matched comparables exist. The broad aggregate fallback does not contain those fields.
 - Options, ownership count, regional transaction channel, inspection findings, fees and negotiation remain unpriced or unknown.
 - User-entered condition can be mistaken or strategic. An independent inspection and history report remain essential.
-- Clean and Extra Clean did not show a reliable residual premium over Average after close peer matching, so the model does not invent one.
+- Clean and Extra Clean were not distinguishable from Average after close peer matching, so the form offers only the tiers the auction panel resolves.
 - The completed transaction is the only ground truth for one specific car.
 
 ## Separate aggregate research benchmark

@@ -54,9 +54,7 @@ Smoke test (mirrors `aws/check_parity.py` handler cases):
 curl -G '<function-url>/predict' --data-urlencode 'baseValue=30000' \
   --data-urlencode 'baseLow=25000' --data-urlencode 'baseHigh=35000' \
   --data-urlencode 'baselineOdometerKm=80000' --data-urlencode 'targetOdometerKm=80000' \
-  --data-urlencode 'conditionGrade=average' --data-urlencode 'accidentHistory=none' \
-  --data-urlencode 'mechanicalCondition=sound' --data-urlencode 'cosmeticCondition=light' \
-  --data-urlencode 'serviceHistory=partial' --data-urlencode 'wearItems=good'
+  --data-urlencode 'conditionGrade=average'
 # expect: {"ok": true, "valuation": {"estimate": 30000, ...}}
 ```
 

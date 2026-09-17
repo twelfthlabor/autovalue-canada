@@ -8,11 +8,6 @@ const rows = marketData as unknown as MarketRow[];
 
 const AVERAGE: ConditionProfile = {
   conditionGrade: "average",
-  accidentHistory: "none",
-  mechanicalCondition: "sound",
-  cosmeticCondition: "light",
-  serviceHistory: "partial",
-  wearItems: "good",
 };
 
 function valuationFor(row: MarketRow, targetOdometerKm: number) {

@@ -79,7 +79,7 @@ Release 0.3 implements the hybrid architecture as a research-grade prototype:
 
 1. A current Canadian asking-market anchor comes from reviewed trim-level comparables when available, or a published province × make × model × year aggregate cell.
 2. A gradient-boosted residual model is trained on 91,278 completed historical US wholesale auction outcomes. Close-peer matching controls sale year, auction, vehicle year, make, model and VIN-derived trim code before the model learns condition-grade and odometer effects.
-3. Six visible consumer condition inputs are consolidated into the auction-grade feature, and the relative model adjustment is applied around the current Canadian anchor.
+3. The visible consumer condition input is one of three tiers (below average, rough, average or better), which maps to the auction-grade feature; the relative model adjustment is applied around the current Canadian anchor.
 4. The estimate, empirical range, listing gap, model metrics and factor ledger fit on one valuation sheet.
 
 The implementation does not satisfy the production release gates above. It lacks licensed Canadian retail outcomes, separately learned accident/mechanical/service effects, calibrated Canadian interval coverage, complete options and transaction-channel fields, and live drift monitoring. Accordingly, the UI calls the output a condition-aware market estimate—not a known transaction price—and recommends an inspection and history report.

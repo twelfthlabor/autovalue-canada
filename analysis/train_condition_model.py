@@ -339,7 +339,7 @@ def main() -> None:
         "limitations": [
             "The training outcomes are 2006-2010 US wholesale transactions, not current Canadian retail sales.",
             "The model is used only for relative condition and odometer adjustments around current Canadian evidence.",
-            "Accident, mechanical, cosmetic, service and wear inputs are consolidated into an auction-grade equivalent; their individual dollar effects are not separately learned.",
+            "Only the overall condition grade feeds the auction-grade equivalent; accident, mechanical, cosmetic, service and wear details are not priced because the training data has no labels for them.",
             "A completed sale, inspection and history report remain the only ground truth for an individual vehicle.",
         ],
         "reproducibility": {"randomState": RANDOM_STATE},

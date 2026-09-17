@@ -1,13 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { conditionScore, predictConditionAdjustedValue, type ConditionProfile } from "./condition-model";
+import { CONDITION_TIER_GRADE, CONDITION_TIER_LABEL, conditionScore, predictConditionAdjustedValue, type ConditionProfile } from "./condition-model";
 
 const averageProfile: ConditionProfile = {
   conditionGrade: "average",
-  accidentHistory: "none",
-  mechanicalCondition: "sound",
-  cosmeticCondition: "light",
-  serviceHistory: "partial",
-  wearItems: "good",
 };
 
 describe("transaction-trained condition model", () => {
@@ -37,7 +32,7 @@ describe("transaction-trained condition model", () => {
       baseHigh: 35_000,
       baselineOdometerKm: 80_000,
       targetOdometerKm: 150_000,
-      profile: { ...averageProfile, conditionGrade: "rough", accidentHistory: "major", mechanicalCondition: "major-repair" },
+      profile: { conditionGrade: "rough" },
     });
     const average = predictConditionAdjustedValue({
       baseValue: 30_000,
@@ -47,7 +42,7 @@ describe("transaction-trained condition model", () => {
       targetOdometerKm: 80_000,
       profile: averageProfile,
     });
-    expect(rough.conditionScore).toBe(-0.75);
+    expect(rough.conditionScore).toBe(1);
     expect(rough.estimate).toBeLessThan(average.estimate);
   });
 
@@ -70,6 +65,32 @@ describe("transaction-trained condition model", () => {
     });
     expect(clean.estimate).toBeGreaterThanOrEqual(average.estimate);
   });
+});
+
+describe("auction condition tiers", () => {
+  // Oracle multipliers from the training artifact's representativeGradeMultipliers.
+  const tiers = [
+    { tier: "below-average", grade: "extra-rough", score: 0, multiplier: 0.7577 },
+    { tier: "rough", grade: "rough", score: 1, multiplier: 0.9091 },
+    { tier: "average", grade: "average", score: 2, multiplier: 1 },
+  ] as const;
+
+  for (const { tier, grade, score, multiplier } of tiers) {
+    it(`maps the ${tier} tier to grade ${grade} (score ${score})`, () => {
+      expect(CONDITION_TIER_GRADE[tier]).toBe(grade);
+      expect(CONDITION_TIER_LABEL[tier]).toBeTruthy();
+      const result = predictConditionAdjustedValue({
+        baseValue: 30_000,
+        baseLow: 25_000,
+        baseHigh: 35_000,
+        baselineOdometerKm: 80_000,
+        targetOdometerKm: 80_000,
+        profile: { conditionGrade: CONDITION_TIER_GRADE[tier] },
+      });
+      expect(result.conditionScore).toBe(score);
+      expect(result.multiplier).toBe(multiplier);
+    });
+  }
 });
 
 describe("odometer extrapolation flag", () => {

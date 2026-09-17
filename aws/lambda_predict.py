@@ -10,9 +10,7 @@ direct-invoke dicts. Responds with API Gateway proxy format + CORS.
 Example:
     GET /predict?baseValue=30000&baseLow=25000&baseHigh=35000
         &baselineOdometerKm=80000&targetOdometerKm=80000
-        &conditionGrade=average&accidentHistory=none
-        &mechanicalCondition=sound&cosmeticCondition=light
-        &serviceHistory=partial&wearItems=good
+        &conditionGrade=average
 """
 
 from __future__ import annotations
@@ -23,22 +21,12 @@ import os
 from pathlib import Path
 
 from condition_model_py import (
-    ACCIDENT_ADJUSTMENT,
-    COSMETIC_ADJUSTMENT,
     GRADE_SCORE,
-    MECHANICAL_ADJUSTMENT,
-    SERVICE_ADJUSTMENT,
-    WEAR_ADJUSTMENT,
     ConditionModel,
 )
 
 ENUMS = {
     "conditionGrade": set(GRADE_SCORE),
-    "accidentHistory": set(ACCIDENT_ADJUSTMENT),
-    "mechanicalCondition": set(MECHANICAL_ADJUSTMENT),
-    "cosmeticCondition": set(COSMETIC_ADJUSTMENT),
-    "serviceHistory": set(SERVICE_ADJUSTMENT),
-    "wearItems": set(WEAR_ADJUSTMENT),
 }
 NUMERICS = ("baseValue", "baseLow", "baseHigh", "baselineOdometerKm", "targetOdometerKm")
 

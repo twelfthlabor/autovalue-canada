@@ -15,7 +15,7 @@ export function SiteNav() {
   return (
     <nav aria-label="Primary navigation">
       {links.map((link) => (
-        <Link key={link.href} href={link.href} aria-current={link.match && pathname === link.match ? "page" : undefined} className={link.match && pathname === link.match ? "active" : undefined}>
+        <Link key={link.href} href={link.href} aria-current={pathname === (link.match ?? link.href) ? "page" : undefined} className={pathname === (link.match ?? link.href) ? "active" : undefined}>
           {link.label}
         </Link>
       ))}

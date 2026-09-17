@@ -62,7 +62,7 @@ The source contains 512,396 auction observations, of which 260,299 are recorded 
 
 Training uses 52,146 outcomes from 2006–2008 and the temporal test uses 39,132 outcomes from 2009–2010. With the same Average-grade centering used at inference, the model reaches $1,198.19 MAE and 11.601% WAPE on the later years, improving MAE 4.29% over the peer-only baseline. These metrics establish historical wholesale residual accuracy; they do not validate a current Canadian retail transaction claim.
 
-The consumer's accident, mechanical, cosmetic, service and wear selections are consolidated into a transparent auction-grade equivalent because those fields are not separately present in the training table. Their independent causal or dollar effects have not been learned. The condition model is therefore transferred only as a relative adjustment around a current Canadian anchor.
+The consumer picks one of three condition tiers (below average, rough, average or better), matching the three effective levels the auction panel resolves. An earlier form also collected accident, mechanical, cosmetic, service and wear detail, but those fields were removed: the training table has no separate labels for them, and the fitted trees could not resolve their small adjustments individually. Combinations could still cross a condition threshold, which made the controls unpredictable rather than useful. The condition model is therefore transferred only as a relative adjustment around a current Canadian anchor.
 
 ## Evaluated but not used for model training
 
@@ -109,7 +109,7 @@ NRCan publishes model-year fuel-consumption ratings and dedicated battery-electr
 | Single snapshot | Cannot infer a trend or future residual | Keep forecast feature gated |
 | No trim or inspection grade in aggregate cells | Wide within-cell variation | Prefer reviewed matches; show source range and the separate learned adjustment |
 | Historical US auction transfer | Market/channel drift can bias the adjustment | Centre on the current Canadian anchor, publish temporal metrics and require Canadian retraining before commercial use |
-| Composite condition proxy | Six user inputs may imply more granularity than the training data contains | Display the auction-grade equivalent and state that individual dollar effects are not separately learned |
+| Composite condition proxy | Three tiers may imply more granularity than the training data contains | Display the auction-grade equivalent and state that accident, mechanical, cosmetic, service and wear effects are not separately learned |
 | Few matched comparables | A fitted target can look more certain than it is | Require four valid observations, exclude the subject, show sample size and residual RMSE, and grade the six-observation example as limited evidence |
 | Odometer outside matched support | Linear extrapolation may be unstable | Expose the observed odometer bounds and flag extrapolation in the benchmark object |
 | Uneven regional coverage | Smaller regions have more suppressed cells | Show sample size and no-result state |

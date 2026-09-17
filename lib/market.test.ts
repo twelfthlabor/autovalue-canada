@@ -56,11 +56,6 @@ describe("market evidence helpers", () => {
 describe("prediction band scaling", () => {
   const profile: ConditionProfile = {
     conditionGrade: "average",
-    accidentHistory: "none",
-    mechanicalCondition: "sound",
-    cosmeticCondition: "light",
-    serviceHistory: "partial",
-    wearItems: "good",
   };
 
   it("scales the typical band from the exact model multiplier on the low-price case", () => {
@@ -96,11 +91,6 @@ describe("prediction band scaling", () => {
 describe("prediction deal signal", () => {
   const averageProfile: ConditionProfile = {
     conditionGrade: "average",
-    accidentHistory: "none",
-    mechanicalCondition: "sound",
-    cosmeticCondition: "light",
-    serviceHistory: "partial",
-    wearItems: "good",
   };
 
   it("describes a clamped mileage comparison when the odometer was entered", () => {

@@ -29,6 +29,7 @@ test("a decoded RAV4 VIN lands on the populated ON/Toyota/RAV4/2020 valuation sh
   });
 
   await page.goto("/#check");
+  await page.getByRole("tab", { name: "VIN", exact: true }).click();
   await page.getByLabel("Vehicle identification number").fill(VIN);
   await page.getByRole("button", { name: "DECODE VIN" }).click();
 

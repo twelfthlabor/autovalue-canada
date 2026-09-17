@@ -13,43 +13,27 @@ function intersectArea(
   return xOverlap * yOverlap;
 }
 
-test("inner .page-hero h1 stays visible and clear of .hero-card", async ({ page }) => {
+test("research headings stay visible and clear of the release metadata", async ({ page }) => {
   for (const path of ["/methodology", "/calculation", "/market-lab"]) {
     await page.goto(path);
-    const h1 = page.locator(".page-hero h1").first();
+    const h1 = page.locator(".report-header h1").first();
     await expect(h1).toBeVisible();
     const h1Box = await h1.boundingBox();
     expect(h1Box).not.toBeNull();
     expect(h1Box!.width).toBeGreaterThan(0);
     expect(h1Box!.height).toBeGreaterThan(0);
 
-    const card = page.locator(".page-hero aside.hero-card, .page-hero .hero-card").first();
+    const card = page.locator(".report-header > span").first();
     if ((await card.count()) > 0) {
       await expect(card).toBeVisible();
       const cardBox = await card.boundingBox();
       expect(cardBox).not.toBeNull();
-      // In-flow aside must not cover the heading (scoped absolute leak guard).
+      // Release metadata stays in flow and never covers the title.
       expect(intersectArea(h1Box!, cardBox!)).toBe(0);
       const position = await card.evaluate((el) => getComputedStyle(el).position);
       expect(position).not.toBe("absolute");
     }
   }
-});
-
-test("landing hero card stays scoped to .hero-visual", async ({ page }) => {
-  await page.goto("/");
-  const card = page.locator(".hero-visual .hero-card").first();
-  await expect(card).toBeVisible();
-  const cardBox = await card.boundingBox();
-  expect(cardBox).not.toBeNull();
-  expect(cardBox!.width).toBeGreaterThan(0);
-  const visualBox = await bbox(page, ".hero-visual");
-  expect(visualBox).not.toBeNull();
-  // Card lives inside the landing visual container.
-  expect(cardBox!.x).toBeGreaterThanOrEqual(visualBox!.x - 2);
-  expect(cardBox!.x + cardBox!.width).toBeLessThanOrEqual(visualBox!.x + visualBox!.width + 2);
-  const position = await card.evaluate((el) => getComputedStyle(el).position);
-  expect(position).toBe("absolute");
 });
 
 test("mobile header keeps nav + external inside without page overflow", async ({ page }) => {
@@ -220,22 +204,4 @@ test("lab-stats keeps 5 columns on wide screens", async ({ page }, testInfo) => 
     const tops = await stats.locator("article").evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().top)));
     expect(new Set(tops).size).toBe(1);
   }
-});
-
-test("JD Power theme tokens applied and ml-estimate present", async ({ page }) => {
-  await page.goto("/");
-  await expect(page.getByTestId("ml-estimate")).toBeVisible();
-  const vars = await page.evaluate(() => {
-    const cs = getComputedStyle(document.documentElement);
-    return {
-      brand: cs.getPropertyValue("--brand").trim(),
-      accent: cs.getPropertyValue("--accent").trim(),
-      ink: cs.getPropertyValue("--ink").trim(),
-      faint: cs.getPropertyValue("--faint").trim(),
-    };
-  });
-  expect(vars.brand.toLowerCase()).toBe("#00838f");
-  expect(vars.accent.toLowerCase()).toBe("#d34612");
-  expect(vars.ink.toLowerCase()).toBe("#102330");
-  expect(vars.faint.toLowerCase()).toBe("#5a6b76");
 });

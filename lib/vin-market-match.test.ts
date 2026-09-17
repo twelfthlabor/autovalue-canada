@@ -173,7 +173,7 @@ describe("resolveVinMarketSelection", () => {
 
 describe("vinMarketEditAction", () => {
   it("preserves the decode for edits that are not vehicle identity or VIN", () => {
-    const unrelatedFields = ["askingPrice", "odometer", "conditionGrade", "accidentHistory", "mechanicalCondition", "cosmeticCondition", "serviceHistory", "wearItems"];
+    const unrelatedFields = ["askingPrice", "odometer", "conditionTier"];
     for (const field of unrelatedFields) {
       expect(vinMarketEditAction(field)).toEqual({ clearsBlock: false, clearsReport: false });
     }

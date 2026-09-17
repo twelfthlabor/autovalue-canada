@@ -1,14 +1,18 @@
 "use client";
 
+import { Tabs } from "@base-ui/react/tabs";
+import { Dialog } from "@base-ui/react/dialog";
+import { MarketComparison } from "@/components/market-comparison";
+import { MileageCurve } from "@/components/mileage-curve";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactElement } from "react";
-import { conditionModelMetadata, predictConditionAdjustedValue, type ConditionProfile, type ConditionValuation } from "@/lib/condition-model";
+import { conditionModelMetadata, CONDITION_TIER_GRADE, CONDITION_TIER_LABEL, predictConditionAdjustedValue, type ConditionProfile, type ConditionTier, type ConditionValuation } from "@/lib/condition-model";
 import { bandPosition, bandScale, layoutBandItems } from "@/lib/band-layout";
 import { confidenceForSample, dealSignalForPrediction, displayBandValues, formatCad, formatNumber, type MarketRow } from "@/lib/market";
 import { normalizeVin, validateNorthAmericanVin, vinStatusCopy } from "@/lib/vin";
 import { resolveVinMarketSelection, vinMarketEditAction } from "@/lib/vin-market-match";
 import type { VinLookupResponse } from "@/lib/vin-report";
 
-type FormState = ConditionProfile & {
+type FormState = {
   province: string;
   make: string;
   model: string;
@@ -16,21 +20,26 @@ type FormState = ConditionProfile & {
   askingPrice: string;
   odometer: string;
   vin: string;
+  conditionTier: ConditionTier;
 };
 
 const initialForm: FormState = {
   province: "ON", make: "Toyota", model: "RAV4", year: "2021", askingPrice: "31995", odometer: "89000",
-  vin: "", conditionGrade: "average", accidentHistory: "none", mechanicalCondition: "sound",
-  cosmeticCondition: "light", serviceHistory: "partial", wearItems: "good",
+  vin: "", conditionTier: "average",
+};
+
+const CONDITION_TIERS: ConditionTier[] = ["below-average", "rough", "average"];
+
+const CONDITION_TIER_DESCRIPTION: Record<ConditionTier, string> = {
+  "below-average": "Salvage, rebuilt, or branded title",
+  rough: "Needs mechanical or cosmetic work",
+  average: "Typical used condition",
 };
 
 function uniqueSorted(values: string[]) {
   return [...new Set(values)].sort((a, b) => a.localeCompare(b));
 }
 
-function InfoIcon() {
-  return <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 7.5v.5" /></svg>;
-}
 
 function CheckCircleIcon() {
   return <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M8.6 12.2l2.2 2.2 4.4-4.8" /></svg>;
@@ -45,7 +54,7 @@ const FACTOR_ICONS: Record<string, ReactElement> = {
   "Local market": <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 21s-6.5-5.3-6.5-10.3A6.5 6.5 0 0112 4a6.5 6.5 0 016.5 6.7C18.5 15.7 12 21 12 21z" /><circle cx="12" cy="10.5" r="2.3" /></svg>,
   "Odometer": <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5.5 18.5a8.5 8.5 0 1113 0" /><path d="M12 13.5l3.5-3.8" /><circle cx="12" cy="14" r="1.4" /></svg>,
   "Trim & drivetrain": <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true"><path d="M5 4v16M9 4v16M13 4v16M17.5 4L19 20M19 4l-1.5 16" /></svg>,
-  "Condition & history": <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.4-3 8.4-7 10-4-1.6-7-5.6-7-10V6l7-3z" /><path d="M9.2 12.2l2 2 3.6-4" /></svg>,
+  "Condition": <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.4-3 8.4-7 10-4-1.6-7-5.6-7-10V6l7-3z" /><path d="M9.2 12.2l2 2 3.6-4" /></svg>,
   "Options & transaction": <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2.5" /><path d="M9 8h6M9 11.5h6M9 15h3.5" /></svg>,
 };
 
@@ -193,16 +202,16 @@ function PredictionBand({ valuation, askingPrice, row }: { valuation: ConditionV
 
 type FactorState = "modelled" | "context" | "missing";
 
-function FactorCoverage({ row, odometer, vinReport, valuation, profile }: { row: MarketRow; odometer?: number; vinReport?: VinLookupResponse; valuation: ConditionValuation; profile: ConditionProfile }) {
+function FactorCoverage({ row, odometer, vinReport, valuation, tier }: { row: MarketRow; odometer?: number; vinReport?: VinLookupResponse; valuation: ConditionValuation; tier: ConditionTier }) {
   const trimLabel = vinReport
     ? [vinReport.vehicle.trim, vinReport.vehicle.driveType, vinReport.vehicle.transmission].filter((value) => value && value !== "Not encoded").join(" · ")
     : "Decode a VIN to identify the exact specification";
   const factors: Array<{ label: string; value: string; note: string; state: FactorState }> = [
     { label: "Identity & age", value: `${row.y} ${row.mk} ${row.md}`, note: "Exact make, model family and model year", state: "modelled" },
     { label: "Local market", value: `${row.p} · ${formatNumber(row.n)} vehicles`, note: "Current province-level dealer inventory", state: "modelled" },
-    { label: "Odometer", value: odometer ? `${formatNumber(odometer)} km` : "Market median used", note: valuation.isOdometerExtrapolation ? (odometer ? "Outside the model's trained support; the mileage comparison was capped" : "The market median is outside the model's trained odometer support; no mileage comparison was applied") : "Transaction-trained relative to the Canadian cell median", state: "modelled" },
+    { label: "Odometer", value: odometer !== undefined ? `${formatNumber(odometer)} km` : "Market median used", note: valuation.isOdometerExtrapolation ? (odometer !== undefined ? "Outside the model's trained support; the mileage comparison was capped" : "The market median is outside the model's trained odometer support; no mileage comparison was applied") : "Transaction-trained relative to the Canadian cell median", state: "modelled" },
     { label: "Trim & drivetrain", value: trimLabel, note: "Decoded specifications are context until a live listing feed supplies row-level pricing", state: vinReport ? "context" : "missing" },
-    { label: "Condition & history", value: `Auction-grade equivalent ${valuation.conditionScore.toFixed(2)} / 4`, note: `${profile.conditionGrade.replace("-", " ")} · ${profile.accidentHistory.replace("-", " ")} accident history · six user-entered signals`, state: "modelled" },
+    { label: "Condition", value: `Auction-grade equivalent ${valuation.conditionScore.toFixed(2)} (scale -1 to 4)`, note: `Tier: ${CONDITION_TIER_LABEL[tier]} · the auction-grade equivalent drives the model`, state: "modelled" },
     { label: "Options & transaction", value: "Not available in public data", note: "Packages, fees, seller type and completed-sale price remain unpriced", state: "missing" },
   ];
   const modelledCount = factors.filter((factor) => factor.state === "modelled").length;
@@ -228,17 +237,24 @@ export function ValuationWorkbench() {
   const [rows, setRows] = useState<MarketRow[]>([]);
   const [form, setForm] = useState<FormState>(initialForm);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [lookupState, setLookupState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [lookupError, setLookupError] = useState("");
   const [vinReport, setVinReport] = useState<VinLookupResponse>();
   const [marketBlockedByVin, setMarketBlockedByVin] = useState(false);
   const [resultPulse, setResultPulse] = useState(0);
+  const [editorTab, setEditorTab] = useState("listing");
+  const [viewTab, setViewTab] = useState("price");
+  const [baseline, setBaseline] = useState<{ form: FormState; estimate: number; low: number; high: number }>();
+  const evidenceRef = useRef<HTMLButtonElement>(null);
+  const [evidenceOpen, setEvidenceOpen] = useState(false);
   const resultRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     fetch("/data/market.json")
       .then((response) => { if (!response.ok) throw new Error("Market data could not be loaded"); return response.json(); })
       .then((data: MarketRow[]) => setRows(data))
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
   }, []);
 
@@ -246,7 +262,7 @@ export function ValuationWorkbench() {
   const provinceRows = useMemo(() => rows.filter((row) => row.p === form.province), [rows, form.province]);
   const makes = useMemo(() => uniqueSorted(provinceRows.map((row) => row.mk)), [provinceRows]);
   const makeRows = useMemo(() => provinceRows.filter((row) => row.mk === form.make), [provinceRows, form.make]);
-  const models = useMemo(() => uniqueSorted(makeRows.map((row) => row.md)), [makeRows, form.model]);
+  const models = useMemo(() => uniqueSorted(makeRows.map((row) => row.md)), [makeRows]);
   const modelRows = useMemo(() => makeRows.filter((row) => row.md === form.model), [makeRows, form.model]);
   const years = useMemo(() => [...new Set(modelRows.map((row) => row.y))].sort((a, b) => b - a), [modelRows]);
   const selectedResult = modelRows.find((row) => String(row.y) === form.year);
@@ -293,22 +309,17 @@ export function ValuationWorkbench() {
       setMarketBlockedByVin(!cellMatched);
       setForm((current) => ({ ...current, ...selection }));
       setLookupState("success"); setResultPulse((value) => value + 1);
-      window.setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
+      window.setTimeout(() => resultRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" }), 120);
     } catch (error) { setLookupState("error"); setLookupError(error instanceof Error ? error.message : "VIN lookup failed."); }
   }
 
-  function checkPrice() { setResultPulse((value) => value + 1); resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }
+  function checkPrice() { resultRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" }); resultRef.current?.focus({ preventScroll: true }); }
 
   const askingPrice = Number(form.askingPrice) || undefined;
-  const odometer = Number(form.odometer) || undefined;
+  const odometer = form.odometer === "" ? undefined : Number(form.odometer);
   const confidence = result ? confidenceForSample(result.n) : "limited";
   const conditionProfile: ConditionProfile = {
-    conditionGrade: form.conditionGrade,
-    accidentHistory: form.accidentHistory,
-    mechanicalCondition: form.mechanicalCondition,
-    cosmeticCondition: form.cosmeticCondition,
-    serviceHistory: form.serviceHistory,
-    wearItems: form.wearItems,
+    conditionGrade: CONDITION_TIER_GRADE[form.conditionTier],
   };
   const baseValue = result ? result.p50 : undefined;
   const conditionValuation = result && baseValue ? predictConditionAdjustedValue({
@@ -319,17 +330,48 @@ export function ValuationWorkbench() {
     targetOdometerKm: odometer ?? result.km,
     profile: conditionProfile,
   }) : undefined;
+  // Same base and mileage inputs per tier; average is the reference row.
+  const tierEstimates = result && baseValue ? Object.fromEntries(CONDITION_TIERS.map((tier) => [
+    tier,
+    predictConditionAdjustedValue({
+      baseValue,
+      baseLow: result.p10,
+      baseHigh: result.p90,
+      baselineOdometerKm: result.km,
+      targetOdometerKm: odometer ?? result.km,
+      profile: { conditionGrade: CONDITION_TIER_GRADE[tier] },
+    }).estimate,
+  ])) as Record<ConditionTier, number> : undefined;
+  const tierDeltas: Record<ConditionTier, number> | undefined = tierEstimates ? {
+    "below-average": tierEstimates["below-average"] - tierEstimates.average,
+    rough: tierEstimates.rough - tierEstimates.average,
+    average: 0,
+  } : undefined;
   const dealSignal = askingPrice && conditionValuation ? dealSignalForPrediction(askingPrice, conditionValuation, odometer !== undefined) : undefined;
   const vinStatus = validateNorthAmericanVin(form.vin);
   const estimate = conditionValuation?.estimate;
   const estimateDifference = askingPrice && estimate ? askingPrice - estimate : undefined;
   const adjustment = conditionValuation?.adjustmentCad ?? 0;
+  const askSliderMin = conditionValuation ? Math.floor(conditionValuation.low * .65 / 100) * 100 : 0;
+  const askSliderMax = conditionValuation ? Math.ceil(conditionValuation.high * 1.3 / 100) * 100 : 0;
+  const askSliderValue = Math.min(askSliderMax, Math.max(askSliderMin, askingPrice ?? estimate ?? 0));
+  const askSliderFill = askSliderMax > askSliderMin ? Math.min(100, Math.max(0, ((askSliderValue - askSliderMin) / (askSliderMax - askSliderMin)) * 100)) : 0;
+  const [estimatePulse, setEstimatePulse] = useState(0);
+  const previousEstimate = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    if (previousEstimate.current !== undefined && previousEstimate.current !== estimate) setEstimatePulse((value) => value + 1);
+    previousEstimate.current = estimate;
+  }, [estimate]);
 
   return (
     <>
-    <div className="workbench">
-      <form className="vehicle-form" onSubmit={(event) => { event.preventDefault(); checkPrice(); }}>
-        <div className="form-heading"><p className="kicker">PRICE CHECK</p><h2>Describe the listing</h2></div>
+    <div className="workspace-heading"><div><p className="kicker">CANADIAN USED-VEHICLE RESEARCH</p><h1>Get a feel for the price<span>.</span></h1></div><p>One listing. A clearer picture.</p></div>
+    <div className="workbench" id="check">
+      <form id="listing" className="vehicle-form" onSubmit={(event) => { event.preventDefault(); checkPrice(); }}>
+        <div className="form-heading"><h2>Your listing</h2><span className="form-live"><i /> Live estimate</span></div>
+        <Tabs.Root value={editorTab} onValueChange={value => setEditorTab(String(value))} className="editor-tabs">
+          <Tabs.List className="segmented" aria-label="Listing details"><Tabs.Tab value="listing">Vehicle</Tabs.Tab><Tabs.Tab value="condition">Condition</Tabs.Tab><Tabs.Tab value="vin">VIN</Tabs.Tab><Tabs.Indicator className="tab-indicator" /></Tabs.List>
+          <Tabs.Panel value="listing" keepMounted className="editor-panel"><p className="panel-hint">Start with a car you’re considering.</p>
         <div className="field-rows">
           <label className="field-row"><span>Province</span><select aria-label="Province" value={form.province} onChange={(event) => update("province", event.target.value)} disabled={loading}>{provinces.map((province) => <option key={province}>{province}</option>)}</select></label>
           <label className="field-row"><span>Make</span><select aria-label="Make" value={form.make} onChange={(event) => update("make", event.target.value)} disabled={loading}>{makes.map((make) => <option key={make}>{make}</option>)}</select></label>
@@ -340,63 +382,83 @@ export function ValuationWorkbench() {
           <label><span>Odometer <small>optional</small></span><div className="input-suffix"><input inputMode="numeric" value={form.odometer} onChange={(event) => update("odometer", event.target.value.replace(/\D/g, ""))} aria-label="Odometer in kilometres" /><i>km</i></div></label>
           <label><span>Listing asking price <small>optional</small></span><div className="input-prefix"><i>$</i><input inputMode="numeric" value={form.askingPrice} onChange={(event) => update("askingPrice", event.target.value.replace(/\D/g, ""))} aria-label="Asking price in Canadian dollars" /></div></label>
         </div>
-        <details className="condition-input" open>
-          <summary><span>CONDITION PROFILE</span><strong>6 inputs · ML-adjusted</strong><i>⌄</i></summary>
-          <div className="condition-grid">
-            <label><span>Overall grade</span><select aria-label="Overall condition grade" value={form.conditionGrade} onChange={(event) => update("conditionGrade", event.target.value as FormState["conditionGrade"])}><option value="extra-clean">Extra clean</option><option value="clean">Clean</option><option value="average">Average</option><option value="rough">Rough</option><option value="extra-rough">Extra rough</option><option value="salvage">Salvage</option></select></label>
-            <label><span>Accident / title</span><select aria-label="Accident and title history" value={form.accidentHistory} onChange={(event) => update("accidentHistory", event.target.value as FormState["accidentHistory"])}><option value="none">None reported</option><option value="minor">Minor accident</option><option value="major">Major accident</option><option value="rebuilt">Rebuilt / branded</option></select></label>
-            <label><span>Mechanical</span><select aria-label="Mechanical condition" value={form.mechanicalCondition} onChange={(event) => update("mechanicalCondition", event.target.value as FormState["mechanicalCondition"])}><option value="sound">No known repairs</option><option value="minor-repair">Minor repair</option><option value="major-repair">Major repair</option><option value="not-running">Not running</option></select></label>
-            <label><span>Cosmetic</span><select aria-label="Cosmetic condition" value={form.cosmeticCondition} onChange={(event) => update("cosmeticCondition", event.target.value as FormState["cosmeticCondition"])}><option value="clean">Very clean</option><option value="light">Light wear</option><option value="moderate">Moderate wear</option><option value="heavy">Heavy damage</option></select></label>
-            <label><span>Service records</span><select aria-label="Service history" value={form.serviceHistory} onChange={(event) => update("serviceHistory", event.target.value as FormState["serviceHistory"])}><option value="complete">Complete</option><option value="partial">Partial</option><option value="unknown">Unknown</option></select></label>
-            <label><span>Tires & brakes</span><select aria-label="Tire and brake condition" value={form.wearItems} onChange={(event) => update("wearItems", event.target.value as FormState["wearItems"])}><option value="good">Good</option><option value="due-soon">Due soon</option><option value="replace-now">Replace now</option></select></label>
+
+          </Tabs.Panel><Tabs.Panel value="condition" keepMounted className="editor-panel condition-panel"><p className="panel-hint">Which tier matches the listing or inspection?</p>
+        <div className="condition-input">
+          <div className="condition-tiers" role="group" aria-label="Condition tier">
+            {CONDITION_TIERS.map((tier) => {
+              const delta = tierDeltas?.[tier];
+              return <button type="button" key={tier} className={form.conditionTier === tier ? "selected" : ""} aria-pressed={form.conditionTier === tier} onClick={() => update("conditionTier", tier)}>
+                <span className="tier-name">{CONDITION_TIER_LABEL[tier]}</span>
+                <small className="tier-desc">{CONDITION_TIER_DESCRIPTION[tier]}</small>
+                {delta === undefined ? null : <span className="tier-delta" title={tier === "average" ? undefined : "Difference vs the Average tier at the same mileage"}>{tier === "average" ? <b>Reference</b> : <><b>{delta < 0 ? "−" : "+"}{formatCad(Math.abs(delta))}</b>{" "}<small>vs avg tier</small></>}</span>}
+              </button>;
+            })}
           </div>
-          <p>These inspection signals form an auction-grade equivalent. The price effect is learned from completed outcomes, not a hand-written dollar table.</p>
-        </details>
+          <p className="condition-note">The panel supports three tiers and does not distinguish above-average grades; the form does not offer them.</p>
+        </div>
+        </Tabs.Panel><Tabs.Panel value="vin" keepMounted className="editor-panel">
         <div className="history-input">
-          <p className="kicker">VIN</p>
+          <p className="kicker">HAVE A VIN? <span>Optional</span></p>
           <label className="vin-field"><span>17-character VIN</span><div className="vin-control"><input value={form.vin} onChange={(event) => update("vin", normalizeVin(event.target.value))} maxLength={17} spellCheck={false} autoCapitalize="characters" placeholder="Enter VIN (optional)" aria-label="Vehicle identification number" /><button type="button" onClick={decodeVin} disabled={loading || lookupState === "loading"}>{lookupState === "loading" ? "DECODING…" : "Decode VIN"}</button></div><small className={`vin-status ${vinStatus}`}>{vinStatusCopy[vinStatus]}</small></label>
           {lookupState === "error" ? <p className="lookup-error" role="alert">{lookupError}</p> : null}
           {vinReport ? <div className="decoded-mini"><span>DECODED BY {vinReport.vehicle.source}</span><strong>{vinReport.vehicle.year} {vinReport.vehicle.make} {vinReport.vehicle.model}</strong><p>{vinReport.vehicle.trim} · {vinReport.vehicle.driveType} · {vinReport.vehicle.displacementL ?? "—"} L</p><small>{vinReport.notice}{marketBlockedByVin ? " No matching price cell exists in this public release, so the previous manual selection is not used as a substitute." : ""}</small></div> : null}
           <p className="privacy-note"><LockIcon /> VIN is sent to the official NHTSA &amp; vPIC decoder only when you click Decode. AutoValue does not store it.</p>
         </div>
-        <button className="check-price-button" type="submit"><strong>Check this price</strong><i>→</i></button>
+        </Tabs.Panel></Tabs.Root>
+        <div className="editor-bottom"><button className="check-price-button" type="submit"><strong>Check this price</strong><i>→</i></button><p>Dealer asking-price reference · CAD</p></div>
       </form>
 
-      <section key={resultPulse} ref={resultRef} className="result-panel result-enter" aria-live="polite">
+      <section key={resultPulse} ref={resultRef} className="result-panel" tabIndex={-1} aria-label="Price check result">
         {loading ? <div className="result-empty"><div className="loader" /><p>Loading the Canadian market reference…</p></div> : result ? <>
-          <div className="result-head">
-            <div><p className="kicker">ONE-PAGE VALUATION</p><h3>{vinReport ? `${vinReport.vehicle.year} ${vinReport.vehicle.make} ${vinReport.vehicle.model}` : `${result.y} ${result.mk} ${result.md}`}</h3><p>{vinReport ? `VIN ${vinReport.vehicle.vin} · live vehicle decode` : `${result.p} · Used dealer inventory · ${formatNumber(result.n)} vehicles`}</p></div>
-            <div className="result-stats">
-              <span className={`confidence ${confidence}`}><i /> {confidence} broad evidence</span>
-              <p>{formatNumber(result.n)} vehicles in cell<br />{formatNumber(conditionModelMetadata.outcomes)} auction outcomes</p>
-            </div>
-          </div>
+          <div className="result-head"><div><p className="kicker">{result.p} · {formatNumber(result.n)} VEHICLES IN THE REFERENCE SET</p><h3>{vinReport ? `${vinReport.vehicle.year} ${vinReport.vehicle.make} ${vinReport.vehicle.model}` : `${result.y} ${result.mk} ${result.md}`}</h3></div><button className="pin-button" type="button" onClick={() => { setBaseline({ form: { ...form, vin: "" }, estimate: estimate ?? 0, low: conditionValuation?.low ?? 0, high: conditionValuation?.high ?? 0 }); setViewTab("compare"); }}> <span aria-hidden="true">⊕</span> {baseline ? "Update pinned" : "Pin scenario"}</button></div>
 
           {vinReport ? <div className="no-listing"><strong>Vehicle decoded live; no listing feed connected.</strong><p>VINs do not carry current asking price or odometer. Enter those values above, or connect a licensed inventory provider for live listing facts.</p></div> : null}
 
           <section className="valuation-summary" aria-label="Valuation summary">
             <div className="stat-tile ml-tile">
-              <span className="stat-label">CONDITION-AWARE ML MARKET VALUE <InfoIcon /></span>
-              <strong data-testid="ml-estimate">{formatCad(estimate ?? 0)}</strong>
+              <span className="stat-label">Estimated market value <span className="estimate-tag">MODELLED</span></span>
+              <strong data-testid="ml-estimate" aria-live="polite" aria-atomic="true">{formatCad(estimate ?? 0)}</strong>
+              {estimatePulse > 0 ? <i key={estimatePulse} className="estimate-settle" aria-hidden="true" /> : null}
               <div className="stat-foot">
                 <div><small>Predicted range</small><b>{formatCad(conditionValuation?.low ?? 0)} – {formatCad(conditionValuation?.high ?? 0)}</b></div>
                 <i className="stat-divider" aria-hidden="true" />
-                <div><b className={adjustment === 0 ? undefined : adjustment > 0 ? "positive" : "negative"}>{adjustment === 0 ? "±$0" : `${adjustment > 0 ? "+" : "−"}${formatCad(Math.abs(adjustment))}`}</b><small>ML adjustment</small></div>
+                <div><b className={adjustment === 0 ? undefined : adjustment > 0 ? "positive" : "negative"}>{adjustment === 0 ? "±$0" : `${adjustment > 0 ? "+" : "−"}${formatCad(Math.abs(adjustment))}`}</b><small>condition + mileage</small></div>
               </div>
             </div>
             <div className="stat-tile ask-tile">
-              <span className="stat-label">SELLER ASK <InfoIcon /></span>
+              <span className="stat-label">Listing asking price</span>
               <strong>{askingPrice ? formatCad(askingPrice) : "Not entered"}</strong>
               <div className="stat-foot">
-                {estimateDifference !== undefined ? <div><b className={estimateDifference > 0 ? "positive" : "negative"} title={dealSignal?.detail}>{estimateDifference > 0 ? "+" : "−"}{formatCad(Math.abs(estimateDifference))}</b><small>vs value</small></div> : <div><b>—</b><small>add an ask to compare</small></div>}
+                {estimateDifference !== undefined ? <div><b className={estimateDifference > 0 ? "positive" : estimateDifference < 0 ? "negative" : undefined} title={dealSignal?.detail}>{estimateDifference > 0 ? "+" : estimateDifference < 0 ? "−" : "±"}{formatCad(Math.abs(estimateDifference))}</b><small>vs value</small></div> : <div><b>—</b><small>add an ask to compare</small></div>}
                 <i className="stat-divider" aria-hidden="true" />
                 {dealSignal ? <div className="signal-line"><i className={`signal-dot ${dealSignal.tone}`}><CheckCircleIcon /></i><small>{dealSignal.label}</small></div> : <div><small>enter an ask to compare</small></div>}
               </div>
             </div>
           </section>
 
-          {conditionValuation ? <div className="valuation-band"><PredictionBand valuation={conditionValuation} askingPrice={askingPrice} row={result} /></div> : null}
+          {conditionValuation ? <Tabs.Root className="explorer-tabs" value={viewTab} onValueChange={value => setViewTab(String(value))}>
+            <Tabs.List className="explorer-nav" aria-label="Explore the valuation"><Tabs.Tab value="price">Price position</Tabs.Tab><Tabs.Tab value="mileage">Mileage</Tabs.Tab><Tabs.Tab value="markets">Across Canada</Tabs.Tab><Tabs.Tab value="compare">Compare{baseline ? <i className="saved-dot" /> : null}</Tabs.Tab><Tabs.Indicator className="explorer-indicator" /></Tabs.List>
+            <div className="explorer-viewport">
+            <Tabs.Panel value="price" keepMounted className="explorer-panel price-explorer">
+              <div className="explorer-title"><div><h4>Where does the asking price sit?</h4></div><span className={`confidence ${confidence}`}><i />{confidence} evidence</span></div>
+              <div className="valuation-band"><PredictionBand valuation={conditionValuation} askingPrice={askingPrice} row={result} /></div>
+              <div className="ask-scrubber"><button type="button" aria-label="Decrease asking price by 500 dollars" onClick={() => update("askingPrice", String(Math.max(0, (askingPrice ?? estimate ?? 0) - 500)))}>−</button><label><span>Explore asking price</span><input type="range" aria-label="Explore asking price" min={askSliderMin} max={askSliderMax} step="1" value={askSliderValue} style={{ "--fill": `${askSliderFill}%` } as React.CSSProperties} onChange={event => update("askingPrice", event.target.value)} /></label><button type="button" aria-label="Increase asking price by 500 dollars" onClick={() => update("askingPrice", String((askingPrice ?? estimate ?? 0) + 500))}>+</button></div>
+              <p className="range-explainer">Modelled range · Not an offer or guaranteed sale price.</p>
+            </Tabs.Panel>
+            <Tabs.Panel value="mileage" className="explorer-panel"><MileageCurve row={result} profile={conditionProfile} mileage={odometer ?? result.km} valuation={conditionValuation} onChange={km => update("odometer", String(km))} /></Tabs.Panel>
+            <Tabs.Panel value="markets" className="explorer-panel"><MarketComparison rows={rows.filter(row => row.mk === result.mk && row.md === result.md && row.y === result.y)} selected={result.p} onSelect={row => { setForm(current => ({...current, province: row.p})); setVinReport(undefined); setLookupState("idle"); setMarketBlockedByVin(false); }} /></Tabs.Panel>
+            <Tabs.Panel value="compare" className="explorer-panel comparison-panel">
+              {baseline ? <><div className="explorer-title"><div><h4>See what changed.</h4><p>Your pinned scenario stays fixed while you edit.</p></div><button className="text-button" type="button" onClick={() => setBaseline(undefined)}>Clear pin</button></div><div className="comparison-pair"><article><span className="comparison-label">PINNED</span><h4>{baseline.form.year} {baseline.form.make} {baseline.form.model}</h4><p>{baseline.form.province} · {baseline.form.odometer.trim() ? `${formatNumber(Number(baseline.form.odometer))} km` : "Market median mileage"} · {CONDITION_TIER_LABEL[baseline.form.conditionTier]}</p><strong data-testid="pinned-estimate">{formatCad(baseline.estimate)}</strong><small>{formatCad(baseline.low)} – {formatCad(baseline.high)}</small><button type="button" onClick={() => { setForm(baseline.form); setVinReport(undefined); setLookupState("idle"); setMarketBlockedByVin(false); }}>Restore inputs ↺</button></article><article><span className="comparison-label">CURRENT</span><h4>{form.year} {form.make} {form.model}</h4><p>{form.province} · {formatNumber(odometer ?? result.km)} km · {CONDITION_TIER_LABEL[form.conditionTier]}</p><strong>{formatCad(estimate ?? 0)}</strong><small>{formatCad(conditionValuation.low)} – {formatCad(conditionValuation.high)}</small><b data-testid="scenario-delta">{(estimate ?? 0) - baseline.estimate >= 0 ? "+" : "−"}{formatCad(Math.abs((estimate ?? 0) - baseline.estimate))} from pinned</b></article></div></> : <div className="comparison-empty"><span aria-hidden="true">⊕</span><h4>Keep a point of comparison.</h4><p>Pin a scenario, then change the mileage, condition, or vehicle to see the difference.</p><button type="button" onClick={() => setBaseline({ form: { ...form, vin: "" }, estimate: estimate ?? 0, low: conditionValuation.low, high: conditionValuation.high })}>Pin this scenario</button></div>}
+            </Tabs.Panel>
+            </div>
+          </Tabs.Root> : null}
+          <div className="result-footer"><div><span>Canadian anchor</span><strong>{formatCad(baseValue ?? 0)}</strong></div><div><span>Model adjustment</span><strong>{adjustment < 0 ? "−" : "+"}{formatCad(Math.abs(adjustment))}</strong></div><button ref={evidenceRef} type="button" onClick={() => setEvidenceOpen(true)}>Inspect the evidence <span aria-hidden="true">↗</span></button></div>
 
+        </> : <div className="result-empty"><p>{loadError ? "The market reference could not load." : marketBlockedByVin ? "VIN decoded, but no defensible price match is available." : "No published price cell matches that combination."}</p>{loadError ? <button type="button" onClick={() => window.location.reload()}>Reload market data</button> : null}<small>{loadError ? "Check your connection and reload this page." : marketBlockedByVin ? "Enter the listing manually only if you can select its true model family, or connect a licensed row-level inventory feed." : "Try another year or province. Sparse cells are intentionally suppressed."}</small></div>}
+      </section>
+    </div>
+    {result && conditionValuation ? <Dialog.Root open={evidenceOpen} onOpenChange={setEvidenceOpen}><Dialog.Portal><Dialog.Backdrop className="evidence-backdrop" /><Dialog.Popup className="evidence-popup" finalFocus={evidenceRef}><section className="studio-evidence" aria-label="Evidence behind the estimate"><header><div><p className="kicker">UNDER THE HOOD</p><Dialog.Title>Every number has a source.</Dialog.Title></div><Dialog.Close className="close-evidence" aria-label="Close evidence">×</Dialog.Close></header><Dialog.Description>The evidence behind {result.y} {result.mk} {result.md} in {result.p}.</Dialog.Description>
           {conditionValuation ? <section className="price-anatomy" aria-label="Price anatomy">
             <p className="kicker">PRICE ANATOMY</p>
             <div className="anatomy-row">
@@ -408,7 +470,7 @@ export function ValuationWorkbench() {
             </div>
           </section> : null}
 
-          {conditionValuation ? <FactorCoverage row={result} odometer={odometer} vinReport={vinReport} valuation={conditionValuation} profile={conditionProfile} /> : null}
+          {conditionValuation ? <FactorCoverage row={result} odometer={odometer} vinReport={vinReport} valuation={conditionValuation} tier={form.conditionTier} /> : null}
 
           <div className="valuation-method">
             <div><span>HYBRID ML METHOD</span><p>Gradient-boosted condition + odometer adjustment</p></div>
@@ -417,9 +479,8 @@ export function ValuationWorkbench() {
             <div><span>METHOD &amp; TRANSPARENCY</span><a href="/calculation">See calculation <span aria-hidden="true">↗</span></a></div>
           </div>
           <div className="caution"><strong>Prediction boundary</strong><p>This is an ML estimate, not an observable “true price.” The condition effect transfers from historical US wholesale outcomes to a current Canadian asking-market anchor; options, inspection findings, fees and the eventual negotiated transaction remain uncertain.</p></div>
-        </> : <div className="result-empty"><p>{marketBlockedByVin ? "VIN decoded, but no defensible price match is available." : "No published price cell matches that combination."}</p><small>{marketBlockedByVin ? "Enter the listing manually only if you can select its true model family, or connect a licensed row-level inventory feed." : "Try another year or province. Sparse cells are intentionally suppressed."}</small></div>}
-      </section>
-    </div>
+
+    </section></Dialog.Popup></Dialog.Portal></Dialog.Root> : null}
     </>
   );
 }

@@ -14,6 +14,7 @@ async function mockAudiQ3Decode(page: Page) {
 async function decodeBlockedAudiQ3(page: Page) {
   await page.goto("/#check");
   await page.getByLabel("Province").selectOption("AB");
+  await page.getByRole("tab", { name: "VIN", exact: true }).click();
   await page.getByLabel("Vehicle identification number").fill(VIN);
   await page.getByRole("button", { name: "DECODE VIN" }).click();
   await expect(page.getByText("VIN decoded, but no defensible price match is available.")).toBeVisible();
@@ -32,6 +33,7 @@ test("a blocked VIN decode is never valued under the decoded heading after a pri
 
   await expectNoValuation();
 
+  await page.getByRole("tab", { name: "Vehicle", exact: true }).click();
   await page.getByLabel("Asking price in Canadian dollars").fill("25000");
   await page.getByRole("button", { name: /Check this price/ }).click();
   await expectNoValuation();
@@ -43,6 +45,7 @@ test("changing the model year abandons the blocked decode and values the chosen 
   await mockAudiQ3Decode(page);
   await decodeBlockedAudiQ3(page);
 
+  await page.getByRole("tab", { name: "Vehicle", exact: true }).click();
   await page.getByLabel("Model year").selectOption("2022");
   await expect(page.getByRole("heading", { name: "2022 Audi Q3" })).toBeVisible();
   await expect(page.getByTestId("ml-estimate")).toBeVisible();

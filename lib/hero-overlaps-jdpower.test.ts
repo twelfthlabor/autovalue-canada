@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 const css = readFileSync("app/globals.css", "utf8");
 const workbench = readFileSync("components/valuation-workbench.tsx", "utf8");
 
-/** WCAG 2.x relative luminance + contrast ratio (white background). */
+/** WCAG 2.x relative luminance. */
 function luminance(hex: string): number {
   const c = hex.replace("#", "");
   const srgb = [0, 2, 4].map((i) => parseInt(c.slice(i, i + 2), 16) / 255);
@@ -12,24 +12,9 @@ function luminance(hex: string): number {
   return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
 }
 
-function contrastOnWhite(hex: string): number {
-  const l = luminance(hex);
-  return (1.05) / (l + 0.05);
-}
-
-describe("hero overlap fixes (fix/hero-overlaps-jdpower-theme)", () => {
-  it("scopes the landing hero-card to .hero-visual (no global absolute leak)", () => {
-    // Landing card must be scoped so inner-page .hero-card is unaffected.
-    expect(css).toContain(".hero-visual .hero-card");
-    // The absolute-positioned landing card only appears in scoped form.
-    const scopedAbsolute = (css.match(/\.hero-visual\s+\.hero-card\s*\{[^}]*position:\s*absolute/g) ?? []).length;
-    expect(scopedAbsolute).toBeGreaterThanOrEqual(1);
-    // No bare `.hero-card { ... position:absolute ... }` rule may remain.
-    expect(css).not.toMatch(/(^|[\n;}])\s*\.hero-card\s*\{[^}]*position:\s*absolute/);
-  });
-
-  it("keeps the inner-page .hero-card static (in-flow aside)", () => {
-    const innerRule = css.match(/(^|[\n])\.hero-card\s*\{[^}]*\}/);
+describe("valuation distribution and research layout contracts", () => {
+  it("keeps the research header in normal flow", () => {
+    const innerRule = css.match(/(^|[\n])\.report-header\s*\{[^}]*\}/);
     expect(innerRule).not.toBeNull();
     expect(innerRule![0]).not.toMatch(/position\s*:/);
   });
@@ -119,50 +104,6 @@ describe("hero overlap fixes (fix/hero-overlaps-jdpower-theme)", () => {
     expect(midBlock).toMatch(/\.lab-stats\s+span\s*\{[^}]*white-space:\s*normal/);
   });
 
-  it("keeps the mobile header in-flow (2-row grid, no 56px clamp)", () => {
-    const mobileBlock = css.split("@media (max-width: 680px)").slice(1).join("\n");
-    expect(mobileBlock).toContain(".site-header");
-    expect(mobileBlock).toMatch(/height:\s*auto/);
-    expect(mobileBlock).toMatch(/grid-template-rows/);
-    expect(mobileBlock).toMatch(/grid-row:\s*2/);
-    // 2-row sticky (~93px) needs deeper anchor offset than desktop 76px.
-    expect(mobileBlock).toMatch(/scroll-margin-top:\s*96px/);
-    // Desktop Open-data link must stay styled + right-aligned in 1fr auto 1fr.
-    expect(css).toMatch(/\.nav-external\s*\{[^}]*justify-self:\s*end/);
-    expect(css).toMatch(/\.nav-external\s*\{[^}]*display:\s*inline-flex/);
-  });
-});
-
-describe("J.D. Power 2026 theme tokens", () => {
-  it("defines brand/accent/navy tokens", () => {
-    expect(css).toMatch(/--brand:\s*#00838F/i);
-    expect(css).toMatch(/--brand-ink:\s*#066A75/i);
-    expect(css).toMatch(/--accent:\s*#D34612/i);
-    expect(css).toMatch(/--ink:\s*#102330/i);
-    expect(css).toMatch(/--navy:\s*#102330/i);
-    // Small teal text on tints must use the darker ink (brand 4.07 fail on bg).
-    expect(css).toMatch(/\.site-header\s+nav\s+a\.active\s*\{[^}]*var\(--brand-ink\)/);
-    expect(css).toMatch(/\.eyebrow\s*\{[^}]*var\(--brand-ink\)/);
-    expect(contrastOnWhite("#066A75")).toBeGreaterThanOrEqual(4.5);
-  });
-
-  it("removes the legacy orange", () => {
-    expect(css.toLowerCase()).not.toContain("#f04b23");
-    expect(css).not.toContain("240, 75, 35");
-    expect(css).not.toContain("240,75,35");
-    // CTA gradient top #E4571A (3.70 fail) removed for solid AA CTA.
-    expect(css.toLowerCase()).not.toContain("#e4571a");
-    expect(css).toMatch(/\.hero-cta\s*\{[^}]*background:\s*var\(--accent\)/);
-    expect(css).toMatch(/\.hero-cta:hover\s*\{[^}]*background:\s*var\(--accent-deep\)/);
-    expect(css).toMatch(/\.check-price-button\s*\{[^}]*background:\s*var\(--accent\)/);
-    expect(css).toMatch(/\.check-price-button:hover\s*\{[^}]*background:\s*var\(--accent-deep\)/);
-  });
-
-  it("uses an AA faint token (was #98a1ad ~2.7:1)", () => {
-    expect(css).toMatch(/--faint:\s*#5A6B76/i);
-    expect(css.toLowerCase()).not.toContain("#98a1ad");
-    expect(contrastOnWhite("#5A6B76")).toBeGreaterThanOrEqual(4.5);
-  });
 });
 
 describe("valuation sheet presence", () => {

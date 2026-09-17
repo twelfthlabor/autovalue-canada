@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * Connector settle regression (animations ENABLED).
+ * Connector settle regression (a transition is injected to stress layout).
  *
  * The band connector geometry is written from a layout effect. If that pass
  * reads the sibling dot's live `left` rect while its 460ms spring is mid-flight
@@ -123,6 +123,10 @@ for (const project of [
     await page.goto("/#check");
     await expect(page.getByTestId("ml-estimate")).toBeVisible();
     await page.evaluate(async () => { await document.fonts.ready; });
+
+    // Production input is immediate. Retain the historical geometry regression
+    // by deliberately injecting the old movement before forcing a re-measure.
+    await page.addStyleTag({ content: ".result-panel .band-median, .result-panel .band-asking { transition: left 460ms cubic-bezier(.3,1.3,.45,1) !important; }" });
 
     // Park the ask at the left edge so the next change runs the full spring
     // across the median dot.

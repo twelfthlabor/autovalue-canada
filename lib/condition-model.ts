@@ -1,19 +1,30 @@
 import artifact from "../public/data/condition-model.json";
 
 export type ConditionGrade = "extra-clean" | "clean" | "average" | "rough" | "extra-rough" | "salvage";
-export type AccidentHistory = "none" | "minor" | "major" | "rebuilt";
-export type MechanicalCondition = "sound" | "minor-repair" | "major-repair" | "not-running";
-export type CosmeticCondition = "clean" | "light" | "moderate" | "heavy";
-export type ServiceHistory = "complete" | "partial" | "unknown";
-export type WearItems = "good" | "due-soon" | "replace-now";
+
+export type ConditionTier = "below-average" | "rough" | "average";
 
 export type ConditionProfile = {
   conditionGrade: ConditionGrade;
-  accidentHistory: AccidentHistory;
-  mechanicalCondition: MechanicalCondition;
-  cosmeticCondition: CosmeticCondition;
-  serviceHistory: ServiceHistory;
-  wearItems: WearItems;
+};
+
+/**
+ * The auction panel resolves three effective condition levels: below-average,
+ * rough and average. Above-average grades are not distinguished, so they are not
+ * exposed as tiers. Below-average maps to extra-rough because the artifact prices
+ * salvage and extra-rough identically; latent if a future retrain adds a split
+ * below 0.5.
+ */
+export const CONDITION_TIER_GRADE: Record<ConditionTier, ConditionGrade> = {
+  "below-average": "extra-rough",
+  rough: "rough",
+  average: "average",
+};
+
+export const CONDITION_TIER_LABEL: Record<ConditionTier, string> = {
+  "below-average": "Below average",
+  rough: "Rough",
+  average: "Average or better",
 };
 
 type SerializedTree = {
@@ -52,12 +63,6 @@ const GRADE_SCORE: Record<ConditionGrade, number> = {
   "extra-clean": 4,
 };
 
-const ACCIDENT_ADJUSTMENT: Record<AccidentHistory, number> = { none: 0, minor: -0.25, major: -1, rebuilt: -1.5 };
-const MECHANICAL_ADJUSTMENT: Record<MechanicalCondition, number> = { sound: 0, "minor-repair": -0.25, "major-repair": -0.75, "not-running": -1.5 };
-const COSMETIC_ADJUSTMENT: Record<CosmeticCondition, number> = { clean: 0.15, light: 0, moderate: -0.25, heavy: -0.6 };
-const SERVICE_ADJUSTMENT: Record<ServiceHistory, number> = { complete: 0.15, partial: 0, unknown: -0.15 };
-const WEAR_ADJUSTMENT: Record<WearItems, number> = { good: 0, "due-soon": -0.1, "replace-now": -0.3 };
-
 function clamp(value: number, [minimum, maximum]: [number, number]) {
   return Math.max(minimum, Math.min(maximum, value));
 }
@@ -83,13 +88,8 @@ function rawPrediction(conditionScore: number, logOdometerDelta: number) {
 }
 
 export function conditionScore(profile: ConditionProfile) {
-  const raw = GRADE_SCORE[profile.conditionGrade]
-    + ACCIDENT_ADJUSTMENT[profile.accidentHistory]
-    + MECHANICAL_ADJUSTMENT[profile.mechanicalCondition]
-    + COSMETIC_ADJUSTMENT[profile.cosmeticCondition]
-    + SERVICE_ADJUSTMENT[profile.serviceHistory]
-    + WEAR_ADJUSTMENT[profile.wearItems];
-  return Math.round(clamp(raw, modelArtifact.featureBounds.conditionScore) * 100) / 100;
+  const gradeScore = GRADE_SCORE[profile.conditionGrade];
+  return Math.round(clamp(gradeScore, modelArtifact.featureBounds.conditionScore) * 100) / 100;
 }
 
 export type ConditionValuation = {

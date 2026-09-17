@@ -22,13 +22,6 @@ sys.path.insert(0, str(ROOT / "aws"))
 from condition_model_py import ConditionModel, js_round  # noqa: E402
 from lambda_predict import handler  # noqa: E402
 
-NEUTRAL = {
-    "accidentHistory": "none",
-    "mechanicalCondition": "sound",
-    "cosmeticCondition": "light",
-    "serviceHistory": "partial",
-    "wearItems": "good",
-}
 GRADE_TO_SCORE = {
     "salvage": -1,
     "extra-rough": 0,
@@ -62,7 +55,7 @@ def main() -> None:
 
     # 1. Oracle multipliers: exact grade score at anchor mileage.
     for grade, score in GRADE_TO_SCORE.items():
-        result = model.predict(30000, 25000, 35000, 80000, 80000, {"conditionGrade": grade, **NEUTRAL})
+        result = model.predict(30000, 25000, 35000, 80000, 80000, {"conditionGrade": grade})
         expected = oracle[ORACLE_NAMES[grade]]
         check(
             f"oracle-multiplier[{grade}]",
@@ -77,7 +70,7 @@ def main() -> None:
         )
 
     # 2. TS test vectors (lib/condition-model.test.ts).
-    average = model.predict(30000, 25000, 35000, 80000, 80000, {"conditionGrade": "average", **NEUTRAL})
+    average = model.predict(30000, 25000, 35000, 80000, 80000, {"conditionGrade": "average"})
     check("ts/average-score", average["conditionScore"] == 2, str(average["conditionScore"]))
     check("ts/average-multiplier", average["multiplier"] == 1, str(average["multiplier"]))
     check("ts/average-estimate", average["estimate"] == 30000, str(average["estimate"]))
@@ -85,15 +78,13 @@ def main() -> None:
 
     rough = model.predict(
         30000, 25000, 35000, 80000, 150000,
-        {"conditionGrade": "rough", "accidentHistory": "major",
-         "mechanicalCondition": "major-repair", **{k: v for k, v in NEUTRAL.items()
-          if k not in ("accidentHistory", "mechanicalCondition")}},
+        {"conditionGrade": "rough"},
     )
-    check("ts/rough-score", rough["conditionScore"] == -0.75, str(rough["conditionScore"]))
+    check("ts/rough-score", rough["conditionScore"] == 1, str(rough["conditionScore"]))
     check("ts/rough-below-average", rough["estimate"] < average["estimate"],
           f"rough {rough['estimate']} vs avg {average['estimate']}")
 
-    clean = model.predict(30000, 25000, 35000, 80000, 80000, {"conditionGrade": "extra-clean", **NEUTRAL})
+    clean = model.predict(30000, 25000, 35000, 80000, 80000, {"conditionGrade": "extra-clean"})
     check("ts/monotonic-guard", clean["estimate"] >= average["estimate"],
           f"clean {clean['estimate']} vs avg {average['estimate']}")
 
@@ -121,7 +112,7 @@ def main() -> None:
         (350000, 100, True, -1.1508),
     ]
     for baseline, target, expected_flag, expected_delta in odometer_vectors:
-        vector = model.predict(30000, 25000, 35000, baseline, target, {"conditionGrade": "average", **NEUTRAL})
+        vector = model.predict(30000, 25000, 35000, baseline, target, {"conditionGrade": "average"})
         check(f"ts/odometer-flag[{baseline}->{target}]", vector["isOdometerExtrapolation"] is expected_flag,
               f"got {vector['isOdometerExtrapolation']}, want {expected_flag}")
         check(f"ts/odometer-delta[{baseline}->{target}]", vector["logOdometerDelta"] == expected_delta,
@@ -131,7 +122,7 @@ def main() -> None:
     ok_event = {"queryStringParameters": {
         "baseValue": "30000", "baseLow": "25000", "baseHigh": "35000",
         "baselineOdometerKm": "80000", "targetOdometerKm": "80000",
-        "conditionGrade": "average", **NEUTRAL}}
+        "conditionGrade": "average"}}
     response = handler(ok_event, None)
     body = json.loads(response["body"])
     check("handler/200", response["statusCode"] == 200 and body["ok"] is True, response["body"][:200])
@@ -144,7 +135,9 @@ def main() -> None:
 
     missing = handler({"queryStringParameters": {"baseValue": "30000"}}, None)
     missing_body = json.loads(missing["body"])
-    check("handler/400-missing", missing["statusCode"] == 400 and len(missing_body.get("details", [])) >= 10,
+    # Only baseValue is supplied: four missing numerics plus the missing
+    # conditionGrade enum, so the handler must report exactly five details.
+    check("handler/400-missing", missing["statusCode"] == 400 and len(missing_body.get("details", [])) == 5,
           missing["body"][:200])
 
     print(f"\n{len(failures)} failure(s)")

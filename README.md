@@ -7,7 +7,7 @@ A transparent Canadian used-vehicle deal checker. It compares a seller's asking 
 ## How it works
 
 1. Select a province, make, model and year, then enter the asking price and odometer.
-2. Optionally decode a VIN and describe the vehicle's condition and history.
+2. Optionally decode a VIN and pick a condition tier (below average, rough, average or better).
 3. Review the estimated value, range, difference from the asking price, evidence strength and unpriced factors.
 
 The estimate combines:
@@ -24,6 +24,10 @@ The included market artifact contains 5,605 used-vehicle cells representing 180,
 The adjustment model was trained on 91,278 historical US wholesale auction sales. On a later-year test set of 39,132 sales, it reached $1,198 MAE and 11.60% WAPE. The model runs locally in the browser; no prediction service or API key is required.
 
 Results are market estimates, not certified appraisals, guaranteed offers or future-value forecasts. Trim, options, inspection findings, fees and the final negotiated price may not be captured. See the [model card](docs/MODEL_CARD.md) and [data sources](docs/DATA_SOURCES.md) for methodology, provenance and full limitations.
+
+## Frontend
+
+The centred valuation workspace pairs a tabbed listing editor with price scrubbing, model-based mileage exploration, provincial comparisons and pinned scenarios. It fits standard laptop screens at 100% zoom. Research pages include a provincial coverage explorer, a readable methodology and an interactive calculation breakdown. The palette uses J.D. Power blue. See [the frontend review](docs/FRONTEND_REVIEW.md) for design research, controls and browser verification.
 
 ## Run locally
 

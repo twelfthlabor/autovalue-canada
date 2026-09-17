@@ -7,29 +7,14 @@ const rows = marketData as unknown as MarketRow[];
 
 const AVERAGE: ConditionProfile = {
   conditionGrade: "average",
-  accidentHistory: "none",
-  mechanicalCondition: "sound",
-  cosmeticCondition: "light",
-  serviceHistory: "partial",
-  wearItems: "good",
 };
 
 const WORST: ConditionProfile = {
   conditionGrade: "salvage",
-  accidentHistory: "rebuilt",
-  mechanicalCondition: "not-running",
-  cosmeticCondition: "heavy",
-  serviceHistory: "unknown",
-  wearItems: "replace-now",
 };
 
 const BEST: ConditionProfile = {
   conditionGrade: "extra-clean",
-  accidentHistory: "none",
-  mechanicalCondition: "sound",
-  cosmeticCondition: "clean",
-  serviceHistory: "complete",
-  wearItems: "good",
 };
 
 function valuationFor(row: MarketRow, profile: ConditionProfile, targetOdometerKm: number) {

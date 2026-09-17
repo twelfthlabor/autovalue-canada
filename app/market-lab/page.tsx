@@ -1,3 +1,6 @@
+import { ReportNav } from "@/components/report-nav";
+import { MarketCoverage } from "@/components/market-coverage";
+import market from "@/public/data/market.json";
 import manifest from "@/public/data/manifest.json";
 import modelMetrics from "@/public/data/model-metrics.json";
 import conditionModel from "@/public/data/condition-model.json";
@@ -38,16 +41,15 @@ export default function MarketLabPage() {
   const modelWins = segmentPairs.filter(({ baseline, model }) => (model.wapePct ?? Infinity) < (baseline.wapePct ?? -Infinity)).length;
   const intervalWidthPct = segments.auctionGrade.model[0]?.intervalWidthPct;
 
+  const coverage = manifest.provinces.map(code => {
+    const rows = market.filter(row => row.p === code);
+    return { code, name: provinceNames[code] ?? code, vehicles: rows.reduce((sum, row) => sum + row.n, 0), cells: rows.length, makes: new Set(rows.map(row => row.mk)).size, years: [Math.min(...rows.map(row => row.y)), Math.max(...rows.map(row => row.y))] as [number, number] };
+  });
   return (
-    <div className="inner-page">
-      <header className="page-hero">
-        <div>
-          <p className="eyebrow">Market data</p>
-          <h1>Coverage, provenance, quality gates, and <em>model benchmarks.</em></h1>
-        </div>
-        <p className="page-hero-side">This page reports coverage, provenance, and automated quality checks from the same artifact that powers the public price check.</p>
-      </header>
-
+    <div className="inner-page research-page market-page">
+      <header className="report-header"><div><p className="eyebrow">AutoValue / Research</p><h1>Market lab</h1><p>Explore the inventory behind the estimate, then inspect how the model performs.</p></div><span>Data retrieved {formatRetrievedDate(manifest.sourceRetrievedAt)}</span></header>
+      <div className="report-layout"><ReportNav items={[{id:"coverage",label:"Market coverage"},{id:"source-audit",label:"Source audit"},{id:"models",label:"Model validation"},{id:"segments",label:"Error by segment"}]} /><div className="report-content">
+      <section id="coverage" className="report-section"><div className="section-heading"><h2>Market coverage</h2><span>Canadian dealer asking prices</span></div>
       <section className="lab-stats" aria-label="Coverage totals">
         <article>
           <span>Used vehicles represented <InfoIcon /></span>
@@ -66,12 +68,14 @@ export default function MarketLabPage() {
           <strong title="Not every combination is present">{manifest.yearRange[0]}–{manifest.yearRange[1]}</strong>
         </article>
         <article>
-          <span>National weighted median (warehouse) <InfoIcon /></span>
+          <span>Weighted median <InfoIcon /></span>
           <strong title="Sample-weighted median across used cells in Postgres">${Math.round(sqlSummary.kpi.national_weighted_median_cad).toLocaleString("en-CA")}</strong>
         </article>
       </section>
 
-      <section className="lab-grid">
+      <MarketCoverage provinces={coverage} />
+      </section>
+      <section className="lab-grid report-section" id="source-audit">
         <article className="qa-card">
           <div className="qa-head">
             <div><p className="kicker">Pipeline health</p><h2>All release gates passed</h2></div>
@@ -88,7 +92,7 @@ export default function MarketLabPage() {
 
         <article className="qa-card provenance-card">
           <p className="kicker">Artifact provenance</p>
-          <h2>Reproducible from the released source</h2>
+          <h2>Source record</h2>
           <dl className="prov-list">
             <div><dt>Retrieved</dt><dd>{formatRetrievedDate(manifest.sourceRetrievedAt)}</dd></div>
             <div><dt>Licence</dt><dd>{manifest.sourceLicense}</dd></div>
@@ -98,11 +102,11 @@ export default function MarketLabPage() {
         </article>
       </section>
 
-      <section className="lab-grid">
+      <section className="lab-grid model-comparison report-section" id="models">
         <article className="model-card consumer">
           <div className="qa-head">
-            <div><p className="kicker">Consumer adjustment model</p><h2>Trained on completed auction outcomes.</h2></div>
-            <span className="pill pill-blue">USED IN CONSUMER RESULTS</span>
+            <div><p className="kicker">Consumer adjustment model</p><h2>Condition model</h2></div>
+            <span className="pill pill-blue">Used in estimates</span>
           </div>
           <div className="scoreboard">
             <article><strong>{conditionModel.rows.eligibleSoldOutcomes.toLocaleString("en-CA")}</strong><span>Eligible sold outcomes</span></article>
@@ -118,8 +122,8 @@ export default function MarketLabPage() {
 
         <article className="model-card research">
           <div className="qa-head">
-            <div><p className="kicker">Research benchmark</p><h2>Evaluated against a declared baseline.</h2></div>
-            <span className="pill pill-red">NOT USED FOR CONSUMER RESULTS</span>
+            <div><p className="kicker">Research benchmark</p><h2>Aggregate benchmark</h2></div>
+            <span className="pill pill-red">Research only</span>
           </div>
           <div className="scoreboard">
             <article><strong>${Math.round(modelMetrics.model.mae_cad).toLocaleString("en-CA")}</strong><span>Grouped-CV MAE</span></article>
@@ -140,14 +144,14 @@ export default function MarketLabPage() {
         </article>
       </section>
 
-      <section className="segment-card">
+      <section className="segment-card report-section" id="segments">
         <article className="qa-card">
           <div className="qa-head">
             <div>
               <p className="kicker">Segment validation</p>
-              <h2>Where the error concentrates.</h2>
+              <h2>Error by segment</h2>
             </div>
-            <span className="pill pill-blue">TEMPORAL TEST · 39,132 OUTCOMES</span>
+            <span className="pill pill-blue">Temporal test · {conditionModel.rows.temporalTest.toLocaleString("en-CA")} outcomes</span>
           </div>
           <div className="segment-table-wrap">
             <table className="segment-table" aria-label="Temporal-test error by validation segment, peer baseline vs condition model">
@@ -207,6 +211,6 @@ export default function MarketLabPage() {
           {manifest.provinces.map((province) => <span key={province} title={provinceNames[province]}>{province}</span>)}
         </div>
       </section>
-    </div>
+    </div></div></div>
   );
 }

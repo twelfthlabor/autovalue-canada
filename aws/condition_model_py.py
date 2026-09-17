@@ -26,11 +26,6 @@ GRADE_SCORE = {
     "clean": 3,
     "extra-clean": 4,
 }
-ACCIDENT_ADJUSTMENT = {"none": 0, "minor": -0.25, "major": -1, "rebuilt": -1.5}
-MECHANICAL_ADJUSTMENT = {"sound": 0, "minor-repair": -0.25, "major-repair": -0.75, "not-running": -1.5}
-COSMETIC_ADJUSTMENT = {"clean": 0.15, "light": 0, "moderate": -0.25, "heavy": -0.6}
-SERVICE_ADJUSTMENT = {"complete": 0.15, "partial": 0, "unknown": -0.15}
-WEAR_ADJUSTMENT = {"good": 0, "due-soon": -0.1, "replace-now": -0.3}
 
 
 def js_round(value: float) -> int:
@@ -77,14 +72,7 @@ class ConditionModel:
         return total
 
     def condition_score(self, profile: dict) -> float:
-        raw = (
-            GRADE_SCORE[profile["conditionGrade"]]
-            + ACCIDENT_ADJUSTMENT[profile["accidentHistory"]]
-            + MECHANICAL_ADJUSTMENT[profile["mechanicalCondition"]]
-            + COSMETIC_ADJUSTMENT[profile["cosmeticCondition"]]
-            + SERVICE_ADJUSTMENT[profile["serviceHistory"]]
-            + WEAR_ADJUSTMENT[profile["wearItems"]]
-        )
+        raw = GRADE_SCORE[profile["conditionGrade"]]
         lo, hi = self.feature_bounds["conditionScore"]
         return js_round(clamp(raw, lo, hi) * 100) / 100
 
