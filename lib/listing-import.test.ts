@@ -105,9 +105,44 @@ describe("parseListingHtml", () => {
     expect(fields.odometer).toBeUndefined();
   });
 
-  it("finds page-text values when no structured data or og tags exist", () => {
-    const { fields } = parseListingHtml("<html><body><h1>2017 Ford F-150 XLT</h1><p>$27,500</p><p>133,000 km</p></body></html>");
+  it("finds labelled page-text values when no structured data or og tags exist", () => {
+    const { fields } = parseListingHtml("<html><body><h1>2017 Ford F-150 XLT</h1><p>Asking $27,500</p><p>133,000 km</p></body></html>");
     expect(fields).toEqual({ year: "2017", make: "Ford", model: "F-150", odometer: "133000", askingPrice: "27500" });
+  });
+
+  it("reads a two-token model and prefers tokens adjacent to the year", () => {
+    expect(parseListingHtml("<h1>2021 Jeep Grand Cherokee</h1>").fields).toEqual({ year: "2021", make: "Jeep", model: "Grand Cherokee" });
+    expect(parseListingHtml("<h1>2022 Tesla Model 3</h1>").fields).toEqual({ year: "2022", make: "Tesla", model: "Model 3" });
+    expect(parseListingHtml("<h1>Toyota RAV4 2021 AWD, 89 000 km</h1>").fields).toEqual({ year: "2021", make: "Toyota", model: "RAV4", odometer: "89000" });
+  });
+
+  it("does not read range, consumption, warranty or distance copy as an odometer", () => {
+    for (const text of ["8.2 L/100 km", "Range 342 km", "Battery warranty 160,000 km", "1 km away"]) {
+      const { fields } = parseListingHtml(`<html><body><p>${text}</p></body></html>`);
+      expect(fields.odometer, text).toBeUndefined();
+    }
+  });
+
+  it("does not read savings as the asking price", () => {
+    const { fields } = parseListingHtml("<html><body><p>Save $1,000</p></body></html>");
+    expect(fields).toEqual({});
+  });
+
+  it("skips a struck price and keeps the labelled current price", () => {
+    const { fields } = parseListingHtml("<html><body><p>Was $34,995 / Now $31,995</p></body></html>");
+    expect(fields.askingPrice).toBe("31995");
+  });
+
+  it("reads decimal-tail JSON-LD and French formatted prices", () => {
+    const jsonLd = parseListingHtml('<script type="application/ld+json">{"@type":"Product","offers":{"price":"31,995.00","priceCurrency":"CAD"}}</script>');
+    expect(jsonLd.fields.askingPrice).toBe("31995");
+    const french = parseListingHtml('<meta property="og:description" content="31 995 $ · 89 000 km">');
+    expect(french.fields).toEqual({ askingPrice: "31995", odometer: "89000" });
+  });
+
+  it("keeps scanning JSON-LD after a length-changing case mapping (İ)", () => {
+    const { fields } = parseListingHtml('<p>İstanbul dealer</p><script type="application/ld+json">{"@type":"Product","name":"2022 Mazda CX-5 GS","offers":{"price":28995,"priceCurrency":"CAD"}}</script>');
+    expect(fields).toEqual({ year: "2022", make: "Mazda", model: "CX-5", askingPrice: "28995" });
   });
 
   it("detects the province from a postal code when no region is present", () => {

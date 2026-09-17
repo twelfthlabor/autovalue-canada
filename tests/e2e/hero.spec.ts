@@ -80,7 +80,7 @@ test("a pinned scenario stays fixed and restores its original inputs", async ({ 
   const estimate = page.getByTestId("ml-estimate");
   await expect(estimate).toBeVisible();
   const original = await estimate.textContent();
-  await page.getByRole("button", { name: "Pin scenario", exact: true }).click();
+  await page.getByRole("button", { name: "Add to compare", exact: true }).click();
   await expect(page.getByTestId("pinned-estimate")).toHaveText(original!);
   await page.getByLabel("Odometer in kilometres").fill("190000");
   await expect(estimate).not.toHaveText(original!);

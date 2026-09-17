@@ -113,6 +113,46 @@ test("storage that throws leaves saving unavailable without crashing", async ({ 
   expect(pageErrors).toEqual([]);
 });
 
+test("saved checks are bound to the market release they were computed from", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("autovalue.scenarios.v2", JSON.stringify([{
+      id: "old-release",
+      savedAt: 1,
+      inputs: { province: "ON", make: "Toyota", model: "RAV4", year: "2021", odometer: "89000", askingPrice: "31995", conditionTier: "average" },
+      estimate: 31000,
+      marketVersion: "2020-01-01",
+    }]));
+  });
+  await waitForDefaultCheck(page);
+
+  const staleRow = page.getByTestId("saved-scenario").filter({ hasText: "Saved against an earlier data release" });
+  await expect(staleRow).toHaveCount(1);
+  await expect(staleRow.getByTestId("saved-estimate")).toHaveText(DEFAULT_ESTIMATE);
+
+  // A fresh save carries the current release and is not labelled.
+  await page.getByRole("button", { name: "Save this check" }).click();
+  await expect(page.getByTestId("saved-scenario")).toHaveCount(2);
+  await expect(staleRow).toHaveCount(1);
+});
+
+test("restoring a check whose cell is gone shows the no-cell state", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("autovalue.scenarios.v2", JSON.stringify([{
+      id: "no-cell",
+      savedAt: 1,
+      inputs: { province: "ON", make: "Toyota", model: "Avalon", year: "2014", odometer: "50000", askingPrice: "40000", conditionTier: "average" },
+      estimate: 18000,
+      marketVersion: "2026-08-29",
+    }]));
+  });
+  await waitForDefaultCheck(page);
+  await page.getByRole("button", { name: /^Restore / }).click();
+
+  await expect(page.getByLabel("Model", { exact: true })).toHaveValue("Avalon");
+  await expect(page.getByText("No published price cell matches that combination.")).toBeVisible();
+  await expect(page.getByTestId("ml-estimate")).toHaveCount(0);
+});
+
 test("a saved check fits a 320px viewport without horizontal overflow", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await waitForDefaultCheck(page);

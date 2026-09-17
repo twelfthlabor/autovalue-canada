@@ -86,11 +86,12 @@ describe("scenario URL encoding", () => {
     }
   });
 
-  it("rejects province codes outside the app's province list", () => {
-    for (const province of ["ZZ", "XX", "US", "ONT", "ab", ""]) {
+  it("rejects province codes outside the app's published-market list", () => {
+    // NT/NU/YT have no market cell, so they are rejected like any unknown code.
+    for (const province of ["ZZ", "XX", "US", "ONT", "ab", "NT", "NU", "YT", ""]) {
       expect(decodeScenario(`p=${province}&mk=Toyota&md=RAV4&y=2021`), province).toBeUndefined();
     }
-    for (const province of ["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YT"]) {
+    for (const province of ["AB", "BC", "MB", "NB", "NL", "NS", "ON", "PE", "QC", "SK"]) {
       expect(decodeScenario(`p=${province}&mk=Toyota&md=RAV4&y=2021`)?.province, province).toBe(province);
     }
   });
@@ -140,11 +141,26 @@ describe("scenario storage", () => {
     }
   });
 
-  it("ignores data stored under an older key", () => {
+  it("reads v1 saves when no v2 payload exists, and ignores older v0 data", () => {
     const scenario = makeSavedScenario(INPUTS, 28400);
-    const storage = fakeStorage({ "autovalue.scenarios.v0": JSON.stringify([scenario]) });
-    expect(SCENARIO_STORAGE_KEY).toBe("autovalue.scenarios.v1");
+    expect(SCENARIO_STORAGE_KEY).toBe("autovalue.scenarios.v2");
+    expect(loadScenarios(fakeStorage({ "autovalue.scenarios.v1": JSON.stringify([scenario]) }))).toEqual([scenario]);
+    expect(loadScenarios(fakeStorage({ "autovalue.scenarios.v0": JSON.stringify([scenario]) }))).toEqual([]);
+  });
+
+  it("does not resurrect v1 saves after the last v2 save is deleted", () => {
+    const legacy = makeSavedScenario(INPUTS, 28400);
+    const storage = fakeStorage({ "autovalue.scenarios.v1": JSON.stringify([legacy]) });
+    expect(saveScenarios([], storage)).toBe(true);
+    expect(storage.data[SCENARIO_STORAGE_KEY]).toBe("[]");
     expect(loadScenarios(storage)).toEqual([]);
+  });
+
+  it("binds a saved check to the market release and decodes old records without one", () => {
+    expect(makeSavedScenario(INPUTS, 28400, "2026-08-29").marketVersion).toBe("2026-08-29");
+    expect(makeSavedScenario(INPUTS, 28400, "x".repeat(41)).marketVersion).toBeUndefined();
+    expect(readSavedScenario({ id: "a", savedAt: 1, inputs: INPUTS, estimate: 28400 })?.marketVersion).toBeUndefined();
+    expect(readSavedScenario({ id: "a", savedAt: 1, inputs: INPUTS, marketVersion: 42 })?.marketVersion).toBeUndefined();
   });
 
   it("keeps valid entries when one stored scenario is corrupted", () => {

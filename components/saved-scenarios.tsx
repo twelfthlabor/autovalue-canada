@@ -9,6 +9,8 @@ import type { SavedScenario } from "@/lib/scenario-store";
 type SavedScenariosProps = {
   scenarios: SavedScenario[];
   notice: string;
+  /** Current market release (manifest sourceRetrievedAt), when loaded. */
+  marketVersion?: string;
   disabled?: boolean;
   onSave: () => void;
   onCopyLink: () => void;
@@ -16,7 +18,7 @@ type SavedScenariosProps = {
   onDelete: (id: string) => void;
 };
 
-export function SavedScenarios({ scenarios, notice, disabled, onSave, onCopyLink, onRestore, onDelete }: SavedScenariosProps) {
+export function SavedScenarios({ scenarios, notice, marketVersion, disabled, onSave, onCopyLink, onRestore, onDelete }: SavedScenariosProps) {
   const noticeRef = useRef<HTMLSpanElement>(null);
 
   // One brief reveal per confirmation; reduced motion renders it in place and
@@ -50,6 +52,7 @@ export function SavedScenarios({ scenarios, notice, disabled, onSave, onCopyLink
           {scenarios.map((scenario) => {
             const { inputs } = scenario;
             const title = `${inputs.year} ${inputs.make} ${inputs.model}`;
+            const olderRelease = scenario.marketVersion && marketVersion && scenario.marketVersion !== marketVersion;
             return (
               <li key={scenario.id} data-testid="saved-scenario" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--line)" }}>
                 <div style={{ minWidth: 0 }}>
@@ -57,6 +60,7 @@ export function SavedScenarios({ scenarios, notice, disabled, onSave, onCopyLink
                   <small style={{ display: "block", fontSize: 10, color: "var(--muted)" }}>
                     {inputs.province} · {inputs.odometer ? `${formatNumber(Number(inputs.odometer))} km` : "market median km"} · {CONDITION_TIER_LABEL[inputs.conditionTier]} · ask {inputs.askingPrice ? formatCad(Number(inputs.askingPrice)) : "not entered"}
                   </small>
+                  {olderRelease ? <small data-testid="saved-version-note" style={{ display: "block", fontSize: 9, color: "var(--muted)" }} title={`Saved against market data ${scenario.marketVersion}; the current release is ${marketVersion}. Restoring may show no matching price cell.`}>Saved against an earlier data release</small> : null}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginLeft: "auto" }}>
                   <span style={{ textAlign: "right" }}>

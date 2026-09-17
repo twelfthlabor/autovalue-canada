@@ -20,11 +20,15 @@ export type SavedScenario = {
   savedAt: number;
   inputs: ScenarioInputs;
   estimate?: number;
+  /** Market release the estimate was computed from (manifest sourceRetrievedAt). */
+  marketVersion?: string;
 };
 
 export type ScenarioStorage = Pick<Storage, "getItem" | "setItem">;
 
-export const SCENARIO_STORAGE_KEY = "autovalue.scenarios.v1";
+export const SCENARIO_STORAGE_KEY = "autovalue.scenarios.v2";
+const LEGACY_STORAGE_KEYS = ["autovalue.scenarios.v1"];
+const MAX_VERSION = 40;
 
 const CONDITION_TIERS: readonly ConditionTier[] = ["below-average", "rough", "average"];
 
@@ -114,7 +118,15 @@ export function readSavedScenario(value: unknown): SavedScenario | undefined {
   if (!id || !inputs) return undefined;
   const savedAt = typeof record.savedAt === "number" && Number.isFinite(record.savedAt) ? record.savedAt : 0;
   const estimate = typeof record.estimate === "number" && Number.isFinite(record.estimate) && record.estimate > 0 ? record.estimate : undefined;
-  return { id, savedAt, inputs, ...(estimate !== undefined ? { estimate } : {}) };
+  const version = typeof record.marketVersion === "string" ? record.marketVersion.trim() : "";
+  const marketVersion = version && version.length <= MAX_VERSION ? version : undefined;
+  return {
+    id,
+    savedAt,
+    inputs,
+    ...(estimate !== undefined ? { estimate } : {}),
+    ...(marketVersion !== undefined ? { marketVersion } : {}),
+  };
 }
 
 function browserStorage(): ScenarioStorage | undefined {
@@ -125,20 +137,23 @@ function browserStorage(): ScenarioStorage | undefined {
   }
 }
 
-export function makeSavedScenario(inputs: ScenarioInputs, estimate?: number): SavedScenario {
+export function makeSavedScenario(inputs: ScenarioInputs, estimate?: number, marketVersion?: string): SavedScenario {
+  const version = text(marketVersion);
   return {
     id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
     savedAt: Date.now(),
     inputs,
     ...(estimate !== undefined && Number.isFinite(estimate) ? { estimate } : {}),
+    ...(version && version.length <= MAX_VERSION ? { marketVersion: version } : {}),
   };
 }
 
-export function loadScenarios(storage: ScenarioStorage | undefined = browserStorage()): SavedScenario[] {
-  if (!storage) return [];
+// `undefined` means the key is absent; a present key always wins over legacy
+// keys (even an empty list), so deleting the last check does not resurrect it.
+function readKey(storage: ScenarioStorage, key: string): SavedScenario[] | undefined {
   try {
-    const raw = storage.getItem(SCENARIO_STORAGE_KEY);
-    if (!raw) return [];
+    const raw = storage.getItem(key);
+    if (raw === null) return undefined;
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
     return parsed
@@ -148,6 +163,17 @@ export function loadScenarios(storage: ScenarioStorage | undefined = browserStor
   } catch {
     return [];
   }
+}
+
+export function loadScenarios(storage: ScenarioStorage | undefined = browserStorage()): SavedScenario[] {
+  if (!storage) return [];
+  const current = readKey(storage, SCENARIO_STORAGE_KEY);
+  if (current !== undefined) return current;
+  for (const key of LEGACY_STORAGE_KEYS) {
+    const legacy = readKey(storage, key);
+    if (legacy !== undefined) return legacy;
+  }
+  return [];
 }
 
 export function saveScenarios(scenarios: SavedScenario[], storage: ScenarioStorage | undefined = browserStorage()): boolean {

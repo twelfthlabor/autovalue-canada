@@ -90,19 +90,21 @@ export async function fetchListingPage(
   }
 }
 
-export const PROVINCE_CODES = new Set(["AB", "BC", "MB", "NB", "NL", "NS", "NT", "NU", "ON", "PE", "QC", "SK", "YT"]);
+// Only provinces with published market cells (see public/data/manifest.json);
+// a code without a selector option would validate but never resolve.
+export const PROVINCE_CODES = new Set(["AB", "BC", "MB", "NB", "NL", "NS", "ON", "PE", "QC", "SK"]);
 
 const PROVINCE_NAMES: Record<string, string> = {
   alberta: "AB", "british columbia": "BC", manitoba: "MB", "new brunswick": "NB",
-  "newfoundland and labrador": "NL", "nova scotia": "NS", "northwest territories": "NT",
-  nunavut: "NU", ontario: "ON", "prince edward island": "PE", quebec: "QC", québec: "QC",
-  saskatchewan: "SK", yukon: "YT",
+  "newfoundland and labrador": "NL", "nova scotia": "NS", ontario: "ON",
+  "prince edward island": "PE", quebec: "QC", québec: "QC", saskatchewan: "SK",
 };
 
-// First letter of a postal code. X (NT/NU) is ambiguous, so it is not mapped.
+// First letter of a postal code. X (territories) has no market cell, so it is
+// not mapped.
 const POSTAL_PROVINCE: Record<string, string> = {
   A: "NL", B: "NS", C: "PE", E: "NB", G: "QC", H: "QC", J: "QC",
-  K: "ON", L: "ON", M: "ON", N: "ON", P: "ON", R: "MB", S: "SK", T: "AB", V: "BC", Y: "YT",
+  K: "ON", L: "ON", M: "ON", N: "ON", P: "ON", R: "MB", S: "SK", T: "AB", V: "BC",
 };
 
 const FIELD_LABEL: Record<keyof ListingFields, string> = {
@@ -132,8 +134,15 @@ function textValue(value: unknown): string | undefined {
   return undefined;
 }
 
+// One number with EN/FR thousands separators ("31,995", "31 995") and an
+// optional decimal tail ("31,995.00"). Concatenating all digits turned
+// "31,995.00" into 3199500.
+const NUMBER_TEXT = /\d+(?:[,\s]\d{3})*(?:[.,]\d{1,2})?/;
+
 function numberInRange(value: string, min: number, max: number) {
-  const digits = value.replace(/[^\d]/g, "");
+  const match = value.match(NUMBER_TEXT);
+  if (!match) return undefined;
+  const digits = match[0].replace(/[.,]\d{1,2}$/, "").replace(/[^\d]/g, "");
   if (!digits) return undefined;
   const number = Number(digits);
   return number >= min && number <= max ? String(number) : undefined;
@@ -164,26 +173,30 @@ function collectLdNodes(html: string) {
     nodes.push(value as Record<string, unknown>);
     Object.values(value as Record<string, unknown>).forEach(visit);
   };
-  const lower = html.toLowerCase();
+  // Case-insensitive regexes over the original text: lowercasing a copy can
+  // change its length (İ → i̇), which shifted every later index and dropped
+  // JSON-LD blocks.
+  const openTag = /<script\b[^>]*>/gi;
+  const closeTag = /<\/script/gi;
   let cursor = 0;
   for (let block = 0; block < MAX_LD_BLOCKS; block += 1) {
-    const open = lower.indexOf("<script", cursor);
-    if (open === -1) break;
-    const openEnd = html.indexOf(">", open);
-    if (openEnd === -1) break;
-    const tag = lower.slice(open, openEnd);
-    if (!tag.includes('type="application/ld+json"') && !tag.includes("type='application/ld+json'")) {
-      cursor = openEnd + 1;
+    openTag.lastIndex = cursor;
+    const open = openTag.exec(html);
+    if (!open) break;
+    const openEnd = open.index + open[0].length;
+    if (!/type\s*=\s*["']application\/ld\+json["']/i.test(open[0])) {
+      cursor = openEnd;
       continue;
     }
-    const close = lower.indexOf("</script", openEnd);
-    if (close === -1) break;
+    closeTag.lastIndex = openEnd;
+    const close = closeTag.exec(html);
+    if (!close) break;
     try {
-      visit(JSON.parse(html.slice(openEnd + 1, close)));
+      visit(JSON.parse(html.slice(openEnd, close.index)));
     } catch {
       // Malformed structured data is skipped; lower layers still run.
     }
-    cursor = close + 8;
+    cursor = close.index + 8;
   }
   return nodes;
 }
@@ -228,29 +241,105 @@ function ldPrice(node: Record<string, unknown>) {
   return undefined;
 }
 
-function parseVehicleTitle(text: string): { year?: string; make?: string; model?: string } {
-  const match = text.match(/\b(19[89]\d|20[0-3]\d)\b/);
-  if (!match || match.index === undefined) return {};
-  const tokens = text
-    .slice(match.index + match[0].length)
+// Trim, drivetrain and mileage tokens that commonly follow a model family in
+// listing titles ("RAV4 XLE AWD", "F-150 XLT", "Civic LX"). They are not part
+// of the model, so a two-token model stops before them.
+const NON_MODEL_TOKENS = new Set([
+  "awd", "fwd", "rwd", "4wd", "4x4", "quattro", "xdrive", "4matic",
+  "xlt", "xl", "lariat", "platinum", "limited", "touring", "premium",
+  "se", "sel", "le", "xle", "xse", "sr5", "trd", "lx", "ex", "sx", "gs",
+  "glx", "dx", "ce", "es", "ls", "lt", "ltz", "sle", "slt", "sxt", "denali",
+  "at4", "hybrid", "phev", "diesel", "turbo",
+]);
+
+const MAKE_TOKEN = /^[A-Za-z][A-Za-z-]{1,18}$/;
+const MODEL_TOKEN = /^[A-Za-z0-9-]{1,18}$/;
+
+function titleTokens(text: string) {
+  return text
     .split(/[\s|,·•/]+/)
     .map((token) => token.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9-]+$/g, ""))
     .filter(Boolean);
-  const make = tokens[0]?.match(/^[A-Za-z][A-Za-z-]{1,18}$/) ? tokens[0] : undefined;
-  const model = tokens[1]?.match(/^[A-Za-z0-9-]{1,18}$/) && /[A-Za-z]/.test(tokens[1]) ? tokens[1] : undefined;
-  return { year: match[0], ...(make ? { make } : {}), ...(model ? { model } : {}) };
 }
 
+/**
+ * Titles put the year before the pair ("2021 Jeep Grand Cherokee") or after it
+ * ("Toyota RAV4 2021 AWD, 89 000 km"). Tokens adjacent to the year win, and a
+ * model may be two tokens ("Grand Cherokee", "Model 3") as long as the second
+ * is not a trim or drivetrain token.
+ */
+function parseVehicleTitle(text: string): { year?: string; make?: string; model?: string } {
+  const match = text.match(/\b(19[89]\d|20[0-3]\d)\b/);
+  if (!match || match.index === undefined) return {};
+  const before = titleTokens(text.slice(0, match.index));
+  const after = titleTokens(text.slice(match.index + match[0].length));
+  const usable = (token: string | undefined) => !!token && MODEL_TOKEN.test(token) && !NON_MODEL_TOKENS.has(token.toLowerCase());
+  let make: string | undefined;
+  let modelTokens: string[] = [];
+  const lead = after[1];
+  if (after[0] && MAKE_TOKEN.test(after[0]) && !NON_MODEL_TOKENS.has(after[0].toLowerCase())) {
+    make = after[0];
+    if (lead && usable(lead) && /[A-Za-z]/.test(lead)) {
+      const continuation = after[2];
+      modelTokens = continuation && usable(continuation) ? [lead, continuation] : [lead];
+    }
+  }
+  if (modelTokens.length === 0) {
+    const fallbackMake = before[before.length - 2];
+    const fallbackModel = before[before.length - 1];
+    if (fallbackMake && fallbackModel && MAKE_TOKEN.test(fallbackMake) && !NON_MODEL_TOKENS.has(fallbackMake.toLowerCase()) && usable(fallbackModel) && /[A-Za-z]/.test(fallbackModel)) {
+      make = fallbackMake;
+      modelTokens = [fallbackModel];
+    }
+  }
+  return { year: match[0], ...(make ? { make } : {}), ...(modelTokens.length > 0 ? { model: modelTokens.join(" ") } : {}) };
+}
+
+// A "km" unit is the odometer label, but the same unit also carries range,
+// consumption, warranty and distance copy. The first plausible labelled value
+// wins; anything with one of these contexts is skipped.
+const ODOMETER_CONTEXT = /(l\s*\/\s*\d*|per\s+100|range|warrant|radius|towing|payload|clearance)/i;
+const ODOMETER_CONTEXT_AFTER = /\b(away|range|left|remaining|to empty)\b/i;
+
 function textOdometer(html: string) {
-  for (const match of html.matchAll(/([\d][\d,\s]{1,8}?)\s*(?:km|kilometres|kilometers|kms)\b/gi)) {
+  for (const match of html.matchAll(/(\d+(?:[,\s]\d{3})*(?:[.,]\d{1,2})?)\s*(?:km|kilometres|kilometers|kms)\b/gi)) {
+    if (match.index === undefined) continue;
+    const before = html.slice(Math.max(0, match.index - 30), match.index);
+    const after = html.slice(match.index + match[0].length, match.index + match[0].length + 14);
+    if (/[l\d]\s*\/\s*$|\bper\s*$/i.test(before) || ODOMETER_CONTEXT.test(before) || ODOMETER_CONTEXT_AFTER.test(after)) continue;
     const odometer = numberInRange(match[1], 1, 1_000_000);
     if (odometer) return odometer;
   }
   return undefined;
 }
 
-function textPrice(html: string) {
-  for (const match of html.matchAll(/\$\s?([\d][\d,]{2,9})(?![\d])/g)) {
+// Prices carry a label ("Ask", "Now", "Price") or an exculpatory neighbour
+// ("Save", "Was", "per month") that says it is not the asking price.
+const PRICE_LABEL = /(price|asking|ask|sale|now|listed|cost|pay|buy)/i;
+// Only the token right before the amount counts as its context: a struck
+// price earlier in the sentence ("Was $34,995 / Now $31,995") must not hide
+// the real ask.
+const PRICE_CONTEXT = /\b(save[sd]?|was|struck|msrp|rebate|discount|down|deposit|monthly|weekly|bi-?weekly|finance|financing|lease|freight|tax|fees?)\b/i;
+const PRICE_CONTEXT_AFTER = /(per\s+(month|week)|monthly|weekly|bi-?weekly|\/\s*(mo|month|wk|week)|down|deposit|save|rebate|tax|fees?)/i;
+
+function textPrice(html: string, requireLabel = false) {
+  for (const match of html.matchAll(/\$\s?(\d+(?:[,\s]\d{3})*(?:[.,]\d{1,2})?)/g)) {
+    if (match.index === undefined) continue;
+    const before = html.slice(Math.max(0, match.index - 30), match.index);
+    const adjacent = html.slice(Math.max(0, match.index - 14), match.index);
+    const after = html.slice(match.index + match[0].length, match.index + match[0].length + 16);
+    if (PRICE_CONTEXT.test(adjacent) || PRICE_CONTEXT_AFTER.test(after)) continue;
+    if (requireLabel && !PRICE_LABEL.test(before)) continue;
+    const price = numberInRange(match[1], 500, 2_000_000);
+    if (price) return price;
+  }
+  // French listings put the dollar sign after the amount ("31 995 $").
+  for (const match of html.matchAll(/(\d+(?:[,\s]\d{3})*(?:[.,]\d{1,2})?)\s*\$/g)) {
+    if (match.index === undefined) continue;
+    const before = html.slice(Math.max(0, match.index - 30), match.index);
+    const adjacent = html.slice(Math.max(0, match.index - 14), match.index);
+    if (PRICE_CONTEXT.test(adjacent)) continue;
+    if (requireLabel && !PRICE_LABEL.test(before)) continue;
     const price = numberInRange(match[1], 500, 2_000_000);
     if (price) return price;
   }
@@ -343,7 +432,9 @@ export function parseListingHtml(html: string): { fields: ListingFields; note: s
     set("make", parsed.make, "page text");
     set("model", parsed.model, "page text");
   }
-  set("askingPrice", textPrice(html), "page text");
+  // Whole-document fallback: a bare amount in page chrome ("Save $1,000",
+  // struck prices) is not the asking price; only a labelled one is taken.
+  set("askingPrice", textPrice(html, true), "page text");
   set("odometer", textOdometer(html), "page text");
 
   return { fields, note: buildNote(fields, sources) };
