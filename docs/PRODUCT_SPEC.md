@@ -22,7 +22,7 @@ A Canadian consumer comparing a dealer listing who knows the vehicle's province,
 - Odometer and condition alter the estimate through a reproducible transaction-trained model while the unadjusted Canadian anchor remains visible.
 - Optional VIN input is validated locally; explicit decode requests are proxied to NHTSA vPIC without persistence.
 - A successful VIN decode fills make, model and year when an exact published market cell is available.
-- Listing price, odometer and inspection facts remain user-entered until a licensed row-level inventory connector is configured; no captured listing is treated as current.
+- Listing price and odometer remain user-entered, with an optional best-effort prefill from a pasted listing link, and inspection facts remain user-entered until a licensed row-level inventory connector is configured; no pasted listing is treated as current and every imported value stays editable.
 - Users can pick one of three condition tiers (below average, rough, average or better) without leaving the one-page result; each tier shows the live dollar delta for the current vehicle and odometer.
 - The tier drives the visible auction-grade equivalent; the interface does not imply that separate accident, mechanical, cosmetic, service or wear effects were learned.
 - The condition model is trained on completed outcomes, validated on later sale years and required to beat its leave-one-out peer baseline before its artifact is published.

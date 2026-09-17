@@ -15,7 +15,7 @@ The estimate combines:
 - a province × make × model × year median from Canadian dealer asking prices; and
 - a browser-based gradient-boosted model that applies relative mileage and condition adjustments.
 
-VIN decoding uses the official NHTSA vPIC API. A VIN is sent only after the user clicks **Decode VIN**, is kept out of the URL and is not stored. The app has no live listing feed, so asking price, odometer and condition are entered by the user.
+VIN decoding uses the official NHTSA vPIC API. A VIN is sent only after the user clicks **Decode VIN**, is kept out of the URL and is not stored. The app has no licensed live listing feed. Asking price and odometer can optionally be prefilled from a pasted listing link and remain user-entered and editable; condition is selected by the user.
 
 ## Data and limitations
 

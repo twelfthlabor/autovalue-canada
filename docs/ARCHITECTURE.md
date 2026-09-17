@@ -19,7 +19,7 @@ Next.js application ─── Vercel CDN
         └── Data control room
 ```
 
-The initial app is static-first for the core market comparison. One small POST-only server route validates VIN input, calls the official NHTSA vPIC decoder and checks a reviewed public-listing evidence registry. The VIN is kept out of the URL and is not persisted. A decoder outage cannot break the manual price-check experience, and the supplied demonstration VIN has a verified cached decode for resilient portfolio review.
+The initial app is static-first for the core market comparison. Two small POST-only server routes back it: `/api/vin-decode` validates VIN input and calls the official NHTSA vPIC decoder, and `/api/listing-import` fetches one user-pasted listing page from AutoTrader.ca, Kijiji.ca, Carpages.ca or Clutch.ca and parses vehicle fields on a best-effort basis. Neither route persists user input and the VIN is kept out of the URL. A decoder outage cannot break the manual price-check experience.
 
 ```text
 VIN form ──POST──► Vercel route ──► NHTSA vPIC
