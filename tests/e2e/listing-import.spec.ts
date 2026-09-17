@@ -123,11 +123,22 @@ for (const [width, height] of [[1440, 900], [1280, 800], [768, 1024], [390, 844]
       const inViewport = (el: Element) => { const rect = el.getBoundingClientRect(); return rect.top >= -0.5 && rect.bottom <= window.innerHeight + 0.5; };
       const input = document.querySelector<HTMLElement>('input[aria-label="Listing URL"]')!;
       const button = Array.from(document.querySelectorAll<HTMLElement>("button")).find((candidate) => candidate.textContent?.includes("Import listing"))!;
+      const hint = document.querySelector<HTMLElement>(".history-input .kicker span")!;
+      const inputRect = input.getBoundingClientRect();
+      const buttonRect = button.getBoundingClientRect();
+      const hintRect = hint.getBoundingClientRect();
+      const overlap = (a: DOMRect, b: DOMRect) =>
+        Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+      const inputStyle = getComputedStyle(input);
       return {
         scrollTop: panel.scrollTop,
         scrollOverflow: panel.scrollHeight - panel.clientHeight,
         inputInPanel: inPanel(input), inputInViewport: inViewport(input),
         buttonInPanel: inPanel(button), buttonInViewport: inViewport(button),
+        inputContentWidth: inputRect.width - parseFloat(inputStyle.paddingLeft) - parseFloat(inputStyle.paddingRight) - parseFloat(inputStyle.borderLeftWidth) - parseFloat(inputStyle.borderRightWidth),
+        inputButtonIntersection: overlap(inputRect, buttonRect),
+        hintOverlapsField: overlap(hintRect, inputRect) > 0 || overlap(hintRect, buttonRect) > 0,
+        hintTruncated: hint.scrollWidth > hint.clientWidth + 0.5,
       };
     });
     expect(atRest.scrollTop, `${tag} panel scroll`).toBe(0);
@@ -135,6 +146,12 @@ for (const [width, height] of [[1440, 900], [1280, 800], [768, 1024], [390, 844]
     expect(atRest.inputInPanel, `${tag} input inside the panel clip`).toBe(true);
     expect(atRest.buttonInPanel, `${tag} button inside the panel clip`).toBe(true);
     expect(atRest.inputInViewport && atRest.buttonInViewport, `${tag} field visible in the viewport`).toBe(true);
+    expect(atRest.inputButtonIntersection, `${tag} input and button do not overlap`).toBe(0);
+    expect(atRest.hintOverlapsField, `${tag} hint stays clear of the field`).toBe(false);
+    expect(atRest.hintTruncated, `${tag} hint is not truncated`).toBe(false);
+    if (width === 1280 || width === 390) {
+      expect(atRest.inputContentWidth, `${tag} input content width`).toBeGreaterThan(100);
+    }
 
     await page.getByLabel("Listing URL").fill("https://www.autotrader.ca/a/honda/civic/2022");
     await page.getByRole("button", { name: "Import listing" }).click();

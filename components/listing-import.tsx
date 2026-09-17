@@ -58,7 +58,7 @@ export function ListingImport({ onImport, disabled }: { onImport: (fields: Listi
   // rest (see the at-rest fit assertions in tests/e2e/listing-import.spec.ts).
   return (
     <div className="history-input" style={{ borderTop: "1px solid var(--line)", marginTop: 10, paddingTop: 10 }}>
-      <p className="kicker" style={{ marginBottom: 6 }}>PASTE A LISTING LINK <span>AutoTrader · Kijiji · Carpages · Clutch</span></p>
+      <p className="kicker">PASTE A LISTING LINK <span>AutoTrader · Kijiji · Carpages · Clutch</span></p>
       <label className="vin-field">
         <div className="vin-control" style={{ gridTemplateColumns: "minmax(0, 1fr) auto", alignItems: "center", gap: 8 }}>
           <input
@@ -73,8 +73,8 @@ export function ListingImport({ onImport, disabled }: { onImport: (fields: Listi
           <button type="button" onClick={importListing} disabled={disabled || state === "fetching" || url.trim() === ""} style={{ whiteSpace: "nowrap" }}>{state === "fetching" ? "IMPORTING…" : "Import listing"}</button>
         </div>
       </label>
-      {state === "error" ? <div className="lookup-error" role="alert" ref={noteRef} style={{ margin: "6px 0 0", fontSize: 10 }}>{message}</div> : null}
-      {state === "success" ? <div className="decoded-mini" role="status" ref={noteRef} style={{ marginTop: 6, padding: "7px 9px" }}>
+      {state === "error" ? <div className="lookup-error listing-reveal" role="alert" ref={noteRef} style={{ margin: "6px 0 0", fontSize: 10 }}>{message}</div> : null}
+      {state === "success" ? <div className="decoded-mini listing-reveal" role="status" ref={noteRef} style={{ marginTop: 6, padding: "7px 9px" }}>
         <p style={{ fontSize: 9, margin: 0, color: "var(--green)", letterSpacing: ".04em" }}>LISTING DETAILS FOUND</p>
         <strong style={{ fontSize: 12, lineHeight: 1.3 }}>{summary}</strong>
         <p style={{ fontSize: 9.5, margin: "2px 0 0", lineHeight: 1.4 }}>{message}</p>

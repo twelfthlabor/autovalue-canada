@@ -298,28 +298,44 @@ function parseVehicleTitle(text: string): { year?: string; make?: string; model?
 // A "km" unit is the odometer label, but the same unit also carries range,
 // consumption, warranty and distance copy. The first plausible labelled value
 // wins; anything with one of these contexts is skipped.
-const ODOMETER_CONTEXT = /(l\s*\/\s*\d*|per\s+100|range|warrant|radius|towing|payload|clearance)/i;
+const ODOMETER_CONTEXT = /(l\s*\/\s*\d*|per\s+100|range|warrant|coverage|battery|electric|radius|towing|payload|clearance)/i;
 const ODOMETER_CONTEXT_AFTER = /\b(away|range|left|remaining|to empty)\b/i;
+
+// The label can sit several words before its number ("Electric range
+// according to the manufacturer 342 km"), so the context window is 60
+// characters; it stops at the previous sentence, separator or number so the
+// odometer that follows another kilometric spec ("Range: 342 km. Odometer:
+// 89,000 km") does not inherit that spec's label.
+function contextBefore(text: string, index: number) {
+  const window = text.slice(Math.max(0, index - 60), index);
+  const boundary = Math.max(
+    window.lastIndexOf("."), window.lastIndexOf(";"), window.lastIndexOf("|"),
+    window.lastIndexOf("·"), window.lastIndexOf("\n"), window.search(/\d(?=[^\d]*$)/),
+  );
+  return boundary < 0 ? window : window.slice(boundary + 1);
+}
 
 function textOdometer(html: string) {
   for (const match of html.matchAll(/(\d+(?:[,\s]\d{3})*(?:[.,]\d{1,2})?)\s*(?:km|kilometres|kilometers|kms)\b/gi)) {
     if (match.index === undefined) continue;
-    const before = html.slice(Math.max(0, match.index - 30), match.index);
+    const before = contextBefore(html, match.index);
     const after = html.slice(match.index + match[0].length, match.index + match[0].length + 14);
     if (/[l\d]\s*\/\s*$|\bper\s*$/i.test(before) || ODOMETER_CONTEXT.test(before) || ODOMETER_CONTEXT_AFTER.test(after)) continue;
     const odometer = numberInRange(match[1], 1, 1_000_000);
     if (odometer) return odometer;
   }
-  return undefined;
+  // French pages label the field without a unit ("Kilométrage : 89 000").
+  const labelled = html.match(/(?:kilom[ée]trage|odom[èe]tre)\s*:?\s*(\d+(?:[,\s]\d{3})*)/i);
+  return labelled ? numberInRange(labelled[1], 1, 1_000_000) : undefined;
 }
 
-// Prices carry a label ("Ask", "Now", "Price") or an exculpatory neighbour
-// ("Save", "Was", "per month") that says it is not the asking price.
-const PRICE_LABEL = /(price|asking|ask|sale|now|listed|cost|pay|buy)/i;
+// Prices carry a label ("Ask", "Now", "Price", "Prix") or an exculpatory
+// neighbour ("Save", "Was", "Regular") that says it is not the asking price.
+const PRICE_LABEL = /(price|prix|asking|ask|sale|now|listed|cost|pay|buy)/i;
 // Only the token right before the amount counts as its context: a struck
 // price earlier in the sentence ("Was $34,995 / Now $31,995") must not hide
 // the real ask.
-const PRICE_CONTEXT = /\b(save[sd]?|was|struck|msrp|rebate|discount|down|deposit|monthly|weekly|bi-?weekly|finance|financing|lease|freight|tax|fees?)\b/i;
+const PRICE_CONTEXT = /\b(save[sd]?|was|struck|msrp|rebate|discount|regular|down|deposit|monthly|weekly|bi-?weekly|finance|financing|lease|freight|tax|fees?)\b/i;
 const PRICE_CONTEXT_AFTER = /(per\s+(month|week)|monthly|weekly|bi-?weekly|\/\s*(mo|month|wk|week)|down|deposit|save|rebate|tax|fees?)/i;
 
 function textPrice(html: string, requireLabel = false) {

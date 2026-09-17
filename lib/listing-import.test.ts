@@ -117,10 +117,27 @@ describe("parseListingHtml", () => {
   });
 
   it("does not read range, consumption, warranty or distance copy as an odometer", () => {
-    for (const text of ["8.2 L/100 km", "Range 342 km", "Battery warranty 160,000 km", "1 km away"]) {
+    for (const text of [
+      "8.2 L/100 km",
+      "Range 342 km",
+      "Battery warranty 160,000 km",
+      "1 km away",
+      "Electric range according to the manufacturer 342 km",
+      "Full warranty coverage for the electric components 160,000 km",
+    ]) {
       const { fields } = parseListingHtml(`<html><body><p>${text}</p></body></html>`);
       expect(fields.odometer, text).toBeUndefined();
     }
+  });
+
+  it("keeps the odometer that follows another kilometric spec", () => {
+    const { fields } = parseListingHtml("<html><body><p>Range: 342 km. Odometer: 89,000 km</p></body></html>");
+    expect(fields.odometer).toBe("89000");
+  });
+
+  it("reads French odometer labels with and without a unit", () => {
+    expect(parseListingHtml("<html><body><p>Kilométrage : 89 000</p></body></html>").fields.odometer).toBe("89000");
+    expect(parseListingHtml("<html><body><p>Odomètre : 112 000 km</p></body></html>").fields.odometer).toBe("112000");
   });
 
   it("does not read savings as the asking price", () => {
@@ -131,6 +148,15 @@ describe("parseListingHtml", () => {
   it("skips a struck price and keeps the labelled current price", () => {
     const { fields } = parseListingHtml("<html><body><p>Was $34,995 / Now $31,995</p></body></html>");
     expect(fields.askingPrice).toBe("31995");
+  });
+
+  it("keeps the sale price when a regular price is also shown", () => {
+    const { fields } = parseListingHtml("<html><body><p>Regular price $41,995, sale $31,995</p></body></html>");
+    expect(fields.askingPrice).toBe("31995");
+  });
+
+  it("reads a French labelled price", () => {
+    expect(parseListingHtml("<html><body><p>Prix : 31 995 $</p></body></html>").fields.askingPrice).toBe("31995");
   });
 
   it("reads decimal-tail JSON-LD and French formatted prices", () => {
