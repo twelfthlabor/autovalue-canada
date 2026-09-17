@@ -99,4 +99,4 @@ Import the repository into Vercel with the default Next.js settings. The product
 
 ## Licence
 
-Application code is MIT licensed. The included market data retains its [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) licence and is not licensed for commercial use.
+Application code is [MIT licensed](LICENSE). The included market data retains its [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) licence and is not licensed for commercial use.
