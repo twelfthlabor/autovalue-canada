@@ -75,6 +75,9 @@ test("condition tiers run through the trained model and change the prediction", 
 
 test("out-of-support odometer surfaces the capped-mileage caveat on both the signal and the odometer factor", async ({ page }) => {
   await page.goto("/#check");
+  // The estimate only renders after hydration and the market fetch; waiting for
+  // it keeps the fill from landing before React owns the input.
+  await expect(page.getByTestId("ml-estimate")).toHaveText("$31,000");
   await page.getByLabel("Odometer in kilometres").fill("400000");
   await expect(page.locator(".signal-line small")).toHaveText("Outside trained mileage support");
   await expect(page.locator(".stat-foot b[title]")).toHaveAttribute("title", /mileage comparison was capped/);
@@ -120,6 +123,7 @@ test("supplied VIN decodes live without inventing listing facts", async ({ page 
   });
 
   await page.goto("/#check");
+  await expect(page.getByTestId("ml-estimate")).toHaveText("$31,000");
   await page.getByRole("tab", { name: "VIN", exact: true }).click();
   await page.getByLabel("Vehicle identification number").fill("WAUFAAF43PN018218");
   await page.getByRole("button", { name: "DECODE VIN" }).click();

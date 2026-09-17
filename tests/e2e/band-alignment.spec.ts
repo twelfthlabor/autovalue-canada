@@ -618,7 +618,7 @@ async function runBandState(page: Page, testInfo: TestInfo, state: BandState, vi
 
 for (const state of STATES) {
   test(`band alignment: ${state.slug} — ${state.label}`, async ({ page }, testInfo: TestInfo) => {
-    const viewport = testInfo.project.name === DESKTOP_PROJECT ? DESKTOP_VIEWPORT : MOBILE_VIEWPORT;
+    const viewport = testInfo.project.name.endsWith("-desktop") ? DESKTOP_VIEWPORT : MOBILE_VIEWPORT;
     await page.setViewportSize(viewport);
     await runBandState(page, testInfo, state, viewport);
   });

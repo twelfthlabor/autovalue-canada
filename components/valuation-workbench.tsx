@@ -2,14 +2,18 @@
 
 import { Tabs } from "@base-ui/react/tabs";
 import { Dialog } from "@base-ui/react/dialog";
+import { ListingImport } from "@/components/listing-import";
 import { MarketComparison } from "@/components/market-comparison";
 import { MileageCurve } from "@/components/mileage-curve";
+import { SavedScenarios } from "@/components/saved-scenarios";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { conditionModelMetadata, CONDITION_TIER_GRADE, CONDITION_TIER_LABEL, predictConditionAdjustedValue, type ConditionProfile, type ConditionTier, type ConditionValuation } from "@/lib/condition-model";
 import { bandPosition, bandScale, layoutBandItems } from "@/lib/band-layout";
 import { confidenceForSample, dealSignalForPrediction, displayBandValues, formatCad, formatNumber, type MarketRow } from "@/lib/market";
 import { normalizeVin, validateNorthAmericanVin, vinStatusCopy } from "@/lib/vin";
 import { resolveVinMarketSelection, vinMarketEditAction } from "@/lib/vin-market-match";
+import type { ListingFields } from "@/lib/listing-import";
+import { decodeScenario, encodeScenario, loadScenarios, makeSavedScenario, saveScenarios, type SavedScenario, type ScenarioInputs } from "@/lib/scenario-store";
 import type { VinLookupResponse } from "@/lib/vin-report";
 
 type FormState = {
@@ -249,6 +253,8 @@ export function ValuationWorkbench() {
   const evidenceRef = useRef<HTMLButtonElement>(null);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const resultRef = useRef<HTMLElement>(null);
+  const [savedScenarios, setSavedScenarios] = useState<SavedScenario[]>([]);
+  const [scenarioNotice, setScenarioNotice] = useState("");
 
   useEffect(() => {
     fetch("/data/market.json")
@@ -256,6 +262,19 @@ export function ValuationWorkbench() {
       .then((data: MarketRow[]) => setRows(data))
       .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
+  }, []);
+
+  // One-shot mount read of browser-only state; there is no hydration-safe
+  // render-time alternative without changing the page shell.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { setSavedScenarios(loadScenarios()); }, []);
+
+  // A valid share payload replaces the initial form once; anything malformed
+  // is ignored and the defaults stay untouched.
+  useEffect(() => {
+    const shared = decodeScenario(window.location.search);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (shared) setForm({ ...initialForm, ...shared });
   }, []);
 
   const provinces = useMemo(() => uniqueSorted(rows.map((row) => row.p)), [rows]);
@@ -313,6 +332,30 @@ export function ValuationWorkbench() {
     } catch (error) { setLookupState("error"); setLookupError(error instanceof Error ? error.message : "VIN lookup failed."); }
   }
 
+  // Parsed listing fields are mapped onto published cells the same way a VIN
+  // decode is; a field the parser missed is never overwritten.
+  function applyListingImport(fields: ListingFields) {
+    const province = fields.province && rows.some((row) => row.p === fields.province) ? fields.province : form.province;
+    const { selection } = resolveVinMarketSelection({
+      rows,
+      province,
+      current: { province: form.province, make: form.make, model: form.model, year: form.year },
+      decoded: {
+        make: fields.make ?? form.make,
+        model: fields.model ?? form.model,
+        year: fields.year ? Number(fields.year) : Number(form.year),
+      },
+    });
+    const identityChanged = selection.province !== form.province || selection.make !== form.make || selection.model !== form.model || selection.year !== form.year;
+    if (identityChanged) { setVinReport(undefined); setLookupState("idle"); setMarketBlockedByVin(false); }
+    setForm((current) => ({
+      ...current,
+      ...selection,
+      ...(fields.odometer ? { odometer: fields.odometer } : {}),
+      ...(fields.askingPrice ? { askingPrice: fields.askingPrice } : {}),
+    }));
+  }
+
   function checkPrice() { resultRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" }); resultRef.current?.focus({ preventScroll: true }); }
 
   const askingPrice = Number(form.askingPrice) || undefined;
@@ -363,6 +406,40 @@ export function ValuationWorkbench() {
     previousEstimate.current = estimate;
   }, [estimate]);
 
+  function scenarioInputs(): ScenarioInputs {
+    return {
+      province: form.province, make: form.make, model: form.model, year: form.year,
+      odometer: form.odometer, askingPrice: form.askingPrice, conditionTier: form.conditionTier,
+    };
+  }
+
+  function saveCurrentScenario() {
+    const next = [makeSavedScenario(scenarioInputs(), estimate), ...savedScenarios];
+    if (!saveScenarios(next)) { setScenarioNotice("Saving is unavailable in this browser."); return; }
+    setSavedScenarios(next);
+    setScenarioNotice("Saved.");
+  }
+
+  async function copyScenarioLink() {
+    const link = `${window.location.origin}${window.location.pathname}?${encodeScenario(scenarioInputs())}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      setScenarioNotice("Link copied.");
+    } catch {
+      setScenarioNotice("Copy failed — copy the URL from the address bar.");
+    }
+  }
+
+  function restoreSavedScenario(scenario: SavedScenario) {
+    setForm({ ...initialForm, ...scenario.inputs });
+    setVinReport(undefined); setLookupState("idle"); setMarketBlockedByVin(false);
+  }
+
+  function deleteSavedScenario(id: string) {
+    const next = savedScenarios.filter((scenario) => scenario.id !== id);
+    if (saveScenarios(next)) setSavedScenarios(next);
+  }
+
   return (
     <>
     <div className="workspace-heading"><div><p className="kicker">CANADIAN USED-VEHICLE RESEARCH</p><h1>Get a feel for the price<span>.</span></h1></div><p>One listing. A clearer picture.</p></div>
@@ -382,6 +459,7 @@ export function ValuationWorkbench() {
           <label><span>Odometer <small>optional</small></span><div className="input-suffix"><input inputMode="numeric" value={form.odometer} onChange={(event) => update("odometer", event.target.value.replace(/\D/g, ""))} aria-label="Odometer in kilometres" /><i>km</i></div></label>
           <label><span>Listing asking price <small>optional</small></span><div className="input-prefix"><i>$</i><input inputMode="numeric" value={form.askingPrice} onChange={(event) => update("askingPrice", event.target.value.replace(/\D/g, ""))} aria-label="Asking price in Canadian dollars" /></div></label>
         </div>
+        <ListingImport onImport={applyListingImport} disabled={loading} />
 
           </Tabs.Panel><Tabs.Panel value="condition" keepMounted className="editor-panel condition-panel"><p className="panel-hint">Which tier matches the listing or inspection?</p>
         <div className="condition-input">
@@ -458,6 +536,7 @@ export function ValuationWorkbench() {
         </> : <div className="result-empty"><p>{loadError ? "The market reference could not load." : marketBlockedByVin ? "VIN decoded, but no defensible price match is available." : "No published price cell matches that combination."}</p>{loadError ? <button type="button" onClick={() => window.location.reload()}>Reload market data</button> : null}<small>{loadError ? "Check your connection and reload this page." : marketBlockedByVin ? "Enter the listing manually only if you can select its true model family, or connect a licensed row-level inventory feed." : "Try another year or province. Sparse cells are intentionally suppressed."}</small></div>}
       </section>
     </div>
+    <SavedScenarios scenarios={savedScenarios} notice={scenarioNotice} disabled={loading} onSave={saveCurrentScenario} onCopyLink={copyScenarioLink} onRestore={restoreSavedScenario} onDelete={deleteSavedScenario} />
     {result && conditionValuation ? <Dialog.Root open={evidenceOpen} onOpenChange={setEvidenceOpen}><Dialog.Portal><Dialog.Backdrop className="evidence-backdrop" /><Dialog.Popup className="evidence-popup" finalFocus={evidenceRef}><section className="studio-evidence" aria-label="Evidence behind the estimate"><header><div><p className="kicker">UNDER THE HOOD</p><Dialog.Title>Every number has a source.</Dialog.Title></div><Dialog.Close className="close-evidence" aria-label="Close evidence">×</Dialog.Close></header><Dialog.Description>The evidence behind {result.y} {result.mk} {result.md} in {result.p}.</Dialog.Description>
           {conditionValuation ? <section className="price-anatomy" aria-label="Price anatomy">
             <p className="kicker">PRICE ANATOMY</p>

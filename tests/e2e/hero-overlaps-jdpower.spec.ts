@@ -184,13 +184,14 @@ test("band markers stay on the value scale when values are close", async ({ page
   await assertOnScale("distant above");
 });
 
-test("lab-stats keeps 5 columns on wide screens", async ({ page }, testInfo) => {
+test("lab-stats keeps 5 columns on wide screens", async ({ page }) => {
   await page.goto("/market-lab");
   const stats = page.locator(".lab-stats");
   await expect(stats).toBeVisible();
   await expect(stats.locator("article")).toHaveCount(5);
   const columns = await stats.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(" ").filter(Boolean).length);
-  if (testInfo.project.name === "mobile-chrome") {
+  // Narrow fallback is selected by viewport width, so every mobile project gets it.
+  if ((page.viewportSize()?.width ?? Number.POSITIVE_INFINITY) <= 680) {
     // Narrow fallback stays 2-col with the last card full-width (2+2+full).
     expect(columns).toBe(2);
     const lastSpan = await stats.locator("article:last-child").evaluate((el) => {

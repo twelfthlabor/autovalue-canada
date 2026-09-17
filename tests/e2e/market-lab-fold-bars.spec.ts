@@ -10,7 +10,8 @@ test("fold-bars avoids the mobile 2+2+1 orphan and stays 5-col on wide screens",
   await expect(bars.locator("div")).toHaveCount(5);
 
   const columns = await bars.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(" ").filter(Boolean).length);
-  if (testInfo.project.name === "mobile-chrome") {
+  // Narrow fallback is selected by viewport width, so every mobile project gets it.
+  if ((page.viewportSize()?.width ?? Number.POSITIVE_INFINITY) <= 680) {
     // Narrow fallback is 2-col with the last bar full-width (2+2+full), not 2+2+half.
     expect(columns).toBe(2);
     const lastSpan = await bars.locator("div:last-child").evaluate((el) => {
