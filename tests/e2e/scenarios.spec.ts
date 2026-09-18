@@ -1,11 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
 
-// WebKit supports clipboard-read only; writeText is allowed from the click gesture.
-test.beforeEach(async ({ context }, testInfo) => {
-  const readOnly = testInfo.project.use.defaultBrowserType === "webkit";
-  await context.grantPermissions(readOnly ? ["clipboard-read"] : ["clipboard-read", "clipboard-write"]);
-});
-
 const DEFAULT_ESTIMATE = "$31,000";
 
 async function waitForDefaultCheck(page: Page) {
@@ -60,6 +54,17 @@ test("saved checks survive a reload and restore the exact scenario", async ({ pa
 });
 
 test("a copied link restores the scenario in a fresh context", async ({ page, browser }) => {
+  // Linux WebKit denies clipboard-read, so capture the write in-page instead.
+  await page.addInitScript(() => {
+    let copied = "";
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: (text: string) => { copied = text; return Promise.resolve(); },
+        readText: () => Promise.resolve(copied),
+      },
+    });
+  });
   await waitForDefaultCheck(page);
   await page.getByLabel("Odometer in kilometres").fill("120000");
   await page.getByLabel("Asking price in Canadian dollars").fill("25000");
