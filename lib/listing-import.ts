@@ -385,9 +385,10 @@ function buildNote(fields: ListingFields, sources: Partial<Record<keyof ListingF
     groups.set(source, [...(groups.get(source) ?? []), FIELD_LABEL[field]]);
   }
   if (groups.size === 0) return "No vehicle details were found on that page. Enter them manually.";
-  const list = new Intl.ListFormat("en-CA", { style: "long", type: "conjunction" });
+  const list = new Intl.ListFormat("en-CA", { style: "long", type: "unit" });
   const parts = [...groups].map(([source, labels]) => `${list.format(labels)} in ${source}`);
-  return `Found ${parts.join("; ")}.`;
+  const note = `${parts.join("; ")}.`;
+  return note[0].toUpperCase() + note.slice(1);
 }
 
 /**

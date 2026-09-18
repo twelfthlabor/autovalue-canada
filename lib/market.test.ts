@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { predictConditionAdjustedValue, type ConditionProfile } from "./condition-model";
-import { approximatePercentile, confidenceForSample, dealSignalForMatched, dealSignalForPrediction, deriveComparableBenchmark, displayBandValues, marketPosition, type ComparableObservation, type MarketRow } from "./market";
+import { approximatePercentile, confidenceForSample, dealSignalForMatched, dealSignalForPrediction, deriveComparableBenchmark, displayBandValues, marketPosition, nearestPublishedCells, type ComparableObservation, type MarketRow } from "./market";
 
 const row: MarketRow = {
   p: "ON", mk: "Toyota", md: "RAV4", y: 2021, c: "Used", n: 204,
@@ -50,6 +50,42 @@ describe("market evidence helpers", () => {
       { vin: "4", askingPrice: 27000, odometerKm: 110000, location: "ON", transmission: "Automatic", observedAt: "2026-08-31" },
     ];
     expect(deriveComparableBenchmark(sparse, 90000)).toBeUndefined();
+  });
+});
+
+describe("nearest published cells", () => {
+  const cell = (p: string, y: number, n = 10, p50 = 20000): MarketRow => ({
+    p, mk: "Chevrolet", md: "Corvette", y, c: "Used", n,
+    p10: p50 - 1000, p25: p50 - 500, p50, p75: p50 + 500, p90: p50 + 1000,
+    mean: p50, km: 50000, dom: 30,
+  });
+
+  it("ranks by year proximity, then the requested province, then province code", () => {
+    const rows = [cell("QC", 2024), cell("ON", 2021), cell("ON", 2019), cell("AB", 2019), cell("AB", 2021)];
+    const nearest = nearestPublishedCells(rows, { province: "AB", make: "Chevrolet", model: "Corvette", year: 2014 });
+    // AB-2021 and ON-2021 tie on distance; the requested province breaks the tie.
+    expect(nearest.map((row) => `${row.p}-${row.y}`)).toEqual(["AB-2019", "ON-2019", "AB-2021"]);
+  });
+
+  it("never returns the exact requested cell as nearest evidence", () => {
+    const rows = [cell("AB", 2019), cell("ON", 2019), cell("ON", 2021)];
+    const nearest = nearestPublishedCells(rows, { province: "AB", make: "Chevrolet", model: "Corvette", year: 2019 });
+    expect(nearest.map((row) => `${row.p}-${row.y}`)).toEqual(["ON-2019", "ON-2021"]);
+  });
+
+  it("returns nothing when the make and model have no published cells", () => {
+    const rows = [cell("ON", 2019), row];
+    expect(nearestPublishedCells(rows, { province: "ON", make: "Cadillac", model: "Fleetwood", year: 1990 })).toEqual([]);
+  });
+
+  it("matches make and model case-insensitively and honours the limit", () => {
+    const rows = [cell("AB", 2019), cell("ON", 2019), cell("ON", 2021)];
+    const nearest = nearestPublishedCells(rows, { province: "AB", make: "chevrolet", model: "CORVETTE", year: 2014 }, 1);
+    expect(nearest.map((row) => `${row.p}-${row.y}`)).toEqual(["AB-2019"]);
+  });
+
+  it("returns nothing without a usable model year", () => {
+    expect(nearestPublishedCells([cell("ON", 2019)], { province: "ON", make: "Chevrolet", model: "Corvette", year: Number.NaN })).toEqual([]);
   });
 });
 

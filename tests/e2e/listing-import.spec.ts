@@ -9,7 +9,23 @@ declare global {
 const FULL_PAYLOAD = {
   ok: true,
   fields: { province: "BC", make: "Honda", model: "Civic", year: "2022", odometer: "42000", askingPrice: "24900" },
-  note: "Found year, make, model, odometer, asking price and province in structured data.",
+  note: "Year, make, model, odometer, asking price, province in structured data.",
+};
+
+// Real 1990 Cadillac Fleetwood offer: no Cadillac Fleetwood cell exists at all,
+// so the result panel must fall back to the coverage statement.
+const CADILLAC_COVERAGE = {
+  ok: true,
+  fields: { province: "ON", make: "Cadillac", model: "Fleetwood", year: "1990", odometer: "65481", askingPrice: "25888" },
+  note: "Year in page text; make, model, odometer, asking price, province in structured data.",
+};
+
+// Real 2014 Chevrolet Corvette offer in AB: Corvette cells exist (2019+), so
+// the result panel must rank the closest published cells instead.
+const CORVETTE_NEAREST = {
+  ok: true,
+  fields: { province: "AB", make: "Chevrolet", model: "Corvette", year: "2014", odometer: "99963", askingPrice: "47910" },
+  note: "Year in page text; make, model, odometer, asking price, province in structured data.",
 };
 
 async function mockImport(page: Page, status: number, payload: unknown) {
@@ -52,7 +68,7 @@ test("a listing URL fills every parsed field and shows its source", async ({ pag
   await expect(page.getByLabel("Model year")).toHaveValue("2022");
   await expect(page.getByLabel("Odometer in kilometres")).toHaveValue("42000");
   await expect(page.getByLabel("Asking price in Canadian dollars")).toHaveValue("24900");
-  await expect(page.getByText(/Found year, make, model, odometer, asking price and province in structured data/)).toBeVisible();
+  await expect(page.getByText(/Year, make, model, odometer, asking price, province in structured data/)).toBeVisible();
   await expect(page.getByRole("heading", { name: "2022 Honda Civic" })).toBeVisible();
 
   await page.screenshot({ path: testInfo.outputPath("listing-import-success.png"), fullPage: true });
@@ -62,7 +78,7 @@ test("a partial parse leaves untouched fields alone", async ({ page }) => {
   await mockImport(page, 200, {
     ok: true,
     fields: { make: "Toyota", model: "RAV4", year: "2021" },
-    note: "Found year, make and model in page metadata.",
+    note: "Year, make, model in page metadata.",
   });
   await page.goto("/#check");
   // Wait for hydration and the market fetch before touching the form (WebKit
@@ -86,7 +102,7 @@ test("malformed field values from the import response are ignored", async ({ pag
   await mockImport(page, 200, {
     ok: true,
     fields: { province: "BC", make: "Honda", model: "Civic", year: "2022", odometer: "12.5", askingPrice: "not-a-price" },
-    note: "Found year, make, model and province in structured data.",
+    note: "Year, make, model, province in structured data.",
   });
   await importListing(page);
 
@@ -114,7 +130,7 @@ test("a blocked fetch keeps manual entry and shows one short message", async ({ 
   await expect(page.getByLabel("Model year")).toHaveValue("2021");
   await expect(page.getByLabel("Odometer in kilometres")).toHaveValue("51234");
   await expect(page.getByLabel("Asking price in Canadian dollars")).toHaveValue("21000");
-  await expect(page.getByText(/Found year, make/)).toHaveCount(0);
+  await expect(page.getByText(/Year, make, model, odometer/)).toHaveCount(0);
 });
 
 test("forced reduced motion fills fields without animation and stays editable", async ({ page }) => {
@@ -122,7 +138,7 @@ test("forced reduced motion fills fields without animation and stays editable", 
   await mockImport(page, 200, FULL_PAYLOAD);
   await importListing(page);
 
-  await expect(page.getByText(/Found year, make, model, odometer, asking price and province/)).toBeVisible();
+  await expect(page.getByText(/Year, make, model, odometer, asking price, province/)).toBeVisible();
   await expect(page.getByLabel("Odometer in kilometres")).toHaveValue("42000");
   const reveal = await page.evaluate(() => {
     const element = document.querySelector<HTMLElement>(".decoded-mini")!;
@@ -236,11 +252,66 @@ for (const [width, height] of [[1440, 900], [1280, 800], [768, 1024], [390, 844]
   });
 }
 
+// The unmatched import is the tightest case: identity, odometer and asking
+// price all change, the note carries a page-text source, and the result panel
+// has no cell. It must fit the internal scroller at every reviewed viewport.
+for (const [width, height] of [[1440, 900], [1280, 800], [768, 1024], [390, 844], [320, 568]]) {
+  test(`an unmatched import applies its fields and keeps its note inside the panel at ${width}x${height}`, async ({ page }) => {
+    const tag = `${width}x${height}`;
+    await mockImport(page, 200, CADILLAC_COVERAGE);
+    await page.setViewportSize({ width, height });
+    await page.goto("/#check");
+    await expect(page.getByTestId("ml-estimate")).toHaveText("$31,000");
+
+    const inputGap = await page.evaluate(() => {
+      const top = (label: string) => document.querySelector<HTMLElement>(`input[aria-label="${label}"]`)!.getBoundingClientRect().top;
+      return Math.abs(top("Odometer in kilometres") - top("Asking price in Canadian dollars"));
+    });
+    expect(inputGap, `${tag} odometer and asking-price input tops`).toBeLessThanOrEqual(1);
+
+    await page.getByLabel("Listing URL").fill("https://www.autotrader.ca/offers/cadillac-fleetwood-2dr-coupe");
+    await page.getByRole("button", { name: "Import listing" }).click();
+    await expect(page.getByText("LISTING DETAILS FOUND")).toBeVisible();
+
+    await expect(page.getByLabel("Make")).toHaveValue("Cadillac");
+    await expect(page.getByLabel("Model", { exact: true })).toHaveValue("Fleetwood");
+    await expect(page.getByLabel("Model year")).toHaveValue("1990");
+    await expect(page.getByLabel("Odometer in kilometres")).toHaveValue("65481");
+    await expect(page.getByLabel("Asking price in Canadian dollars")).toHaveValue("25888");
+    await expect(page.getByText("No published price cell matches that combination.")).toBeVisible();
+    await expect(page.getByText(/Published data covers model years 2002-2027/)).toBeVisible();
+
+    await settleReveal(page);
+    const feedback = await page.evaluate(() => {
+      const panel = document.querySelector<HTMLElement>(".editor-panel:not([hidden])")!;
+      const element = document.querySelector<HTMLElement>(".decoded-mini")!;
+      const message = element.querySelector<HTMLElement>(".listing-note-line")!;
+      const panelRect = panel.getBoundingClientRect();
+      const rect = element.getBoundingClientRect();
+      return {
+        visible: Math.max(0, Math.min(rect.bottom, panelRect.bottom) - Math.max(rect.top, panelRect.top)),
+        height: rect.height,
+        lines: Math.round(message.getBoundingClientRect().height / Number.parseFloat(getComputedStyle(message).lineHeight)),
+        noteClientHeight: message.clientHeight,
+        noteScrollHeight: message.scrollHeight,
+        panelScrollTop: panel.scrollTop,
+      };
+    });
+    expect(feedback.lines, `${tag} import note stays within two lines`).toBeLessThanOrEqual(2);
+    // At 768 the note is at its tightest; the clamp must not hide a third line.
+    if (width === 768) {
+      expect(feedback.noteScrollHeight, `${tag} note fits without clamping`).toBeLessThanOrEqual(feedback.noteClientHeight + 1);
+    }
+    expect(feedback.visible, `${tag} feedback inside the panel clip`).toBeGreaterThanOrEqual(feedback.height - 0.5);
+    expect(feedback.panelScrollTop, `${tag} feedback needs no panel scroll`).toBe(0);
+  });
+}
+
 test("a truncated model token resolves to the published family and keeps the listing numbers", async ({ page }) => {
   await mockImport(page, 200, {
     ok: true,
     fields: { province: "ON", make: "Jeep", model: "Grand", year: "2021", odometer: "50000", askingPrice: "30000" },
-    note: "Found year, make, model, odometer and asking price in structured data.",
+    note: "Year, make, model, odometer, asking price in structured data.",
   });
   await importListing(page);
 
@@ -250,26 +321,28 @@ test("a truncated model token resolves to the published family and keeps the lis
   await expect(page.getByLabel("Asking price in Canadian dollars")).toHaveValue("30000");
 });
 
-test("an unmatched vehicle shows its parsed identity, no cell, and keeps the old numbers", async ({ page }) => {
-  await mockImport(page, 200, {
-    ok: true,
-    fields: { province: "ON", make: "Toyota", model: "Avalon", year: "2014", odometer: "50000", askingPrice: "40000" },
-    note: "Found year, make, model, odometer and asking price in structured data.",
-  });
+test("an unmatched model with other published years shows ranked nearest cells, not an estimate", async ({ page }) => {
+  await mockImport(page, 200, CORVETTE_NEAREST);
   await page.goto("/#check");
   await expect(page.getByTestId("ml-estimate")).toHaveText("$31,000");
-  await page.getByLabel("Odometer in kilometres").fill("51234");
-  await page.getByLabel("Asking price in Canadian dollars").fill("21000");
-  await page.getByLabel("Listing URL").fill("https://www.kijiji.ca/v-cars/ottawa/2014-toyota-avalon");
+  await page.getByLabel("Listing URL").fill("https://www.autotrader.ca/offers/chevrolet-corvette-stingray-z51");
   await page.getByRole("button", { name: "Import listing" }).click();
 
-  await expect(page.getByText(/No published price cell matches 2014 Toyota Avalon/)).toBeVisible();
-  await expect(page.getByLabel("Make")).toHaveValue("Toyota");
-  await expect(page.getByLabel("Model", { exact: true })).toHaveValue("Avalon");
+  await expect(page.getByLabel("Make")).toHaveValue("Chevrolet");
+  await expect(page.getByLabel("Model", { exact: true })).toHaveValue("Corvette");
   await expect(page.getByLabel("Model year")).toHaveValue("2014");
-  await expect(page.getByLabel("Odometer in kilometres")).toHaveValue("51234");
-  await expect(page.getByLabel("Asking price in Canadian dollars")).toHaveValue("21000");
+  await expect(page.getByLabel("Odometer in kilometres")).toHaveValue("99963");
+  await expect(page.getByLabel("Asking price in Canadian dollars")).toHaveValue("47910");
+  await expect(page.getByTestId("ml-estimate")).toHaveCount(0);
   await expect(page.getByText("No published price cell matches that combination.")).toBeVisible();
+  await expect(page.getByText("NEAREST PUBLISHED CELLS")).toBeVisible();
+  await expect(page.getByText(/Not an estimate for this vehicle/)).toBeVisible();
+
+  const rows = page.locator(".nearest-cells li");
+  await expect(rows).toHaveCount(3);
+  await expect(rows.nth(0)).toContainText("AB · 2019");
+  await expect(rows.nth(0)).toContainText("10 listings");
+  await expect(rows.nth(0)).toContainText("$67,988");
 });
 
 test("the imported details block fits a 320px viewport without horizontal overflow", async ({ page }) => {

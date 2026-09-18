@@ -9,7 +9,7 @@ import { SavedScenarios } from "@/components/saved-scenarios";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { conditionModelMetadata, CONDITION_TIER_GRADE, CONDITION_TIER_LABEL, predictConditionAdjustedValue, type ConditionProfile, type ConditionTier, type ConditionValuation } from "@/lib/condition-model";
 import { bandPosition, bandScale, layoutBandItems } from "@/lib/band-layout";
-import { confidenceForSample, dealSignalForPrediction, displayBandValues, formatCad, formatNumber, type MarketRow } from "@/lib/market";
+import { confidenceForSample, dealSignalForPrediction, displayBandValues, formatCad, formatNumber, nearestPublishedCells, type MarketRow } from "@/lib/market";
 import { normalizeVin, validateNorthAmericanVin, vinStatusCopy } from "@/lib/vin";
 import { resolveVinMarketSelection, vinMarketEditAction } from "@/lib/vin-market-match";
 import type { ListingFields } from "@/lib/listing-import";
@@ -308,6 +308,17 @@ export function ValuationWorkbench() {
   const selectedResult = modelRows.find((row) => String(row.y) === form.year);
   const result = marketBlockedByVin ? undefined : selectedResult;
 
+  // No-cell state evidence: closest published same make/model cells, plus the
+  // release's model-year span for the "no cells at all" coverage statement.
+  const coverage = useMemo(() => {
+    if (loading || loadError || marketBlockedByVin || selectedResult || rows.length === 0) return undefined;
+    return {
+      cells: nearestPublishedCells(rows, { province: form.province, make: form.make, model: form.model, year: Number(form.year) }),
+      firstYear: Math.min(...rows.map((row) => row.y)),
+      lastYear: Math.max(...rows.map((row) => row.y)),
+    };
+  }, [loading, loadError, marketBlockedByVin, selectedResult, rows, form.province, form.make, form.model, form.year]);
+
   function update<K extends keyof FormState>(field: K, value: FormState[K]) {
     const vinAction = vinMarketEditAction(field);
     if (vinAction.clearsBlock) setMarketBlockedByVin(false);
@@ -376,11 +387,10 @@ export function ValuationWorkbench() {
   }
 
   // Parsed listing fields are mapped onto published cells the same way a VIN
-  // decode is; a field the parser missed is never overwritten. When the
-  // identity has no published cell, the parsed identity still replaces the
-  // form so the user sees their vehicle and the no-cell state; the listing's
-  // odometer and asking price are not applied to a different vehicle.
-  function applyListingImport(fields: ListingFields): string | undefined {
+  // decode is; a field the parser missed is never overwritten. The identity,
+  // odometer and asking price are user inputs and always move together, even
+  // when no cell matches: the result panel explains the missing evidence.
+  function applyListingImport(fields: ListingFields) {
     const province = fields.province && rows.some((row) => row.p === fields.province) ? fields.province : form.province;
     const make = fields.make ?? form.make;
     const year = fields.year ?? form.year;
@@ -394,17 +404,12 @@ export function ValuationWorkbench() {
     const next = cellMatched ? selection : { province, make, model, year };
     const identityChanged = next.province !== form.province || next.make !== form.make || next.model !== form.model || next.year !== form.year;
     if (identityChanged) { setVinReport(undefined); setLookupState("idle"); setMarketBlockedByVin(false); }
-    if (!cellMatched) {
-      setForm((current) => ({ ...current, ...next }));
-      return `No published price cell matches ${year} ${make} ${model}.`;
-    }
     setForm((current) => ({
       ...current,
-      ...selection,
+      ...next,
       ...(fields.odometer ? { odometer: fields.odometer } : {}),
       ...(fields.askingPrice ? { askingPrice: fields.askingPrice } : {}),
     }));
-    return undefined;
   }
 
   function checkPrice() { resultRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" }); resultRef.current?.focus({ preventScroll: true }); }
@@ -584,7 +589,21 @@ export function ValuationWorkbench() {
           </Tabs.Root> : null}
           <div className="result-footer"><div><span>Canadian anchor</span><strong>{formatCad(baseValue ?? 0)}</strong></div><div><span>Model adjustment</span><strong>{adjustment < 0 ? "−" : "+"}{formatCad(Math.abs(adjustment))}</strong></div><button ref={evidenceRef} type="button" onClick={() => setEvidenceOpen(true)}>Inspect the evidence <span aria-hidden="true">↗</span></button></div>
 
-        </> : <div className="result-empty"><p>{loadError ? "The market reference could not load." : marketBlockedByVin ? "VIN decoded, but no defensible price match is available." : "No published price cell matches that combination."}</p>{loadError ? <button type="button" onClick={() => window.location.reload()}>Reload market data</button> : null}<small>{loadError ? "Check your connection and reload this page." : marketBlockedByVin ? "Enter the listing manually only if you can select its true model family, or connect a licensed row-level inventory feed." : "Try another year or province. Sparse cells are intentionally suppressed."}</small></div>}
+        </> : <div className="result-empty">
+          <p>{loadError ? "The market reference could not load." : marketBlockedByVin ? "VIN decoded, but no defensible price match is available." : "No published price cell matches that combination."}</p>
+          {loadError ? <button type="button" onClick={() => window.location.reload()}>Reload market data</button> : null}
+          {loadError ? <small>Check your connection and reload this page.</small> : marketBlockedByVin ? <small>Enter the listing manually only if you can select its true model family, or connect a licensed row-level inventory feed.</small> : coverage && coverage.cells.length > 0 ? <div className="nearest-cells">
+            <p className="kicker">NEAREST PUBLISHED CELLS</p>
+            <small>Closest published {form.make} {form.model} evidence. Not an estimate for this vehicle.</small>
+            <ul>
+              {coverage.cells.map((cell) => <li key={`${cell.p}-${cell.y}`}>
+                <span>{cell.p} · {cell.y}</span>
+                <span>{formatNumber(cell.n)} listings</span>
+                <strong>{formatCad(cell.p50)}</strong>
+              </li>)}
+            </ul>
+          </div> : coverage ? <small>Published data covers model years {coverage.firstYear}-{coverage.lastYear}; cells with fewer than 10 listings are suppressed.</small> : null}
+        </div>}
       </section>
     </div>
     <SavedScenarios scenarios={savedScenarios} notice={scenarioNotice} marketVersion={marketVersion} disabled={loading} onSave={saveCurrentScenario} onCopyLink={copyScenarioLink} onRestore={restoreSavedScenario} onDelete={deleteSavedScenario} />

@@ -6,9 +6,9 @@ import { readListingFields, type ListingFields } from "@/lib/listing-import";
 
 type ImportState = "idle" | "fetching" | "success" | "error";
 
-// `onImport` may return a short note when the parsed vehicle does not match a
-// published price cell; it is appended to the import feedback.
-export function ListingImport({ onImport, disabled }: { onImport: (fields: ListingFields) => string | undefined; disabled?: boolean }) {
+// `onImport` applies the parsed fields to the workbench form. Anything that
+// explains a missing price cell belongs in the result panel, not here.
+export function ListingImport({ onImport, disabled }: { onImport: (fields: ListingFields) => void; disabled?: boolean }) {
   const [url, setUrl] = useState("");
   const [state, setState] = useState<ImportState>("idle");
   const [message, setMessage] = useState("");
@@ -43,9 +43,9 @@ export function ListingImport({ onImport, disabled }: { onImport: (fields: Listi
       if (!payload?.ok) throw new Error(payload?.reason || "That listing could not be read. Enter the details manually.");
       const fields = readListingFields(payload.fields);
       if (Object.keys(fields).length === 0) throw new Error("That listing did not contain usable vehicle details. Enter them manually.");
-      const matchNote = onImport(fields);
+      onImport(fields);
       setSummary([fields.year, fields.make, fields.model].filter(Boolean).join(" ") || "Listing details");
-      setMessage([typeof payload.note === "string" ? payload.note : "Listing details imported.", matchNote].filter(Boolean).join(" "));
+      setMessage(typeof payload.note === "string" ? payload.note : "Listing details imported.");
       setState("success");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "That listing could not be read. Enter the details manually.");
@@ -74,10 +74,10 @@ export function ListingImport({ onImport, disabled }: { onImport: (fields: Listi
         </div>
       </label>
       {state === "error" ? <div className="lookup-error listing-reveal" role="alert" ref={noteRef} style={{ margin: "6px 0 0", fontSize: 10 }}>{message}</div> : null}
-      {state === "success" ? <div className="decoded-mini listing-reveal" role="status" ref={noteRef} style={{ marginTop: 2, padding: "7px 9px" }}>
+      {state === "success" ? <div className="decoded-mini listing-reveal" role="status" ref={noteRef} style={{ marginTop: 2, padding: "6px 9px" }}>
         <p style={{ fontSize: 9, margin: 0, color: "var(--green)", letterSpacing: ".04em" }}>LISTING DETAILS FOUND</p>
         <strong style={{ fontSize: 12, lineHeight: 1.3 }}>{summary}</strong>
-        <p style={{ fontSize: 9.5, margin: "2px 0 0", lineHeight: 1.4 }}>{message}</p>
+        <p className="listing-note-line" style={{ fontSize: 9.5, margin: "2px 0 0", lineHeight: 1.35 }}>{message}</p>
       </div> : null}
     </div>
   );

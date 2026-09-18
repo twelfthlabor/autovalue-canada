@@ -70,19 +70,25 @@ describe("parseListingHtml", () => {
   it("reads a JSON-LD Vehicle page, including the province", () => {
     const { fields, note } = parseListingHtml(fixture("listing-autotrader.html"));
     expect(fields).toEqual({ year: "2021", make: "Toyota", model: "RAV4", odometer: "89000", askingPrice: "31995", province: "ON" });
-    expect(note).toBe("Found year, make, model, odometer, asking price and province in structured data.");
+    expect(note).toBe("Year, make, model, odometer, asking price, province in structured data.");
+  });
+
+  it("reads the real AutoTrader offer page, whose year only exists in page text", () => {
+    const { fields, note } = parseListingHtml(fixture("listing-autotrader-offer.html"));
+    expect(fields).toEqual({ year: "1990", make: "Cadillac", model: "Fleetwood", odometer: "65481", askingPrice: "25888", province: "ON" });
+    expect(note).toBe("Year in page text; make, model, odometer, asking price, province in structured data.");
   });
 
   it("reads a meta-only page and names where every field came from", () => {
     const { fields, note } = parseListingHtml(fixture("listing-kijiji.html"));
     expect(fields).toEqual({ year: "2019", make: "Honda", model: "Civic", odometer: "112000", askingPrice: "18500" });
-    expect(note).toBe("Found year, make, model, odometer and asking price in page metadata.");
+    expect(note).toBe("Year, make, model, odometer, asking price in page metadata.");
   });
 
   it("returns a partial result without inventing fields", () => {
     const { fields, note } = parseListingHtml('<script type="application/ld+json">{"@type":"Product","offers":{"price":"24900","priceCurrency":"CAD"}}</script>');
     expect(fields).toEqual({ askingPrice: "24900" });
-    expect(note).toBe("Found asking price in structured data.");
+    expect(note).toBe("Asking price in structured data.");
   });
 
   it("falls back to a Product name for year, make and model", () => {

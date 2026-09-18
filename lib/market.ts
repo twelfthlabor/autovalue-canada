@@ -197,6 +197,33 @@ export function dealSignalForPrediction(askingPrice: number, valuation: Conditio
   return { label: "Within predicted range", detail: "The ask is consistent with the condition-aware prediction interval, subject to the unpriced factors shown below.", tone: "typical" };
 }
 
+/**
+ * Up to `limit` published cells for the same make and model, ordered by
+ * absolute model-year distance, then the requested province, then province
+ * code. The exact requested cell is never returned as "nearest" evidence.
+ */
+export function nearestPublishedCells(
+  rows: MarketRow[],
+  selection: { province: string; make: string; model: string; year: number },
+  limit = 3,
+): MarketRow[] {
+  if (!Number.isFinite(selection.year) || limit < 1) return [];
+  const make = selection.make.trim().toLowerCase();
+  const model = selection.model.trim().toLowerCase();
+  return rows
+    .filter((row) => row.mk.toLowerCase() === make && row.md.toLowerCase() === model)
+    .filter((row) => row.p !== selection.province || row.y !== selection.year)
+    .sort(
+      (a, b) =>
+        Math.abs(a.y - selection.year) - Math.abs(b.y - selection.year)
+        || Number(a.p !== selection.province) - Number(b.p !== selection.province)
+        || a.p.localeCompare(b.p)
+        || b.y - a.y
+        || b.n - a.n,
+    )
+    .slice(0, limit);
+}
+
 export function formatCad(value: number) {
   return new Intl.NumberFormat("en-CA", {
     style: "currency",
