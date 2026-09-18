@@ -13,6 +13,9 @@ async function mockAudiQ3Decode(page: Page) {
 
 async function decodeBlockedAudiQ3(page: Page) {
   await page.goto("/#check");
+  // Hydration and the market fetch own the form; interacting before the
+  // estimate exists can land on server-rendered controls and be dropped.
+  await expect(page.getByTestId("ml-estimate")).toHaveText("$31,000");
   await page.getByLabel("Province").selectOption("AB");
   await page.getByRole("tab", { name: "VIN", exact: true }).click();
   await page.getByLabel("Vehicle identification number").fill(VIN);
@@ -45,7 +48,9 @@ test("changing the model year abandons the blocked decode and values the chosen 
   await mockAudiQ3Decode(page);
   await decodeBlockedAudiQ3(page);
 
-  await page.getByRole("tab", { name: "Vehicle", exact: true }).click();
+  const vehicleTab = page.getByRole("tab", { name: "Vehicle", exact: true });
+  await vehicleTab.click();
+  await expect(vehicleTab).toHaveAttribute("aria-selected", "true");
   await page.getByLabel("Model year").selectOption("2022");
   await expect(page.getByRole("heading", { name: "2022 Audi Q3" })).toBeVisible();
   await expect(page.getByTestId("ml-estimate")).toBeVisible();

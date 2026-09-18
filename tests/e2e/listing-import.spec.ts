@@ -191,7 +191,36 @@ for (const [width, height] of [[1440, 900], [1280, 800], [768, 1024], [390, 844]
     expect(atRest.scrollOverflow, `${tag} panel content overflow`).toBeLessThanOrEqual(1);
     expect(atRest.inputInPanel, `${tag} input inside the panel clip`).toBe(true);
     expect(atRest.buttonInPanel, `${tag} button inside the panel clip`).toBe(true);
-    expect(atRest.inputInViewport && atRest.buttonInViewport, `${tag} field visible in the viewport`).toBe(true);
+    if (width >= 390) {
+      expect(atRest.inputInViewport && atRest.buttonInViewport, `${tag} field visible in the viewport`).toBe(true);
+    } else {
+      // At 320x568 the import block sits below the fold, so a phone user
+      // scrolls the page to it. The field must still be inside the panel clip
+      // and the panel itself must stay at rest.
+      await page.evaluate(() => {
+        document.documentElement.style.scrollBehavior = "auto";
+        document.querySelector<HTMLElement>('input[aria-label="Listing URL"]')!.scrollIntoView({ block: "center" });
+      });
+      const afterScroll = await page.evaluate(() => {
+        const panel = document.querySelector<HTMLElement>(".editor-panel:not([hidden])")!;
+        const panelRect = panel.getBoundingClientRect();
+        const inPanel = (el: Element) => { const rect = el.getBoundingClientRect(); return rect.top >= panelRect.top - 0.5 && rect.bottom <= panelRect.bottom + 0.5; };
+        const inViewport = (el: Element) => { const rect = el.getBoundingClientRect(); return rect.top >= -0.5 && rect.bottom <= window.innerHeight + 0.5; };
+        const input = document.querySelector<HTMLElement>('input[aria-label="Listing URL"]')!;
+        const button = Array.from(document.querySelectorAll<HTMLElement>("button")).find((candidate) => candidate.textContent?.includes("Import listing"))!;
+        return {
+          panelScrollTop: panel.scrollTop,
+          scrollOverflow: panel.scrollHeight - panel.clientHeight,
+          inputInViewport: inViewport(input), buttonInViewport: inViewport(button),
+          inputInPanel: inPanel(input), buttonInPanel: inPanel(button),
+        };
+      });
+      expect(afterScroll.inputInViewport && afterScroll.buttonInViewport, `${tag} field reachable by page scroll`).toBe(true);
+      expect(afterScroll.inputInPanel, `${tag} scrolled input inside the panel clip`).toBe(true);
+      expect(afterScroll.buttonInPanel, `${tag} scrolled button inside the panel clip`).toBe(true);
+      expect(afterScroll.panelScrollTop, `${tag} page scroll leaves the panel at rest`).toBe(0);
+      expect(afterScroll.scrollOverflow, `${tag} panel content relationship unchanged`).toBe(atRest.scrollOverflow);
+    }
     expect(atRest.inputButtonIntersection, `${tag} input and button do not overlap`).toBe(0);
     expect(atRest.hintOverlapsField, `${tag} hint stays clear of the field`).toBe(false);
     if (width === 1280 || width === 390) {

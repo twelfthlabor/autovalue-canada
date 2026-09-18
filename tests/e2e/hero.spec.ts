@@ -131,9 +131,16 @@ test("the complete workspace fits and is centred at normal laptop zoom", async (
     const box = await page.locator(".workbench").boundingBox();
     expect(box!.y).toBeGreaterThan(0);
     expect(box!.y + box!.height).toBeLessThanOrEqual(height);
-    // Centre against the scrollport: a classic scrollbar narrows clientWidth.
-    const scrollport = await page.evaluate(() => document.documentElement.clientWidth);
-    expect(Math.abs(box!.x - (scrollport - box!.x - box!.width))).toBeLessThanOrEqual(2);
+    // Centre against the actual containing blocks: scrollbar-gutter and a
+    // classic scrollbar shrink the layout width without shrinking clientWidth.
+    const studio = await page.locator(".price-studio").boundingBox();
+    const body = await page.evaluate(() => { const rect = document.body.getBoundingClientRect(); return { x: rect.x, width: rect.width }; });
+    const workbenchLeft = box!.x - studio!.x;
+    const workbenchRight = studio!.x + studio!.width - (box!.x + box!.width);
+    expect(Math.abs(workbenchLeft - workbenchRight)).toBeLessThanOrEqual(2);
+    const studioLeft = studio!.x - body.x;
+    const studioRight = body.x + body.width - (studio!.x + studio!.width);
+    expect(Math.abs(studioLeft - studioRight)).toBeLessThanOrEqual(2);
     const panel = await page.locator(".price-explorer").evaluate(el => ({ client: el.clientHeight, scroll: el.scrollHeight }));
     expect(panel.scroll).toBeLessThanOrEqual(panel.client + 1);
     expect(await page.evaluate(() => visualViewport!.scale)).toBe(1);
