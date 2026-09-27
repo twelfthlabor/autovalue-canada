@@ -11,7 +11,7 @@ const contents = [{id:"scope",label:"What the estimate means"},{id:"model-benchm
 
 export default function MethodologyPage() {
   return <div className="inner-page research-page methodology-page">
-    <header className="report-header"><div><p className="eyebrow">AutoValue / Research</p><h1>Methodology</h1><p>The data, model and assumptions behind a price check.</p></div><span>Release {pkg.version} · {formatRetrievedDate(manifest.sourceRetrievedAt)}</span></header>
+    <header className="report-header" data-stage-anchor="1"><div><p className="eyebrow">AutoValue / Research</p><h1>Methodology</h1><p>The data, model and assumptions behind a price check.</p></div><span>Release {pkg.version} · {formatRetrievedDate(manifest.sourceRetrievedAt)}</span></header>
     <div className="report-layout"><ReportNav items={contents} /><div className="report-content reading-content">
       <section className="report-section" id="scope">
         <p className="section-label">The estimate</p><h2>A reference for an asking price.</h2>

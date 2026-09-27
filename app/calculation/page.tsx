@@ -8,7 +8,7 @@ const contents = [{id:"worked-example",label:"Try the calculation"},{id:"inputs"
 export default function CalculationPage() {
   const row = market.find(row => row.p === "ON" && row.mk === "Toyota" && row.md === "RAV4" && row.y === 2021) as MarketRow;
   return <div className="inner-page research-page calculation-page">
-    <header className="report-header"><div><p className="eyebrow">AutoValue / Research</p><h1>How we calculate</h1><p>Change the example. Select a part of the equation to see where it comes from.</p></div><span>Canadian dollars · Asking-price reference</span></header>
+    <header className="report-header" data-stage-anchor="1"><div><p className="eyebrow">AutoValue / Research</p><h1>How we calculate</h1><p>Change the example. Select a part of the equation to see where it comes from.</p></div><span>Canadian dollars · Asking-price reference</span></header>
     <div className="report-layout"><ReportNav items={contents} /><div className="report-content">
       <CalculationExample row={row} />
       <section className="report-section" id="inputs"><div className="section-heading"><h2>Where inputs come from</h2><span>VIN decoding is optional</span></div><div className="input-sources">

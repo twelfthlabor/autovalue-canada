@@ -6,6 +6,7 @@ import "./globals.css";
 import manifest from "@/public/data/manifest.json";
 import { formatRetrievedDate } from "@/lib/market";
 import { SiteNav } from "@/components/site-nav";
+import { AmbientStage } from "@/components/ambient-stage";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en">
       <body>
         <a className="skip-link" href="#main-content">Skip to content</a>
+        <AmbientStage />
         <header className="site-header">
           <Wordmark />
           <SiteNav />

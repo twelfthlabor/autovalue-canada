@@ -6,6 +6,7 @@ import { ListingImport } from "@/components/listing-import";
 import { MarketComparison } from "@/components/market-comparison";
 import { MileageCurve } from "@/components/mileage-curve";
 import { SavedScenarios } from "@/components/saved-scenarios";
+import { VehicleSearch } from "@/components/vehicle-search";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { conditionModelMetadata, CONDITION_TIER_GRADE, CONDITION_TIER_LABEL, predictConditionAdjustedValue, type ConditionProfile, type ConditionTier, type ConditionValuation } from "@/lib/condition-model";
 import { bandPosition, bandScale, layoutBandItems } from "@/lib/band-layout";
@@ -412,6 +413,11 @@ export function ValuationWorkbench() {
     }));
   }
 
+  function selectMarketRow(row: MarketRow) {
+    setForm((current) => ({ ...current, province: row.p, make: row.mk, model: row.md, year: String(row.y) }));
+    setVinReport(undefined); setLookupState("idle"); setMarketBlockedByVin(false); setResultPulse((value) => value + 1);
+  }
+
   function checkPrice() { resultRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" }); resultRef.current?.focus({ preventScroll: true }); }
 
   const askingPrice = Number(form.askingPrice) || undefined;
@@ -498,8 +504,8 @@ export function ValuationWorkbench() {
 
   return (
     <>
-    <div className="workspace-heading"><div><p className="kicker">CANADIAN USED-VEHICLE RESEARCH</p><h1>Get a feel for the price<span>.</span></h1></div><p>One listing. A clearer picture.</p></div>
-    <div className="workbench" id="check">
+    <div className="workspace-heading"><div><p className="kicker"><span className="kicker-pill">ML · CAD</span> CANADIAN USED-VEHICLE RESEARCH</p><h1>Get a feel for the <em>price</em><span>.</span></h1></div><VehicleSearch rows={rows} disabled={loading || loadError} onSelect={selectMarketRow} /></div>
+    <div className="workbench" id="check" data-stage-anchor="0.4">
       <form id="listing" className="vehicle-form" onSubmit={(event) => { event.preventDefault(); checkPrice(); }}>
         <div className="form-heading"><h2>Your listing</h2><span className="form-live"><i /> Live estimate</span></div>
         <Tabs.Root value={editorTab} onValueChange={value => setEditorTab(String(value))} className="editor-tabs">

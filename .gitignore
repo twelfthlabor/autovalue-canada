@@ -13,3 +13,4 @@ test-results/
 # Local visual review artifacts
 .playwright-cli/
 output/
+*.tsbuildinfo

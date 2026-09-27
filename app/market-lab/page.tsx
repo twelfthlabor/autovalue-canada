@@ -47,7 +47,7 @@ export default function MarketLabPage() {
   });
   return (
     <div className="inner-page research-page market-page">
-      <header className="report-header"><div><p className="eyebrow">AutoValue / Research</p><h1>Market lab</h1><p>Explore the inventory behind the estimate, then inspect how the model performs.</p></div><span>Data retrieved {formatRetrievedDate(manifest.sourceRetrievedAt)}</span></header>
+      <header className="report-header" data-stage-anchor="1"><div><p className="eyebrow">AutoValue / Research</p><h1>Market lab</h1><p>Explore the inventory behind the estimate, then inspect how the model performs.</p></div><span>Data retrieved {formatRetrievedDate(manifest.sourceRetrievedAt)}</span></header>
       <div className="report-layout"><ReportNav items={[{id:"coverage",label:"Market coverage"},{id:"source-audit",label:"Source audit"},{id:"models",label:"Model validation"},{id:"segments",label:"Error by segment"}]} /><div className="report-content">
       <section id="coverage" className="report-section"><div className="section-heading"><h2>Market coverage</h2><span>Canadian dealer asking prices</span></div>
       <section className="lab-stats" aria-label="Coverage totals">
