@@ -115,6 +115,7 @@ test("VIN lookup stays focused and the result remains a single valuation sheet",
 });
 
 test("supplied VIN decodes live without inventing listing facts", async ({ page }, testInfo) => {
+  test.setTimeout(60_000); // hydration plus two full-page screenshots pushes WebKit past the 30s default.
   await page.route("**/api/vin-decode", async (route) => {
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({
       vehicle: { vin: "WAUFAAF43PN018218", year: 2023, make: "Audi", model: "A4", trim: "S Line quattro Prestige", bodyClass: "Sedan/Saloon", driveType: "AWD/All-Wheel Drive", transmission: "Automatic", cylinders: 4, displacementL: 2, fuelType: "Gasoline", plantCountry: "Germany", source: "NHTSA vPIC" },

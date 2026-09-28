@@ -7,6 +7,7 @@ export default defineConfig({
   testDir: "./tests/e2e",
   outputDir: "test-results",
   reporter: "list",
+  retries: process.env.CI ? 2 : 0,
   use: {
     baseURL,
     trace: "retain-on-failure",
