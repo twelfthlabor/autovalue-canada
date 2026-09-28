@@ -16,7 +16,7 @@ async function decodeBlockedAudiQ3(page: Page) {
   // Hydration and the market fetch own the form; interacting before the
   // estimate exists can land on server-rendered controls and be dropped.
   await expect(page.getByTestId("ml-estimate")).toHaveText("$31,000");
-  await page.getByLabel("Province").selectOption("AB");
+  await page.getByLabel("Province", { exact: true }).selectOption("AB");
   await page.getByRole("tab", { name: "VIN", exact: true }).click();
   await page.getByLabel("Vehicle identification number").fill(VIN);
   await page.getByRole("button", { name: "DECODE VIN" }).click();

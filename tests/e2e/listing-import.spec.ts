@@ -62,8 +62,8 @@ test("a listing URL fills every parsed field and shows its source", async ({ pag
   await mockImport(page, 200, FULL_PAYLOAD);
   await importListing(page);
 
-  await expect(page.getByLabel("Province")).toHaveValue("BC");
-  await expect(page.getByLabel("Make")).toHaveValue("Honda");
+  await expect(page.getByLabel("Province", { exact: true })).toHaveValue("BC");
+  await expect(page.getByLabel("Make", { exact: true })).toHaveValue("Honda");
   await expect(page.getByLabel("Model", { exact: true })).toHaveValue("Civic");
   await expect(page.getByLabel("Model year")).toHaveValue("2022");
   await expect(page.getByLabel("Odometer in kilometres")).toHaveValue("42000");
@@ -84,14 +84,14 @@ test("a partial parse leaves untouched fields alone", async ({ page }) => {
   // Wait for hydration and the market fetch before touching the form (WebKit
   // runs the interaction too early otherwise).
   await expect(page.getByTestId("ml-estimate")).toHaveText("$31,000");
-  await page.getByLabel("Province").selectOption("BC");
+  await page.getByLabel("Province", { exact: true }).selectOption("BC");
   await page.getByLabel("Odometer in kilometres").fill("12345");
   await page.getByLabel("Asking price in Canadian dollars").fill("9999");
   await page.getByLabel("Listing URL").fill("https://www.kijiji.ca/v-cars-trucks/ottawa/2021-toyota-rav4");
   await page.getByRole("button", { name: "Import listing" }).click();
 
-  await expect(page.getByLabel("Province")).toHaveValue("BC");
-  await expect(page.getByLabel("Make")).toHaveValue("Toyota");
+  await expect(page.getByLabel("Province", { exact: true })).toHaveValue("BC");
+  await expect(page.getByLabel("Make", { exact: true })).toHaveValue("Toyota");
   await expect(page.getByLabel("Model", { exact: true })).toHaveValue("RAV4");
   await expect(page.getByLabel("Model year")).toHaveValue("2021");
   await expect(page.getByLabel("Odometer in kilometres")).toHaveValue("12345");
@@ -106,8 +106,8 @@ test("malformed field values from the import response are ignored", async ({ pag
   });
   await importListing(page);
 
-  await expect(page.getByLabel("Province")).toHaveValue("BC");
-  await expect(page.getByLabel("Make")).toHaveValue("Honda");
+  await expect(page.getByLabel("Province", { exact: true })).toHaveValue("BC");
+  await expect(page.getByLabel("Make", { exact: true })).toHaveValue("Honda");
   await expect(page.getByLabel("Model", { exact: true })).toHaveValue("Civic");
   await expect(page.getByLabel("Model year")).toHaveValue("2022");
   await expect(page.getByLabel("Odometer in kilometres")).toHaveValue("89000");
@@ -124,8 +124,8 @@ test("a blocked fetch keeps manual entry and shows one short message", async ({ 
   await page.getByRole("button", { name: "Import listing" }).click();
 
   await expect(page.getByText("The listing site blocked the request (403). Enter the details manually.")).toBeVisible();
-  await expect(page.getByLabel("Province")).toHaveValue("ON");
-  await expect(page.getByLabel("Make")).toHaveValue("Toyota");
+  await expect(page.getByLabel("Province", { exact: true })).toHaveValue("ON");
+  await expect(page.getByLabel("Make", { exact: true })).toHaveValue("Toyota");
   await expect(page.getByLabel("Model", { exact: true })).toHaveValue("RAV4");
   await expect(page.getByLabel("Model year")).toHaveValue("2021");
   await expect(page.getByLabel("Odometer in kilometres")).toHaveValue("51234");
@@ -302,7 +302,7 @@ for (const [width, height] of [[1440, 900], [1280, 800], [768, 1024], [390, 844]
     await page.getByRole("button", { name: "Import listing" }).click();
     await expect(page.getByText("LISTING DETAILS FOUND")).toBeVisible();
 
-    await expect(page.getByLabel("Make")).toHaveValue("Cadillac");
+    await expect(page.getByLabel("Make", { exact: true })).toHaveValue("Cadillac");
     await expect(page.getByLabel("Model", { exact: true })).toHaveValue("Fleetwood");
     await expect(page.getByLabel("Model year")).toHaveValue("1990");
     await expect(page.getByLabel("Odometer in kilometres")).toHaveValue("65481");
@@ -357,7 +357,7 @@ test("an unmatched model with other published years shows ranked nearest cells, 
   await page.getByLabel("Listing URL").fill("https://www.autotrader.ca/offers/chevrolet-corvette-stingray-z51");
   await page.getByRole("button", { name: "Import listing" }).click();
 
-  await expect(page.getByLabel("Make")).toHaveValue("Chevrolet");
+  await expect(page.getByLabel("Make", { exact: true })).toHaveValue("Chevrolet");
   await expect(page.getByLabel("Model", { exact: true })).toHaveValue("Corvette");
   await expect(page.getByLabel("Model year")).toHaveValue("2014");
   await expect(page.getByLabel("Odometer in kilometres")).toHaveValue("99963");

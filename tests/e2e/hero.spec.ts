@@ -46,7 +46,7 @@ test("regional comparison uses exact vehicle rows and changes the province", asy
   const option = page.locator(".province-list button").filter({ hasText: "Alberta" });
   await expect(option).toContainText(ab.p50.toLocaleString("en-CA"));
   await option.click();
-  await expect(page.getByLabel("Province")).toHaveValue("AB");
+  await expect(page.getByLabel("Province", { exact: true })).toHaveValue("AB");
   await expect(page.getByRole("heading", { name: "2021 Toyota RAV4" })).toBeVisible();
 });
 

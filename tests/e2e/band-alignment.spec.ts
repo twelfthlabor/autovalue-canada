@@ -246,8 +246,8 @@ async function applyState(page: Page, state: BandState) {
   await page.goto("/#check");
   await expect(page.getByTestId("ml-estimate")).toBeVisible();
   await killAnimations(page);
-  await page.getByLabel("Province").selectOption(state.fields.province);
-  await page.getByLabel("Make").selectOption(state.fields.make);
+  await page.getByLabel("Province", { exact: true }).selectOption(state.fields.province);
+  await page.getByLabel("Make", { exact: true }).selectOption(state.fields.make);
   await page.getByLabel("Model", { exact: true }).selectOption(state.fields.model);
   await page.getByLabel("Model year").selectOption(state.fields.year);
   await page.getByLabel("Odometer in kilometres").fill(state.fields.odometer);

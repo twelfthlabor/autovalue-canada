@@ -82,8 +82,8 @@ test("a copied link restores the scenario in a fresh context", async ({ page, br
   const fresh = await context.newPage();
   try {
     await fresh.goto(shareUrl);
-    await expect(fresh.getByLabel("Province")).toHaveValue("ON");
-    await expect(fresh.getByLabel("Make")).toHaveValue("Toyota");
+    await expect(fresh.getByLabel("Province", { exact: true })).toHaveValue("ON");
+    await expect(fresh.getByLabel("Make", { exact: true })).toHaveValue("Toyota");
     await expect(fresh.getByLabel("Model", { exact: true })).toHaveValue("RAV4");
     await expect(fresh.getByLabel("Model year")).toHaveValue("2021");
     await expect(fresh.getByLabel("Odometer in kilometres")).toHaveValue("120000");
@@ -183,8 +183,8 @@ test("a malformed share URL leaves the default scenario untouched", async ({ pag
 
   await page.goto("/?p=ON&mk=Toyota&md=RAV4&y=2021&km=not-a-number&ask=&c=excellent");
   await expect(page.getByTestId("ml-estimate")).toHaveText(DEFAULT_ESTIMATE);
-  await expect(page.getByLabel("Province")).toHaveValue("ON");
-  await expect(page.getByLabel("Make")).toHaveValue("Toyota");
+  await expect(page.getByLabel("Province", { exact: true })).toHaveValue("ON");
+  await expect(page.getByLabel("Make", { exact: true })).toHaveValue("Toyota");
   await expect(page.getByLabel("Model", { exact: true })).toHaveValue("RAV4");
   await expect(page.getByLabel("Model year")).toHaveValue("2021");
   await expect(page.getByLabel("Odometer in kilometres")).toHaveValue("89000");
@@ -198,6 +198,6 @@ test("a malformed share URL leaves the default scenario untouched", async ({ pag
 
   await page.goto("/?p=ZZ&mk=Toyota&md=RAV4&y=2021");
   await expect(page.getByTestId("ml-estimate")).toHaveText(DEFAULT_ESTIMATE);
-  await expect(page.getByLabel("Province")).toHaveValue("ON");
+  await expect(page.getByLabel("Province", { exact: true })).toHaveValue("ON");
   expect(pageErrors).toEqual([]);
 });

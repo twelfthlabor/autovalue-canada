@@ -87,8 +87,8 @@ test("out-of-support odometer surfaces the capped-mileage caveat on both the sig
 
 test("level-only out-of-support odometer copy says no mileage comparison was applied", async ({ page }) => {
   await page.goto("/#check");
-  await page.getByLabel("Province").selectOption("AB");
-  await page.getByLabel("Make").selectOption("Buick");
+  await page.getByLabel("Province", { exact: true }).selectOption("AB");
+  await page.getByLabel("Make", { exact: true }).selectOption("Buick");
   await page.getByLabel("Model", { exact: true }).selectOption("Encore GX");
   await page.getByLabel("Model year").selectOption("2026");
   await page.getByLabel("Odometer in kilometres").fill("");
