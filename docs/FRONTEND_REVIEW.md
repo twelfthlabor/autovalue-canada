@@ -24,7 +24,7 @@ Creator sites, component documentation and original GitHub repositories informed
 
 X searches and direct creator profiles were attempted, but profiles were inaccessible and results did not establish engagement rankings. These are inspectable creator and GitHub references, not a claim to have identified the top posts on X.
 
-The earlier cobalt layout was too tall. This version uses a centred 1,220 px maximum shell, a viewport-height budget on laptops, and two coordinated work areas. The white and cool-grey surfaces use J.D. Power’s published blue (#0087FB), with #005DA8 for readable text and a slate asking-price marker. Archivo carries vehicle names and prices; Inter handles controls, with a monospace face for units. The distinctive interaction is a working valuation instrument: edit a real input and see its effect, or pin a scenario and compare.
+The earlier cobalt layout was too tall. This version uses a centred 1,220 px maximum shell, a viewport-height budget on laptops, and two coordinated work areas. The white and cool-grey surfaces use a saturated blue (#0087FB), with #005DA8 for readable text and a slate asking-price marker. Archivo carries vehicle names and prices; Inter handles controls, with a monospace face for units. The distinctive interaction is a working valuation instrument: edit a real input and see its effect, or pin a scenario and compare.
 
 ## Behaviour
 
@@ -63,7 +63,7 @@ The results below are from local production verification. No model, market artif
 
 ## Blue palette and research-page revision
 
-The user requested J.D. Power blue and a more deliberate design for the other tabs. The brand reference is the published [J.D. Power brand book](https://discover.jdpa.com/hubfs/Files/Industry%20Campaigns/Valuation%20Services/2020%20J.D.%20Power%20Brand%20Book_011121.pdf), which names #0087FB in its primary gradient. The live cars site was also inspected, but its current teal/orange treatments are not the requested blue. AutoValue retains its own name and identity.
+The user requested a blue palette (#0087FB) and a more deliberate design for the other tabs.
 
 - Replaced the large slogans, nested cards, numbered benefit blocks and dark technical diagram on the research pages with simple page titles, an in-page index and readable sections.
 - Market Lab now includes a provincial coverage explorer. Selecting a province reveals its inventory, cell count, makes and year span; the chart can switch between vehicle counts and market-cell counts. Every summary comes from the released market rows.

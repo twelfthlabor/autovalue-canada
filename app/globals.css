@@ -396,7 +396,7 @@ body:has(.research-page) { background: #fff; }
 @media (max-width: 900px) { .estimate-settle { top: 18px; height: 46px; } }
 
 
-/* Midnight stage: a full-bleed JD Power blue night sky behind the header. Its
+/* Midnight stage: a full-bleed blue night sky behind the header. Its
    height is measured from the page's `data-stage-anchor`; the fallbacks cover
    the first paint before hydration. Everything here is decorative. */
 @property --beam { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
