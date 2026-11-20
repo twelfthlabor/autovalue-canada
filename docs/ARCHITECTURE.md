@@ -52,7 +52,7 @@ Licensed market feed      Transport Canada       NRCan / Statistics Canada
                   Tableau review      Vercel application
 ```
 
-This separation lets the public product remain responsive while demonstrating the AWS, ETL, SQL, model-deployment and monitoring responsibilities in the target J.D. Power role.
+This separation lets the public product remain responsive while demonstrating the AWS, ETL, SQL, model-deployment and monitoring work of a production data pipeline.
 
 ## Accuracy and observability
 

@@ -1,75 +1,52 @@
 # AutoValue Canada
 
-A transparent Canadian used-vehicle deal checker. It compares a seller's asking price with current Canadian dealer inventory, then adjusts the market estimate for mileage and user-reported condition.
+Is this used car fairly priced? AutoValue Canada compares a seller's asking price with current Canadian dealer inventory for the same province, make, model and year, then adjusts for mileage and condition with a gradient-boosted model that runs in the browser.
 
-[Live demo](https://autovalue-canada.vercel.app) · [Calculation](https://autovalue-canada.vercel.app/calculation) · [CI](https://github.com/twelfthlabor/autovalue-canada/actions)
+[Live demo](https://autovalue-canada.vercel.app) · [Calculation](https://autovalue-canada.vercel.app/calculation) · [Model card](docs/MODEL_CARD.md) · [CI](https://github.com/twelfthlabor/autovalue-canada/actions)
+
+## Results
+
+| What | Number |
+|---|---|
+| Canadian market coverage | 5,605 province × make × model × year cells, 180,833 dealer-listed vehicles |
+| Adjustment model, temporal test (39,132 auction sales) | $1,198 MAE, 11.60% WAPE; 4.29% better than a matched-peer baseline |
+| Canadian cross-province check (4,609 held-out cells) | full mileage effect $2,961 MAE vs $2,236 without it; cross-validated scale 0.2 gives $2,142 |
+
+The last row is the honest one: the mileage effect was learned from US auction sales, and on Canadian cell medians it is about five times too steep. The [model card](docs/MODEL_CARD.md#canadian-cross-province-check) explains why the shipped estimate is not shrunk on that evidence alone.
 
 ## How it works
 
-1. Select a province, make, model and year, then enter the asking price and odometer.
-2. Optionally decode a VIN and pick a condition tier (below average, rough, average or better).
-3. Review the estimated value, range, difference from the asking price, evidence strength and unpriced factors.
+1. Pick a province, make, model and year, then enter the asking price and odometer. A listing link from AutoTrader.ca, Kijiji.ca, Carpages.ca or Clutch.ca can prefill these where the site allows a fetch.
+2. Optionally decode a VIN (official NHTSA vPIC API, sent only on click, never stored) and pick a condition tier.
+3. Read the estimate, its range, the gap to the asking price and how strong the evidence is.
 
-The estimate combines:
+The estimate starts from the median dealer asking price for the matching cell ([OmniaAuto Canadian Vehicle Market Aggregates](https://huggingface.co/datasets/OmniaAuto/canadian-vehicle-market-aggregates); cells under 10 vehicles excluded). The model trees are serialized to JSON and evaluated by a small TypeScript function, so there is no prediction server or API key.
 
-- a province × make × model × year median from Canadian dealer asking prices; and
-- a browser-based gradient-boosted model that applies relative mileage and condition adjustments.
+Checks can be saved in the browser, restored or shared as a link. Research pages cover provincial coverage, methodology and an interactive calculation breakdown.
 
-VIN decoding uses the official NHTSA vPIC API. A VIN is sent only after the user clicks **Decode VIN**, is kept out of the URL and is not stored. The app has no licensed live listing feed. Asking price and odometer can optionally be prefilled from a pasted listing link and remain user-entered and editable; condition is selected by the user.
+## Limitations
 
-## Data and limitations
-
-The included market artifact contains 5,605 used-vehicle cells representing 180,833 vehicles from [OmniaAuto's Canadian Vehicle Market Aggregates](https://huggingface.co/datasets/OmniaAuto/canadian-vehicle-market-aggregates). These are dealer asking prices, not completed sales. Cells with fewer than 10 vehicles are excluded.
-
-The adjustment model was trained on 91,278 historical US wholesale auction sales. On a later-year test set of 39,132 sales, it reached $1,198 MAE and 11.60% WAPE. The model runs locally in the browser; no prediction service or API key is required.
-
-Results are market estimates, not certified appraisals, guaranteed offers or future-value forecasts. Trim, options, inspection findings, fees and the final negotiated price may not be captured. See the [model card](docs/MODEL_CARD.md) and [data sources](docs/DATA_SOURCES.md) for methodology, provenance and full limitations.
-
-## Frontend
-
-The centred valuation workspace pairs a tabbed listing editor with price scrubbing, model-based mileage exploration, provincial comparisons and pinned scenarios. It fits standard laptop screens at 100% zoom. An AutoTrader.ca, Kijiji.ca, Carpages.ca or Clutch.ca listing link can fill make, model, year, odometer and asking price where the listing site allows a fetch; imported values stay editable and anything it misses is entered by hand. Checks can be saved in the browser, restored later, or copied as a link that reopens the same inputs. Research pages include a provincial coverage explorer, a readable methodology and an interactive calculation breakdown. The palette uses J.D. Power blue. See [the frontend review](docs/FRONTEND_REVIEW.md) for design research, controls and browser verification.
+These are dealer asking prices, not completed sales. The condition and mileage model was fit on 52,146 US wholesale auction sales from 2006–2008 and tested on 39,132 from 2009–2010. Results are market estimates, not appraisals or offers; trim, options, inspection findings and fees may not be captured. See [data sources](docs/DATA_SOURCES.md) for provenance.
 
 ## Run locally
 
-Requires Node.js 20.9 or later.
+Requires Node.js 20.9 or later. No credentials or environment variables are needed.
 
 ```bash
 npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000`. No credentials or environment variables are required.
-
-## Postgres warehouse (PostgreSQL 16, RDS-compatible)
-
-The same CSVs also load into Postgres for SQL analytics. Local Docker matches
-AWS RDS (PostgreSQL 16), so queries run unchanged in both places.
-
-```bash
-cp .env.example .env  # edit DATABASE_URL for RDS when needed
-docker compose up -d db
-python -m pip install -r requirements.txt
-python analysis/etl_to_postgres.py
-python analysis/run_sql.py  # writes public/data/sql_summary.json
-```
-
-S3 raw zone (optional, same boto3 path): upload the two CSVs, then set
-`S3_PRICE_STATS_URI` / `S3_INVENTORY_URI` instead of using `data/raw/`.
-See `analysis/market_insights.sql` for the six warehouse queries
-(province-year medians, dispersion, depreciation proxy, DOM buckets,
-national KPI, thin-cell flags).
-
 ## Verify
 
 ```bash
-npm run build:data
-npm test
+npm test          # unit tests, including the pinned Canadian check
 npm run lint
-npm run build
-npm run test:e2e
+npm run build     # regenerates and validates the market artifact first
+npm run test:e2e  # Playwright, Chromium and WebKit
 ```
 
-Model training is optional and requires Python dependencies:
+The data build rejects schema changes, duplicate market cells, invalid values, samples below 10 and unordered price percentiles. Model retraining is optional:
 
 ```bash
 python -m pip install -r requirements.txt
@@ -77,26 +54,25 @@ npm run model:benchmark
 npm run model:train-condition
 ```
 
-The data build rejects schema changes, duplicate market cells, invalid values, samples below 10 and unordered price percentiles.
+The same CSVs also load into a PostgreSQL 16 warehouse for SQL analytics; see [docs/WAREHOUSE.md](docs/WAREHOUSE.md).
 
 ## Project structure
 
 ```text
 app/          Pages and VIN decode route
 components/   Valuation interface
-lib/          Market, VIN and model logic
-analysis/     Model training, Postgres ETL (etl_to_postgres.py),
-              warehouse SQL (market_insights.sql) and runner (run_sql.py)
+lib/          Market, VIN, model and Canadian-check logic
+analysis/     Model training, Postgres ETL and warehouse SQL
 data/raw/     Attributed source snapshots
-public/data/  Validated release artifacts (incl. sql_summary.json)
+public/data/  Validated release artifacts
 scripts/      Data preparation
-docs/         Architecture, methodology and data notes
+docs/         Architecture, model card, data sources and design notes
 ```
 
 ## Deployment
 
-Import the repository into Vercel with the default Next.js settings. The production build regenerates and validates the market artifact before compiling the app.
+Import the repository into Vercel with the default Next.js settings.
 
 ## Licence
 
-Application code is [MIT licensed](LICENSE). The included market data retains its [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) licence and is not licensed for commercial use.
+Application code is [MIT licensed](LICENSE). The included market data keeps its [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) licence and is not licensed for commercial use.
