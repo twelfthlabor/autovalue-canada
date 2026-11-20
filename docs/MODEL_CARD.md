@@ -57,6 +57,20 @@ Coverage is uneven. Ten of the twenty-one slices sit below 80%: Salvage 15.9% (n
 
 The model's WAPE advantage is uneven too: it wins 13 of 21 slices. The largest gains are the $0–5k band (30.3% → 22.1%), Extra Rough (35.0% → 25.7%) and Rough (18.4% → 16.1%). It is worse than the baseline for Clean (7.4% → 8.7%), Extra Clean (7.9% → 8.7%), 2010 (6.3% → 7.3%), $10–20k (9.6% → 10.4%), $20k+ (7.4% → 9.1%), odometer-delta sextiles S4 (9.0% → 9.7%) and S5 (10.2% → 11.0%), and the top peer-count tercile (8.8% → 9.9%) — segments where matched peers already price tightly. Salvage WAPE exceeds 90% under both methods, on a slice too thin to conclude much from.
 
+### Canadian cross-province check
+
+The temporal test above is US auction data. To test the transferred mileage effect on Canadian prices, `lib/canadian-check.ts` holds out each used Canadian cell (province × make × model × year) and predicts its median asking price from the same make, model and year in the other provinces, weighted by vehicle count. Each donor median is moved from its own median mileage to the held-out cell's with the model's Average-condition multiplier, raised to a scale k (k = 0 ignores mileage, k = 1 is the shipped effect). `lib/canadian-check.test.ts` pins every number below.
+
+| Prediction | Held-out cells | MAE |
+|---|---:|---:|
+| Other provinces, no mileage adjustment (k = 0) | 4,609 | $2,236 |
+| Full shipped mileage effect (k = 1) | 4,609 | $2,961 |
+| Cross-validated k (5 folds by make-model-year) | 4,609 | $2,142 |
+
+The full effect beats no adjustment in 2,036 of 4,609 cells (44%). Every fold picks k = 0.2. After removing each province's average price level, the fitted slope stays well below 1 at every mileage gap: 0.37 for log-mileage gaps under 0.15 (6,626 pairs), 0.29 for 0.15–0.4 (5,298) and 0.19 above 0.4 (2,736). Noisy mileage medians would push small-gap slopes toward zero and leave large-gap slopes near 1. The pattern runs the other way, so noise alone does not explain the shortfall.
+
+**Reading:** at the level of Canadian cell medians, the auction-trained mileage effect is about five times too steep. This is not proof that it overshoots for an individual car: a cell's median price and median mileage come from different vehicles, and trim or regional mix can travel with mileage. The shipped estimate is therefore unchanged. Shrinking the effect needs listing-level Canadian prices with odometer readings, which the published aggregates do not provide.
+
 One inference fix ships in the same artifact: `featureBounds.logOdometerDelta` is now computed from training rows only, recorded as `boundsSource: "train-only"`. The previous release took those quantiles from the full frame, so 2009–2010 test rows could shift a bound the deployed evaluator clamps against. The interval moved from `[-1.161765, 0.880628]` to `[-1.150765, 0.856905]`. The three TypeScript/parity vectors that sit exactly on the clamp were updated in the same commit; the model trees, grade multipliers and global metrics are unchanged.
 
 ## Inference and reproducibility
